@@ -2,19 +2,24 @@ import { Button } from "@mui/material";
 import {
   buildDefaultMonostaticSensor,
   type MapClickListener,
-  type SensorPortfolio,
 } from "../types/types";
 import type { LatLng } from "leaflet";
+import { useScenarioStore } from "../context/ScenarioStore";
 
 export default function AddRadars({
   setMapClickListener,
-  sensorPortfolio,
-  setSensorPortfolio,
 }: {
   setMapClickListener: (listener: MapClickListener | null) => void;
-  sensorPortfolio: SensorPortfolio;
-  setSensorPortfolio: (portfolio: SensorPortfolio) => void;
 }) {
+  const addSensor = useScenarioStore((state) => state.addMonostaticSensor);
+  const unusedIdMonostaticSensor = useScenarioStore(
+    (state) => state.unusedIdMonostaticSensor,
+  );
+  const unusedIdReceiver = useScenarioStore((state) => state.unusedIdReceiver);
+  const unusedIdTransmitter = useScenarioStore(
+    (state) => state.unusedIdTransmitter,
+  );
+
   return (
     <fieldset className="addRadars">
       <legend>Add sensors</legend>
@@ -28,21 +33,18 @@ export default function AddRadars({
           setMapClickListener(() => (p: LatLng) => {
             // Add the radar.
             // TODO: Use correct altitude!
-            // TODO: Use correct IDs!
             // TODO: Select blue or red!
-            const newRadar = buildDefaultMonostaticSensor({
-              lat: p.lat,
-              lon: p.lng,
-              alt: 0.0, 
-            },
-            
-            0,
-            0,
-            0,
-          );
-            const newPortfolio = structuredClone(sensorPortfolio);
-            newPortfolio.blueMonostaticSensors.push(newRadar);
-            setSensorPortfolio(newPortfolio);
+            const newRadar = buildDefaultMonostaticSensor(
+              {
+                lat: p.lat,
+                lon: p.lng,
+                alt: 0.0,
+              },
+              unusedIdReceiver,
+              unusedIdTransmitter,
+              unusedIdMonostaticSensor,
+            );
+            addSensor(newRadar, true);
             console.log(`Add radar at position ${p}`);
 
             // Deactivate the listener.

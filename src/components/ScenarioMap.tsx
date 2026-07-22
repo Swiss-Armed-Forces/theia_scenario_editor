@@ -11,13 +11,10 @@ import {
 import "leaflet/dist/leaflet.css";
 import { DEFAULT_MAP_CENTER } from "../util/constants";
 import { useState } from "react";
-import type {
-  MapClickListener,
-  MonostaticSensor,
-  SensorPortfolio,
-} from "../types/types";
+import type { MapClickListener, MonostaticSensor } from "../types/types";
 import ms from "milsymbol";
 import L from "leaflet";
+import { useScenarioStore } from "../context/ScenarioStore";
 
 function ClickMarker({
   mapClickListener,
@@ -30,10 +27,10 @@ function ClickMarker({
     click: (e) => {
       if (mapClickListener) {
         // Pass information to listener.
-      mapClickListener(e.latlng);
+        mapClickListener(e.latlng);
       } else {
         // Display the (lat, lon) popup.
-      setPos(e.latlng);
+        setPos(e.latlng);
       }
     },
   });
@@ -83,11 +80,12 @@ function MonostaticRadarMarker({
 
 export default function ScenarioMap({
   mapClickListener,
-  sensorPortfolio,
 }: {
   mapClickListener: MapClickListener | null;
-  sensorPortfolio: SensorPortfolio;
 }) {
+  const blueMonostaticSensors = useScenarioStore(
+    (state) => state.blueMonostaticSensors,
+  );
   return (
     <MapContainer center={DEFAULT_MAP_CENTER} zoom={10}>
       <TileLayer
@@ -96,7 +94,7 @@ export default function ScenarioMap({
       />
       <ClickMarker mapClickListener={mapClickListener} />;
       <ScaleControl position="bottomleft" />
-      {sensorPortfolio.blueMonostaticSensors.map((sensor, i) => (
+      {blueMonostaticSensors.map((sensor, i) => (
         <MonostaticRadarMarker
           key={i}
           radar={sensor}

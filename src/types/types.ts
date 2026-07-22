@@ -1,3 +1,4 @@
+import type { LatLng } from "leaflet";
 import type { components } from "./schema";
 
 export type Point = components["schemas"]["Point"];
@@ -7,7 +8,14 @@ export const POLARIZATION_HORIZONTAL = 0;
 export const POLARIZATION_VERTICAL = 1;
 export type MonostaticSensor = components["schemas"]["MonostaticSensor-Input"];
 
-export function build_default_monostatic_sensor(
+export type SensorPortfolio = {
+  blueMonostaticSensors: MonostaticSensor[];
+  redMonostaticSensors: MonostaticSensor[];
+};
+
+export type MapClickListener = (p: LatLng) => void;
+
+export function buildDefaultMonostaticSensor(
   point: Point,
   rx_id: number,
   tx_id: number,

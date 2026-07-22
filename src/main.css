@@ -46,8 +46,8 @@ body, html {
 }
 
 .sidePanel {
-    min-width: 25%;
-    max-width: 25%;
+    min-width: 20%;
+    max-width: 20%;
 }
 
 .scenarioMap {
@@ -60,4 +60,11 @@ body, html {
     flex: 1;
     min-height: 0;
     min-width: 0;
+}
+
+.addRadars {
+    display: flex;
+    flex-direction: row;
+    gap: 10px;
+    max-height: 10%;
 }

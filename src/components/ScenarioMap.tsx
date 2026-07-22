@@ -15,6 +15,7 @@ import type { MapClickListener, MonostaticSensor } from "../types/types";
 import ms from "milsymbol";
 import L from "leaflet";
 import { useScenarioStore } from "../context/ScenarioStore";
+import { useGuiStateStore } from "../context/GuiStateStore";
 
 function ClickMarker({
   mapClickListener,
@@ -58,19 +59,26 @@ const radarIcon = L.divIcon({
   iconAnchor: [12, 12], // center the icon
 });
 
-function MonostaticRadarMarker({
-  radar,
-  onClick,
-}: {
-  radar: MonostaticSensor;
-  onClick: () => void;
-}) {
+const highlightedRadarIcon = L.divIcon({
+  html: `<div style="border: 2px solid red; width: fit-content; height: fit-content">${friendlyRadarSymbol.asSVG()}</div>`,
+  className: "", // remove default 'leaflet-div-icon' styles if needed
+  iconSize: [24, 24],
+  iconAnchor: [12, 12], // center the icon
+});
+
+function MonostaticRadarMarker({ radar }: { radar: MonostaticSensor }) {
+  const selectedSensorId = useGuiStateStore((state) => state.selectedSensorId);
+  const selectSensor = useGuiStateStore((state) => state.selectSensor);
+
+  const isHighlighted = selectedSensorId === radar.id
   return (
     <Marker
       position={[radar.receiver.point.lat, radar.receiver.point.lon]}
-      icon={radarIcon}
+      icon={isHighlighted ? highlightedRadarIcon : radarIcon}
       eventHandlers={{
-        click: onClick,
+        click: () => {
+          selectSensor(isHighlighted ? null : radar.id);
+        },
       }}
     >
       <Tooltip>Monostatic Sensor #{radar.id}</Tooltip>
@@ -95,11 +103,7 @@ export default function ScenarioMap({
       <ClickMarker mapClickListener={mapClickListener} />;
       <ScaleControl position="bottomleft" />
       {blueMonostaticSensors.map((sensor, i) => (
-        <MonostaticRadarMarker
-          key={i}
-          radar={sensor}
-          onClick={() => {}}
-        ></MonostaticRadarMarker>
+        <MonostaticRadarMarker key={i} radar={sensor}></MonostaticRadarMarker>
       ))}
     </MapContainer>
   );

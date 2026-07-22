@@ -1,0 +1,63 @@
+:root {
+  --primary: #3388FF;
+  --accent: #E74C3C;
+  --primary-bg: #0F172A;
+  --panel-bg: #1F2933;
+  --panel-border-color: #374151;
+  --text-color: #E5E7EB;
+  --natoBlue: #80e0ff;
+  --natoRed: #ff8080;
+}
+
+
+* {
+  box-sizing: border-box;
+}
+
+body, html {
+    color: var(--text-color);
+    background-color: var(--primary-bg);
+    /* overflow: hidden; */
+}
+
+.rootContainer {
+    margin: 0px;
+    padding: 10px;
+    width: 100vw;
+    max-width: 100vw;
+    height: 100vh;
+    max-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.headerBar {
+    width: 100%;
+    height: 10%;
+}
+
+.contentContainer {
+    display: flex;
+    gap: 10px;
+    align-content: space-between;
+    flex-direction: row;
+    height: 90%;
+    min-height: 85%;
+}
+
+.sidePanel {
+    min-width: 25%;
+    max-width: 25%;
+}
+
+.scenarioMap {
+    min-width: 75%;
+    max-width: 75%;
+    height: 100%;
+}
+
+.leaflet-container {
+    flex: 1;
+    min-height: 0;
+    min-width: 0;
+}

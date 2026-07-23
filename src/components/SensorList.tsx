@@ -60,7 +60,8 @@ export default function SensorList() {
   );
 
   return (
-    <Box className="SensorList">
+    <fieldset className="SensorList">
+      <legend>Sensor List</legend>
       {monostaticSensors.map((sensor, i) => (
         <SensorListItem
           key={i}
@@ -68,6 +69,6 @@ export default function SensorList() {
           isHighlighted={sensor.id == highlightedSensorId}
         />
       ))}
-    </Box>
+    </fieldset>
   );
 }

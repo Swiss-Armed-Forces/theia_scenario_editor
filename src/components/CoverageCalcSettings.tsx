@@ -7,7 +7,7 @@ export default function CoverageCalcSettings() {
   );
 
   return (
-    <fieldset className="SettingsContainer">
+    <fieldset className="MonostaticCoverageSettingsContainer">
       <legend>Coverage calc settings</legend>
       <label htmlFor="targetAlt">Target MASL</label>
       <input

@@ -16,7 +16,7 @@ export default function MonostaticSensorSettings() {
   let content = <></>;
   if (sensor) {
     content = (
-      <>
+      <div className="SensorSettingsContainer">
         <label>Position</label>
         <PositionSelector
           point={sensor.receiver.point}
@@ -199,7 +199,7 @@ export default function MonostaticSensorSettings() {
             updateMonostaticSensor(newSensor, true);
           }}
         />
-      </>
+      </div>
     );
   }
 

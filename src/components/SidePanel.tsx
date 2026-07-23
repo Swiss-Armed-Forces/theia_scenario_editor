@@ -31,10 +31,7 @@ export default function SidePanel({
     <div className="sidePanel">
       <AddRadars setMapClickListener={setMapClickListener} />
       <MonostaticSensorSettings />
-      <fieldset>
-        <legend>Sensor List</legend>
         <SensorList />
-      </fieldset>
       <CoverageCalcSettings />
       <Button
         variant="contained"

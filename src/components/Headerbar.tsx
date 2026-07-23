@@ -1,8 +1,21 @@
+import { Button } from "@mui/material";
+import { downloadJSON } from "../util/export";
+import { useScenarioStore } from "../context/ScenarioStore";
+import ImportButton from "./ImportButton";
+
 export default function Headerbar() {
   return (
     <div className="headerBar">
-      <div style={{ width: "100%" }}>Theia Scenario Editor</div>
-      <hr style={{ color: "var(--panel-border-color)" }} />
+      <Button
+        variant="contained"
+        onClick={() =>
+          downloadJSON(useScenarioStore.getState(), "scenario.json")
+        }
+      >
+        Save
+      </Button>
+      <ImportButton />
+      <div>Theia Scenario Editor</div>
     </div>
   );
 }

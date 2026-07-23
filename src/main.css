@@ -33,9 +33,13 @@ body, html {
 
 .headerBar {
     width: 100%;
-    height: 10%;
+    height: 5%;
+    max-height: 5%;
     margin: 0;
     padding: 0;
+    display: flex;
+    flex-direction: row;
+    gap: 10px;
 }
 
 .contentContainer {
@@ -43,7 +47,7 @@ body, html {
     gap: 10px;
     align-content: space-between;
     flex-direction: row;
-    height: 90%;
+    height: 95%;
     min-height: 85%;
     font-size: 10pt;
 }

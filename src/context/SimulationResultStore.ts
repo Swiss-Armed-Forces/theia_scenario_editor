@@ -12,6 +12,7 @@ interface SimulationStore {
     sensors: MonostaticSensor[],
     conf: MonostaticCoverageCalcConf,
   ) => void;
+  deleteSensor: (sensorId: number) => void;
 }
 
 export const useSimulationStore = create<SimulationStore>((set) => ({
@@ -20,10 +21,6 @@ export const useSimulationStore = create<SimulationStore>((set) => ({
     sensors: MonostaticSensor[],
     conf: MonostaticCoverageCalcConf,
   ) => {
-    console.log(
-      "coverage calc",
-      sensors.map((s) => s.id),
-    );
     const coverages = await Promise.all(
       sensors.map((sensor) =>
         Promise.all([
@@ -35,4 +32,11 @@ export const useSimulationStore = create<SimulationStore>((set) => ({
     );
     set({ monostaticCoverages: coverages });
   },
+  deleteSensor: (sensorId: number) =>
+    set((state) => {
+      const newCoverages = state.monostaticCoverages.filter(
+        ([id, _coverage, _lastUpdated]) => id !== sensorId,
+      );
+      return { monostaticCoverages: newCoverages };
+    }),
 }));

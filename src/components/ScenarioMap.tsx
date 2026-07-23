@@ -1,5 +1,5 @@
-import type { LatLng } from "leaflet";
 import {
+  GeoJSON,
   MapContainer,
   Marker,
   Popup,
@@ -11,18 +11,20 @@ import {
 import "leaflet/dist/leaflet.css";
 import { DEFAULT_MAP_CENTER } from "../util/constants";
 import { useState } from "react";
-import type { MapClickListener, MonostaticSensor } from "../types/types";
+import type { MapClickListener, MonostaticSensor, Point } from "../types/types";
 import ms from "milsymbol";
 import L from "leaflet";
 import { useScenarioStore } from "../context/ScenarioStore";
 import { useGuiStateStore } from "../context/GuiStateStore";
+import { useSimulationStore } from "../context/SimulationResultStore";
+import { elevationAt } from "../backend/backend";
 
 function ClickMarker({
   mapClickListener,
 }: {
   mapClickListener: MapClickListener | null;
 }) {
-  const [pos, setPos] = useState<LatLng | null>(null);
+  const [pos, setPos] = useState<Point | null>(null);
 
   useMapEvents({
     click: (e) => {
@@ -31,14 +33,20 @@ function ClickMarker({
         mapClickListener(e.latlng);
       } else {
         // Display the (lat, lon) popup.
-        setPos(e.latlng);
+        elevationAt(e.latlng.lat, e.latlng.lng).then((alt) => {
+          setPos({
+            lat: e.latlng.lat,
+            lon: e.latlng.lng,
+            alt: alt,
+          });
+        });
       }
     },
   });
 
   return pos ? (
-    <Popup position={pos}>
-      {pos.lat.toFixed(4)}, {pos.lng.toFixed(4)}
+    <Popup position={{ lat: pos.lat, lng: pos.lon }}>
+      {pos.lat.toFixed(4)}, {pos.lon.toFixed(4)}, {pos.alt.toFixed(0)}
     </Popup>
   ) : null;
 }
@@ -70,7 +78,7 @@ function MonostaticRadarMarker({ radar }: { radar: MonostaticSensor }) {
   const selectedSensorId = useGuiStateStore((state) => state.selectedSensorId);
   const selectSensor = useGuiStateStore((state) => state.selectSensor);
 
-  const isHighlighted = selectedSensorId === radar.id
+  const isHighlighted = selectedSensorId === radar.id;
   return (
     <Marker
       position={[radar.receiver.point.lat, radar.receiver.point.lon]}
@@ -91,9 +99,14 @@ export default function ScenarioMap({
 }: {
   mapClickListener: MapClickListener | null;
 }) {
+  // TODO: RED
+  const visibleSensorIds = useGuiStateStore((state) => state.visibleSensorIds);
   const blueMonostaticSensors = useScenarioStore(
     (state) => state.blueMonostaticSensors,
-  );
+  ).filter((sensor) => visibleSensorIds.has(sensor.id));
+  const blueMonostaticCoverages = useSimulationStore(
+    (state) => state.monostaticCoverages,
+  ).filter(([sensorId, _coverage]) => visibleSensorIds.has(sensorId));
   return (
     <MapContainer center={DEFAULT_MAP_CENTER} zoom={10}>
       <TileLayer
@@ -104,6 +117,9 @@ export default function ScenarioMap({
       <ScaleControl position="bottomleft" />
       {blueMonostaticSensors.map((sensor, i) => (
         <MonostaticRadarMarker key={i} radar={sensor}></MonostaticRadarMarker>
+      ))}
+      {blueMonostaticCoverages.map(([_sensorId, coverage]) => (
+        <GeoJSON key={`Coverage ${_sensorId}`} data={coverage} />
       ))}
     </MapContainer>
   );

@@ -5,6 +5,7 @@ import {
 } from "../types/types";
 import type { LatLng } from "leaflet";
 import { useScenarioStore } from "../context/ScenarioStore";
+import { elevationAt } from "../backend/backend";
 
 export default function AddRadars({
   setMapClickListener,
@@ -32,23 +33,23 @@ export default function AddRadars({
           // a trivial updater function that simply returns our callback.
           setMapClickListener(() => (p: LatLng) => {
             // Add the radar.
-            // TODO: Use correct altitude!
             // TODO: Select blue or red!
-            const newRadar = buildDefaultMonostaticSensor(
-              {
-                lat: p.lat,
-                lon: p.lng,
-                alt: 0.0,
-              },
-              unusedIdReceiver,
-              unusedIdTransmitter,
-              unusedIdMonostaticSensor,
-            );
-            addSensor(newRadar, true);
-            console.log(`Add radar at position ${p}`);
+            elevationAt(p.lat, p.lng).then((alt) => {
+              const newRadar = buildDefaultMonostaticSensor(
+                {
+                  lat: p.lat,
+                  lon: p.lng,
+                  alt: alt,
+                },
+                unusedIdReceiver,
+                unusedIdTransmitter,
+                unusedIdMonostaticSensor,
+              );
+              addSensor(newRadar, true);
 
-            // Deactivate the listener.
-            setMapClickListener(null);
+              // Deactivate the listener.
+              setMapClickListener(null);
+            });
           });
         }}
       >

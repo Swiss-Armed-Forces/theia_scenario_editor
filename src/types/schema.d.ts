@@ -257,6 +257,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/elevation_at/{lat}_{lon}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Elevationat
+         * @description Calculate elevation [MASL] for the given decimal (lat, lon) coordinates.
+         */
+        get: operations["elevationAt_elevation_at__lat___lon__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -337,8 +357,9 @@ export interface components {
             /**
              * Type
              * @default Feature
+             * @constant
              */
-            type: string;
+            type: "Feature";
             /** Geometry */
             geometry: components["schemas"]["GeoJSONPolygon"] | components["schemas"]["GeoJSONMultiPolygon"];
             /**
@@ -1200,6 +1221,38 @@ export interface operations {
                     "application/json": {
                         [key: string]: components["schemas"]["GeoJSONFeature"];
                     };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    elevationAt_elevation_at__lat___lon__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                lat: number;
+                lon: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": number;
                 };
             };
             /** @description Validation Error */

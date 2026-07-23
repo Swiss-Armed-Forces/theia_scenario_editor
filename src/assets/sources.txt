@@ -1,0 +1,2 @@
+eye.png                 https://fontawesome.com/icons/classic/regular/eye
+eye-slash-regular.png   https://fontawesome.com/icons/classic/regular/eye-slash

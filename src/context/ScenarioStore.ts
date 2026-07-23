@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import type { MonostaticSensor } from "../types/types";
+import { useGuiStateStore } from "./GuiStateStore";
 
 interface ScenarioStore {
   blueMonostaticSensors: MonostaticSensor[];
@@ -19,6 +20,8 @@ export const useScenarioStore = create<ScenarioStore>((set) => ({
 
   addMonostaticSensor: (sensor, isBlue) =>
     set((state) => {
+      useGuiStateStore.getState().showSensor(sensor.id);
+
       const oldSensors = isBlue
         ? state.blueMonostaticSensors
         : state.redMonostaticSensors;

@@ -6,6 +6,7 @@ import { useSimulationStore } from "../context/SimulationResultStore";
 import { useGuiStateStore } from "../context/GuiStateStore";
 import { useScenarioStore } from "../context/ScenarioStore";
 import CoverageCalcSettings from "./CoverageCalcSettings";
+import MonostaticSensorSettings from "./MonostaticSensorSettings";
 
 export default function SidePanel({
   setMapClickListener,
@@ -29,13 +30,14 @@ export default function SidePanel({
   return (
     <div className="sidePanel">
       <AddRadars setMapClickListener={setMapClickListener} />
+      <MonostaticSensorSettings />
       <fieldset>
         <legend>Sensor List</legend>
         <SensorList />
       </fieldset>
       <CoverageCalcSettings />
       <Button
-      variant="contained"
+        variant="contained"
         onClick={(_event) => {
           updateMonostaticCoverage(
             visibleMonostaticSensors,

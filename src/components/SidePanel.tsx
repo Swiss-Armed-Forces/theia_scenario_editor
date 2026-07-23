@@ -35,6 +35,7 @@ export default function SidePanel({
       </fieldset>
       <CoverageCalcSettings />
       <Button
+      variant="contained"
         onClick={(_event) => {
           updateMonostaticCoverage(
             visibleMonostaticSensors,

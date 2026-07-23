@@ -46,6 +46,9 @@ body, html {
 }
 
 .sidePanel {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
     min-width: 20%;
     max-width: 20%;
 }

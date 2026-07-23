@@ -6,7 +6,8 @@ import {
 } from "../backend/backend";
 
 interface SimulationStore {
-  monostaticCoverages: [number, GeoJSONFeature][];
+  // sensorId, coverage, calculatedAt (epoch)
+  monostaticCoverages: [number, GeoJSONFeature, number][];
   updateMonostaticCoverages: (
     sensors: MonostaticSensor[],
     conf: MonostaticCoverageCalcConf,
@@ -25,10 +26,11 @@ export const useSimulationStore = create<SimulationStore>((set) => ({
     );
     const coverages = await Promise.all(
       sensors.map((sensor) =>
-        Promise.all([sensor.id, calculateMonostaticCoverage(sensor, conf)] as [
-          number,
-          Promise<GeoJSONFeature>,
-        ]),
+        Promise.all([
+          sensor.id,
+          calculateMonostaticCoverage(sensor, conf),
+          Date.now(),
+        ] as [number, Promise<GeoJSONFeature>, number]),
       ),
     );
     set({ monostaticCoverages: coverages });

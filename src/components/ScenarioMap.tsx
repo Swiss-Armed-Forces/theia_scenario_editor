@@ -106,7 +106,7 @@ export default function ScenarioMap({
   ).filter((sensor) => visibleSensorIds.has(sensor.id));
   const blueMonostaticCoverages = useSimulationStore(
     (state) => state.monostaticCoverages,
-  ).filter(([sensorId, _coverage]) => visibleSensorIds.has(sensorId));
+  ).filter(([sensorId, _coverage, _date]) => visibleSensorIds.has(sensorId));
   return (
     <MapContainer center={DEFAULT_MAP_CENTER} zoom={10}>
       <TileLayer
@@ -118,8 +118,8 @@ export default function ScenarioMap({
       {blueMonostaticSensors.map((sensor, i) => (
         <MonostaticRadarMarker key={i} radar={sensor}></MonostaticRadarMarker>
       ))}
-      {blueMonostaticCoverages.map(([_sensorId, coverage]) => (
-        <GeoJSON key={`Coverage ${_sensorId}`} data={coverage} />
+      {blueMonostaticCoverages.map(([_sensorId, coverage, date]) => (
+        <GeoJSON key={`Coverage ${_sensorId}_${date}`} data={coverage} />
       ))}
     </MapContainer>
   );

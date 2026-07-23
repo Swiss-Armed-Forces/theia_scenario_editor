@@ -8,6 +8,7 @@ interface GuiStateStore {
   selectSensor: (sensorId: number | null) => void;
   showSensor: (sensorId: number) => void;
   hideSensor: (sensorId: number) => void;
+  updateMonostaticCoverageCalcConf: (conf: MonostaticCoverageCalcConf) => void;
 }
 
 export const useGuiStateStore = create<GuiStateStore>((set) => ({
@@ -35,5 +36,9 @@ export const useGuiStateStore = create<GuiStateStore>((set) => ({
       const ids = structuredClone(state.visibleSensorIds);
       ids.delete(sensorId);
       return { visibleSensorIds: ids };
+    }),
+  updateMonostaticCoverageCalcConf: (conf: MonostaticCoverageCalcConf) =>
+    set((_state) => {
+      return { monostaticCoverageCalcConf: conf };
     }),
 }));

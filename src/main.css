@@ -71,3 +71,9 @@ body, html {
     gap: 10px;
     max-height: 10%;
 }
+
+.SettingsContainer {
+    display: grid;
+    grid-template-columns: 4fr 1fr;
+    gap: 10px;
+}

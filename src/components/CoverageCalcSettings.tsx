@@ -1,5 +1,4 @@
 import { useGuiStateStore } from "../context/GuiStateStore";
-import "./CoverageCalcSettings.css";
 
 export default function CoverageCalcSettings() {
   const conf = useGuiStateStore((state) => state.monostaticCoverageCalcConf);
@@ -8,7 +7,7 @@ export default function CoverageCalcSettings() {
   );
 
   return (
-    <fieldset className="CoverageCalcSettingsContainer">
+    <fieldset className="SettingsContainer">
       <legend>Coverage calc settings</legend>
       <label htmlFor="targetAlt">Target MASL</label>
       <input

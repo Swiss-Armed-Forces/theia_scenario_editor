@@ -5,18 +5,27 @@ import { useGuiStateStore } from "./context/GuiStateStore";
 import { useScenarioStore } from "./context/ScenarioStore";
 
 function App() {
+  const fetchFmTransmitters = useGuiStateStore(
+      (state) => state.fetchFmTransmitters,
+    );
+
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
       if (e.key == "Delete") {
         const sensorId = useGuiStateStore.getState().selectedSensorId;
         if (sensorId !== null) {
           useScenarioStore.getState().deleteMonostaticSensor(sensorId, true);
-        } 
+        }
       }
     }
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
+
+  // Call at initialization.
+  useEffect(() => {
+    fetchFmTransmitters();
   }, []);
 
   return (

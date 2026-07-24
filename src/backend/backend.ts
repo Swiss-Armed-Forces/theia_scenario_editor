@@ -1,6 +1,10 @@
 import createClient from "openapi-fetch";
 import type { paths } from "../types/schema";
-import type { GeoJSONFeature, MonostaticSensor } from "../types/types";
+import type {
+  GeoJSONFeature,
+  MonostaticSensor,
+  Transmitter,
+} from "../types/types";
 
 const client = createClient<paths>({ baseUrl: "http://localhost:8000" });
 
@@ -51,6 +55,16 @@ export async function elevationAt(lat: number, lon: number): Promise<number> {
 
   if (error) {
     throw new Error(JSON.stringify(error));
+  }
+
+  return data;
+}
+
+export async function fetchFmTransmitters(): Promise<Transmitter[]> {
+  const { data, error } = await client.GET("/fm_transmitters");
+
+  if (error) {
+    throw new Error(error);
   }
 
   return data;

@@ -11,7 +11,7 @@ import { lineOfSightDistance } from "../backend/backend";
 
 export type PclTxSelectionCriteria = { min_power: number; max_dist: number };
 
-interface ScenarioStore {
+export interface ScenarioStore {
   blueMonostaticSensors: MonostaticSensor[];
   redMonostaticSensors: MonostaticSensor[];
   pclSensors: PclSensor[];
@@ -111,6 +111,64 @@ async function matchingTransmitterIds(
       .filter((_tx, i) => fulfillsConditions[i])
       .map((tx) => tx.id),
   );
+}
+
+// `Map`/`Set` don't survive JSON.stringify (a Map serializes to "{}",
+// silently dropping its contents), so save/load needs an explicit,
+// JSON-safe representation of the store rather than dumping getState()
+// directly.
+export type SerializedScenarioState = {
+  blueMonostaticSensors: MonostaticSensor[];
+  redMonostaticSensors: MonostaticSensor[];
+  pclSensors: PclSensor[];
+  pclReceivers: Receiver[];
+  pclTransmitterIds: [number, number[]][];
+  pclTxCriteria: [number, PclTxSelectionCriteria][];
+  unusedIdSensor: number;
+  unusedIdReceiver: number;
+  unusedIdTransmitter: number;
+};
+
+export function serializeScenarioState(
+  state: ScenarioStore,
+): SerializedScenarioState {
+  return {
+    blueMonostaticSensors: state.blueMonostaticSensors,
+    redMonostaticSensors: state.redMonostaticSensors,
+    pclSensors: state.pclSensors,
+    pclReceivers: state.pclReceivers,
+    pclTransmitterIds: Array.from(state.pclTransmitterIds.entries()).map(
+      ([receiverId, ids]): [number, number[]] => [
+        receiverId,
+        Array.from(ids),
+      ],
+    ),
+    pclTxCriteria: Array.from(state.pclTxCriteria.entries()),
+    unusedIdSensor: state.unusedIdSensor,
+    unusedIdReceiver: state.unusedIdReceiver,
+    unusedIdTransmitter: state.unusedIdTransmitter,
+  };
+}
+
+export function deserializeScenarioState(
+  data: SerializedScenarioState,
+): Partial<ScenarioStore> {
+  return {
+    blueMonostaticSensors: data.blueMonostaticSensors,
+    redMonostaticSensors: data.redMonostaticSensors,
+    pclSensors: data.pclSensors,
+    pclReceivers: data.pclReceivers ?? [],
+    pclTransmitterIds: new Map(
+      (data.pclTransmitterIds ?? []).map(([receiverId, ids]) => [
+        receiverId,
+        new Set(ids),
+      ]),
+    ),
+    pclTxCriteria: new Map(data.pclTxCriteria ?? []),
+    unusedIdSensor: data.unusedIdSensor,
+    unusedIdReceiver: data.unusedIdReceiver,
+    unusedIdTransmitter: data.unusedIdTransmitter,
+  };
 }
 
 export const useScenarioStore = create<ScenarioStore>((set, get) => ({

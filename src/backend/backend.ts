@@ -3,6 +3,7 @@ import type { paths } from "../types/schema";
 import type {
   GeoJSONFeature,
   MonostaticSensor,
+  Point,
   Transmitter,
 } from "../types/types";
 
@@ -65,6 +66,33 @@ export async function fetchFmTransmitters(): Promise<Transmitter[]> {
 
   if (error) {
     throw new Error(error);
+  }
+
+  return data;
+}
+
+export async function lineOfSightDistance(
+  p1: Point,
+  p2: Point,
+): Promise<number> {
+  const { data, error } = await client.GET(
+    "/line_of_sight_distance/{lat1}_{lon1}_{alt1}/{lat2}_{lon2}_{alt2}",
+    {
+      params: {
+        path: {
+          lat1: p1.lat,
+          lon1: p1.lon,
+          alt1: p1.alt,
+          lat2: p2.lat,
+          lon2: p2.lon,
+          alt2: p2.alt,
+        },
+      },
+    },
+  );
+
+  if (error) {
+    throw new Error(JSON.stringify(error));
   }
 
   return data;

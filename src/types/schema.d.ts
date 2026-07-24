@@ -277,6 +277,60 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/fm_transmitters": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Fm Transmitters */
+        get: operations["get_fm_transmitters_fm_transmitters_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/line_of_sight_distance/{lat1}_{lon1}_{alt1}/{lat2}_{lon2}_{alt2}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Los Distance
+         * @description Calculate LOS distance [m]
+         */
+        get: operations["get_los_distance_line_of_sight_distance__lat1___lon1___alt1___lat2___lon2___alt2__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/haversine_distance/{lat1}_{lon1}/{lat2}_{lon2}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Haversine Distance */
+        get: operations["get_haversine_distance_haversine_distance__lat1___lon1___lat2___lon2__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -1241,6 +1295,96 @@ export interface operations {
             path: {
                 lat: number;
                 lon: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": number;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_fm_transmitters_fm_transmitters_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Transmitter-Output"][];
+                };
+            };
+        };
+    };
+    get_los_distance_line_of_sight_distance__lat1___lon1___alt1___lat2___lon2___alt2__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                lat1: number;
+                lon1: number;
+                alt1: number;
+                lat2: number;
+                lon2: number;
+                alt2: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": number;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_haversine_distance_haversine_distance__lat1___lon1___lat2___lon2__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                lat1: number;
+                lon1: number;
+                lat2: number;
+                lon2: number;
             };
             cookie?: never;
         };

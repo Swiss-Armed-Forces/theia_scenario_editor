@@ -1,17 +1,11 @@
 import { Button } from "@mui/material";
-import {
-  buildDefaultMonostaticSensor,
-  type MapClickListener,
-} from "../types/types";
+import { buildDefaultMonostaticSensor } from "../types/types";
 import type { LatLng } from "leaflet";
 import { useScenarioStore } from "../context/ScenarioStore";
 import { elevationAt } from "../backend/backend";
+import { useGuiStateStore } from "../context/GuiStateStore";
 
-export default function AddRadars({
-  setMapClickListener,
-}: {
-  setMapClickListener: (listener: MapClickListener | null) => void;
-}) {
+export default function AddRadars() {
   const addSensor = useScenarioStore((state) => state.addMonostaticSensor);
   const unusedIdMonostaticSensor = useScenarioStore(
     (state) => state.unusedIdSensor,
@@ -19,6 +13,10 @@ export default function AddRadars({
   const unusedIdReceiver = useScenarioStore((state) => state.unusedIdReceiver);
   const unusedIdTransmitter = useScenarioStore(
     (state) => state.unusedIdTransmitter,
+  );
+
+  const setMapClickListener = useGuiStateStore(
+    (state) => state.setMapClickListener,
   );
 
   return (
@@ -31,7 +29,7 @@ export default function AddRadars({
           // considered an updater function.
           // However, we want the function itself to be the values, so we define
           // a trivial updater function that simply returns our callback.
-          setMapClickListener(() => (p: LatLng) => {
+          setMapClickListener((p: LatLng) => {
             // Add the radar.
             // TODO: Select blue or red!
             elevationAt(p.lat, p.lng).then((alt) => {

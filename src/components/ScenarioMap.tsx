@@ -12,7 +12,6 @@ import "leaflet/dist/leaflet.css";
 import { DEFAULT_MAP_CENTER } from "../util/constants";
 import { useState } from "react";
 import type {
-  MapClickListener,
   MonostaticSensor,
   PclSensor,
   Point,
@@ -26,12 +25,10 @@ import { useGuiStateStore } from "../context/GuiStateStore";
 import { useSimulationStore } from "../context/SimulationResultStore";
 import { elevationAt } from "../backend/backend";
 
-function ClickMarker({
-  mapClickListener,
-}: {
-  mapClickListener: MapClickListener | null;
-}) {
+function ClickMarker() {
   const [pos, setPos] = useState<Point | null>(null);
+
+  const mapClickListener = useGuiStateStore((state) => state.mapClickListener);
 
   useMapEvents({
     click: (e) => {
@@ -159,11 +156,7 @@ function PclSensorMarker({ sensor }: { sensor: PclSensor }) {
   );
 }
 
-export default function ScenarioMap({
-  mapClickListener,
-}: {
-  mapClickListener: MapClickListener | null;
-}) {
+export default function ScenarioMap() {
   // TODO: RED
   const visibleSensorIds = useGuiStateStore((state) => state.visibleSensorIds);
   const fmTransmitters = useGuiStateStore((state) => state.fmTransmitters);
@@ -179,7 +172,7 @@ export default function ScenarioMap({
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
       />
-      <ClickMarker mapClickListener={mapClickListener} />;
+      <ClickMarker />;
       <ScaleControl position="bottomleft" />
       {blueMonostaticSensors.map((sensor, i) => (
         <MonostaticRadarMarker key={i} radar={sensor}></MonostaticRadarMarker>

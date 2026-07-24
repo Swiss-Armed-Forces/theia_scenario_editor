@@ -14,7 +14,6 @@ export default function ImportButton() {
         type="file"
         accept=".json"
         onChange={async (event) => {
-          console.log("Hey ho!");
           const files = event.target.files;
           if (!files || files.length != 1) {
             throw new Error("Import exactly one file!");

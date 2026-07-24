@@ -3,7 +3,7 @@ import {
   fetchFmTransmitters,
   type MonostaticCoverageCalcConf,
 } from "../backend/backend";
-import type { Transmitter } from "../types/types";
+import type { MapClickListener, Transmitter } from "../types/types";
 import { useScenarioStore } from "./ScenarioStore";
 
 interface GuiStateStore {
@@ -11,6 +11,8 @@ interface GuiStateStore {
   visibleSensorIds: Set<number>;
   monostaticCoverageCalcConf: MonostaticCoverageCalcConf;
   fmTransmitters: Transmitter[];
+  mapClickListener: MapClickListener | null;
+  setMapClickListener: (listener: MapClickListener | null) => void;
   selectReceiver: (receiverId: number | null) => void;
   showSensor: (sensorId: number) => void;
   hideSensor: (sensorId: number) => void;
@@ -29,6 +31,11 @@ export const useGuiStateStore = create<GuiStateStore>((set) => ({
     azimuthResolution: 2.0,
     rangeOnly: false,
   },
+  mapClickListener: null,
+  setMapClickListener: (mapClickListener: MapClickListener | null) =>
+    set((_state) => {
+      return { mapClickListener: mapClickListener };
+    }),
   selectReceiver: (receiverId) =>
     set((_state) => {
       return { selectedReceiverId: receiverId };

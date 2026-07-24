@@ -1,5 +1,4 @@
 import { Button } from "@mui/material";
-import type { MapClickListener } from "../types/types";
 import AddRadars from "./AddRadars";
 import SensorList from "./SensorList";
 import { useSimulationStore } from "../context/SimulationResultStore";
@@ -8,11 +7,7 @@ import { useScenarioStore } from "../context/ScenarioStore";
 import CoverageCalcSettings from "./CoverageCalcSettings";
 import MonostaticSensorSettings from "./MonostaticSensorSettings";
 
-export default function SidePanel({
-  setMapClickListener,
-}: {
-  setMapClickListener: (listener: MapClickListener | null) => void;
-}) {
+export default function SidePanel() {
   const visibleSensorIds = useGuiStateStore((state) => state.visibleSensorIds);
   const monostaticCalcConf = useGuiStateStore(
     (state) => state.monostaticCoverageCalcConf,
@@ -29,9 +24,9 @@ export default function SidePanel({
   );
   return (
     <div className="sidePanel">
-      <AddRadars setMapClickListener={setMapClickListener} />
+      <AddRadars />
       <MonostaticSensorSettings />
-        <SensorList />
+      <SensorList />
       <CoverageCalcSettings />
       <Button
         variant="contained"

@@ -10,6 +10,8 @@ export type MonostaticSensor = components["schemas"]["MonostaticSensor-Input"];
 export type PclSensor = components["schemas"]["PclSensor-Input"];
 export type GeoJSONFeature = components["schemas"]["GeoJSONFeature"];
 
+export type Sensor = MonostaticSensor | PclSensor;
+
 export type SensorPortfolio = {
   blueMonostaticSensors: MonostaticSensor[];
   redMonostaticSensors: MonostaticSensor[];

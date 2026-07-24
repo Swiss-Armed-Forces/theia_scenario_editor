@@ -1,64 +1,15 @@
-import { Box, Button, IconButton } from "@mui/material";
+import { Button } from "@mui/material";
 import { useScenarioStore } from "../context/ScenarioStore";
-import {
-  buildDefaultMonostaticSensor,
-  type MonostaticSensor,
-} from "../types/types";
+import { buildDefaultMonostaticSensor } from "../types/types";
 import { useGuiStateStore } from "../context/GuiStateStore";
-import iconVisible from "../assets/eye-regular.png";
-import iconHidden from "../assets/eye-slash-regular.png";
+
 import type { LatLng } from "leaflet";
 import { elevationAt } from "../backend/backend";
-
-function SensorListItem({
-  sensor,
-  isHighlighted,
-}: {
-  sensor: MonostaticSensor;
-  isHighlighted: boolean;
-}) {
-  const visibleIds = useGuiStateStore((state) => state.visibleSensorIds);
-  const showSensor = useGuiStateStore((state) => state.showSensor);
-  const hideSensor = useGuiStateStore((state) => state.hideSensor);
-  const isVisible = visibleIds.has(sensor.id);
-  return (
-    <Box
-      className="SensorListItem"
-      style={{
-        border: isHighlighted ? "solid red" : "none",
-        display: "flex",
-        flexDirection: "row",
-        gap: "10px",
-      }}
-    >
-      <IconButton
-        style={{ padding: 0, height: "1em", verticalAlign: "-0.25em" }}
-        onClick={(_event) => {
-          if (isVisible) {
-            hideSensor(sensor.id);
-          } else {
-            showSensor(sensor.id);
-          }
-        }}
-      >
-        <img
-          src={isVisible ? iconVisible : iconHidden}
-          style={{
-            filter: "invert(1) hue-rotate(180deg)",
-            height: "1em",
-          }}
-        />
-      </IconButton>
-      <span>Sensor #{sensor.id}</span>
-    </Box>
-  );
-}
+import SensorListItem from "./SensorListItem";
 
 export default function SensorList() {
   // TODO: Allow to switch to RED.
-  const monostaticSensors = useScenarioStore(
-    (state) => state.blueMonostaticSensors,
-  );
+  const sensors = useScenarioStore((state) => state.blueMonostaticSensors);
 
   const highlightedReceiverId = useGuiStateStore(
     (state) => state.selectedReceiverId,
@@ -79,7 +30,7 @@ export default function SensorList() {
   return (
     <fieldset className="SensorList">
       <legend>Sensor List</legend>
-      {monostaticSensors.map((sensor, i) => (
+      {sensors.map((sensor, i) => (
         <SensorListItem
           key={i}
           sensor={sensor}
@@ -97,12 +48,14 @@ export default function SensorList() {
             // Add the radar.
             // TODO: Select blue or red!
             elevationAt(p.lat, p.lng).then((alt) => {
+              const point = {
+                lat: p.lat,
+                lon: p.lng,
+                alt: alt,
+              };
+
               const newRadar = buildDefaultMonostaticSensor(
-                {
-                  lat: p.lat,
-                  lon: p.lng,
-                  alt: alt,
-                },
+                point,
                 unusedIdReceiver,
                 unusedIdTransmitter,
                 unusedIdMonostaticSensor,

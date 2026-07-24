@@ -1,6 +1,6 @@
 import { useGuiStateStore } from "../context/GuiStateStore";
 
-export default function CoverageCalcSettings() {
+export default function MonostaticCoverageCalcSettings() {
   const conf = useGuiStateStore((state) => state.monostaticCoverageCalcConf);
   const updateConf = useGuiStateStore(
     (state) => state.updateMonostaticCoverageCalcConf,

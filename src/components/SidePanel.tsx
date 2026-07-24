@@ -4,7 +4,7 @@ import MonostaticSensorList from "./MonostaticSensorList";
 import { useSimulationStore } from "../context/SimulationResultStore";
 import { useGuiStateStore } from "../context/GuiStateStore";
 import { useScenarioStore } from "../context/ScenarioStore";
-import CoverageCalcSettings from "./CoverageCalcSettings";
+import MonostaticCoverageCalcSettings from "./MonostaticCoverageCalcSettings";
 import MonostaticSensorSettings from "./MonostaticSensorSettings";
 import PclSensorList from "./PclSensorList";
 import PclSensorSettings from "./PclSensorSettings";
@@ -42,7 +42,7 @@ export default function SidePanel() {
           <div className="sidePanelSection">
             <MonostaticSensorSettings />
             <MonostaticSensorList />
-            <CoverageCalcSettings />
+            <MonostaticCoverageCalcSettings />
             <Button
               variant="contained"
               onClick={(_event) => {

@@ -1,5 +1,10 @@
 import { create } from "zustand";
-import type { MonostaticSensor, PclSensor, Receiver } from "../types/types";
+import type {
+  MonostaticSensor,
+  PclSensor,
+  Receiver,
+  Transmitter,
+} from "../types/types";
 import { useGuiStateStore } from "./GuiStateStore";
 import { useSimulationStore } from "./SimulationResultStore";
 import { lineOfSightDistance } from "../backend/backend";
@@ -10,21 +15,111 @@ interface ScenarioStore {
   blueMonostaticSensors: MonostaticSensor[];
   redMonostaticSensors: MonostaticSensor[];
   pclSensors: PclSensor[];
+  pclReceivers: Receiver[];
+  pclTransmitterIds: Map<number, Set<number>>;
   pclTxCriteria: Map<number, PclTxSelectionCriteria>;
   unusedIdSensor: number;
   unusedIdReceiver: number;
   unusedIdTransmitter: number;
   addMonostaticSensor: (sensor: MonostaticSensor, isBlue: boolean) => void;
-  updatePclReceiver: (rx: Receiver, criteria: PclTxSelectionCriteria) => void;
+  addPclReceiver: (
+    rx: Receiver,
+    criteria: PclTxSelectionCriteria,
+  ) => Promise<void>;
+  updatePclReceiverSettings: (rx: Receiver) => void;
+  updatePclTxCriteria: (
+    receiverId: number,
+    criteria: PclTxSelectionCriteria,
+  ) => void;
+  togglePclTransmitter: (receiverId: number, transmitterId: number) => void;
+  selectAllMatchingCriteria: (receiverId: number) => Promise<void>;
+  deletePclReceiver: (receiverId: number) => void;
   deleteReceiver: (receiverId: number, isBlue: boolean) => void;
   updateMonostaticSensor: (sensor: MonostaticSensor, isBlue: boolean) => void;
+}
+
+// Rebuilds the PclSensor rows for a single receiver from its associated
+// transmitter ids, reusing existing sensor ids for pairs that already exist
+// so unrelated churn (e.g. a settings edit) doesn't disturb visibility state
+// or force new ids for transmitters that were already selected.
+function rebuildPclSensorsFor(
+  receiverId: number,
+  receiver: Receiver,
+  transmitterIds: Set<number>,
+  fmTransmitters: Transmitter[],
+  existingSensors: PclSensor[],
+  unusedIdSensor: number,
+): { sensors: PclSensor[]; unusedIdSensor: number } {
+  const txById = new Map(fmTransmitters.map((tx) => [tx.id, tx]));
+  const existingIdByTxId = new Map(
+    existingSensors
+      .filter((sensor) => sensor.receiver.id === receiverId)
+      .map((sensor) => [sensor.transmitter.id, sensor.id]),
+  );
+
+  let nextId = unusedIdSensor;
+  const sensorsForReceiver: PclSensor[] = [];
+  for (const txId of transmitterIds) {
+    const tx = txById.get(txId);
+    if (!tx) {
+      continue;
+    }
+    const existingId = existingIdByTxId.get(txId);
+    const id = existingId ?? nextId;
+    if (existingId === undefined) {
+      nextId += 1;
+    }
+    sensorsForReceiver.push({
+      id,
+      transmitter: tx,
+      receiver,
+      error_model: {
+        min_bistatic_range_uncertainty: 0,
+        max_bistatic_range_uncertainty: 0,
+        min_doppler_uncertainty: 0,
+        max_doppler_uncertainty: 0,
+      },
+    });
+  }
+
+  const otherSensors = existingSensors.filter(
+    (sensor) => sensor.receiver.id !== receiverId,
+  );
+  return {
+    sensors: [...otherSensors, ...sensorsForReceiver],
+    unusedIdSensor: nextId,
+  };
+}
+
+async function matchingTransmitterIds(
+  point: Receiver["point"],
+  criteria: PclTxSelectionCriteria,
+  fmTransmitters: Transmitter[],
+): Promise<Set<number>> {
+  const fulfillsConditions = await Promise.all(
+    fmTransmitters.map((tx) => {
+      if (tx.power < criteria.min_power) {
+        return false;
+      }
+      return lineOfSightDistance(tx.point, point).then(
+        (d) => d <= criteria.max_dist,
+      );
+    }),
+  );
+  return new Set(
+    fmTransmitters
+      .filter((_tx, i) => fulfillsConditions[i])
+      .map((tx) => tx.id),
+  );
 }
 
 export const useScenarioStore = create<ScenarioStore>((set, get) => ({
   blueMonostaticSensors: [],
   redMonostaticSensors: [],
   pclSensors: [],
-  pclTxCriteria: new Map<number, { min_power: number; max_dist: number }>(),
+  pclReceivers: [],
+  pclTransmitterIds: new Map<number, Set<number>>(),
+  pclTxCriteria: new Map<number, PclTxSelectionCriteria>(),
   unusedIdSensor: 0,
   unusedIdReceiver: 0,
   unusedIdTransmitter: 0,
@@ -99,8 +194,6 @@ export const useScenarioStore = create<ScenarioStore>((set, get) => ({
           ),
         };
       }
-
-      // TODO: PCL sensors.
     }),
   updateMonostaticSensor: (sensor: MonostaticSensor, _isBlue: boolean) =>
     set((state) => {
@@ -125,58 +218,189 @@ export const useScenarioStore = create<ScenarioStore>((set, get) => ({
       return { blueMonostaticSensors: newSensors };
     }),
 
-  updatePclReceiver: async (rx: Receiver, criteria: PclTxSelectionCriteria) => {
-    // const transmitters =
-    const fulfillsConditions = await Promise.all(
-      useGuiStateStore.getState().fmTransmitters.map((tx) => {
-        if (tx.power < criteria.min_power) {
-          return false;
-        }
-        return lineOfSightDistance(tx.point, rx.point).then(
-          (d) => d <= criteria.max_dist,
-        );
-      }),
-    );
-    const transmitters = useGuiStateStore
-      .getState()
-      .fmTransmitters.filter((_tx, i) => fulfillsConditions[i]);
+  addPclReceiver: async (rx: Receiver, criteria: PclTxSelectionCriteria) => {
+    const fmTransmitters = useGuiStateStore.getState().fmTransmitters;
+    const initialIds = new Set<number>();
 
-    const unusedIdReceiver = get().unusedIdReceiver;
-    let unusedSensorId = get().unusedIdSensor;
-    const newPclSensors: PclSensor[] = transmitters.map((tx) => {
-      const sensor: PclSensor = {
-        id: unusedSensorId,
-        transmitter: tx,
-        receiver: rx,
-        error_model: {
-          min_bistatic_range_uncertainty: 0,
-          max_bistatic_range_uncertainty: 0,
-          min_doppler_uncertainty: 0,
-          max_doppler_uncertainty: 0,
-        },
+    set((state) => {
+      const { sensors, unusedIdSensor } = rebuildPclSensorsFor(
+        rx.id,
+        rx,
+        initialIds,
+        fmTransmitters,
+        state.pclSensors,
+        state.unusedIdSensor,
+      );
+      for (const sensor of sensors.filter((s) => s.receiver.id === rx.id)) {
+        useGuiStateStore.getState().showSensor(sensor.id);
+      }
+
+      const newTransmitterIds = structuredClone(state.pclTransmitterIds);
+      newTransmitterIds.set(rx.id, initialIds);
+      const newCriteria = structuredClone(state.pclTxCriteria);
+      newCriteria.set(rx.id, criteria);
+
+      return {
+        pclReceivers: [...state.pclReceivers, rx],
+        pclSensors: sensors,
+        pclTransmitterIds: newTransmitterIds,
+        pclTxCriteria: newCriteria,
+        unusedIdSensor,
+        unusedIdReceiver: Math.max(state.unusedIdReceiver, rx.id + 1),
       };
-      unusedSensorId += 1;
-      return sensor;
-    });
-
-    const oldPclSensors: PclSensor[] = get().pclSensors.filter(
-      (sensor) => sensor.receiver.id !== rx.id,
-    );
-    const sensors = [...oldPclSensors, ...newPclSensors];
-    for (const sensor of sensors) {
-      useGuiStateStore.getState().showSensor(sensor.id);
-    }
-
-    const newCriteria = structuredClone(get().pclTxCriteria);
-    newCriteria.set(rx.id, criteria);
-
-    set({
-      pclSensors: sensors,
-      unusedIdSensor: unusedSensorId,
-      unusedIdReceiver: Math.max(unusedIdReceiver, rx.id + 1),
-      pclTxCriteria: newCriteria,
     });
   },
+
+  updatePclReceiverSettings: (rx: Receiver) =>
+    set((state) => {
+      const index = state.pclReceivers.findIndex((r) => r.id === rx.id);
+      if (index < 0) {
+        throw new Error("Cannot edit receiver that does not exist!");
+      }
+      const newReceivers = structuredClone(state.pclReceivers);
+      newReceivers[index] = rx;
+
+      const transmitterIds =
+        state.pclTransmitterIds.get(rx.id) ?? new Set<number>();
+      const { sensors, unusedIdSensor } = rebuildPclSensorsFor(
+        rx.id,
+        rx,
+        transmitterIds,
+        useGuiStateStore.getState().fmTransmitters,
+        state.pclSensors,
+        state.unusedIdSensor,
+      );
+
+      return {
+        pclReceivers: newReceivers,
+        pclSensors: sensors,
+        unusedIdSensor,
+      };
+    }),
+
+  updatePclTxCriteria: (receiverId: number, criteria: PclTxSelectionCriteria) =>
+    set((state) => {
+      const newCriteria = structuredClone(state.pclTxCriteria);
+      newCriteria.set(receiverId, criteria);
+      return { pclTxCriteria: newCriteria };
+    }),
+
+  togglePclTransmitter: (receiverId: number, transmitterId: number) =>
+    set((state) => {
+      const receiver = state.pclReceivers.find((r) => r.id === receiverId);
+      if (!receiver) {
+        throw new Error(
+          "Cannot toggle transmitter for receiver that does not exist!",
+        );
+      }
+
+      const currentIds =
+        state.pclTransmitterIds.get(receiverId) ?? new Set<number>();
+      const newIds = new Set(currentIds);
+      if (newIds.has(transmitterId)) {
+        newIds.delete(transmitterId);
+      } else {
+        newIds.add(transmitterId);
+      }
+
+      const { sensors, unusedIdSensor } = rebuildPclSensorsFor(
+        receiverId,
+        receiver,
+        newIds,
+        useGuiStateStore.getState().fmTransmitters,
+        state.pclSensors,
+        state.unusedIdSensor,
+      );
+      for (const sensor of sensors.filter(
+        (s) => s.receiver.id === receiverId,
+      )) {
+        useGuiStateStore.getState().showSensor(sensor.id);
+      }
+
+      const newTransmitterIds = structuredClone(state.pclTransmitterIds);
+      newTransmitterIds.set(receiverId, newIds);
+
+      return {
+        pclTransmitterIds: newTransmitterIds,
+        pclSensors: sensors,
+        unusedIdSensor,
+      };
+    }),
+
+  selectAllMatchingCriteria: async (receiverId: number) => {
+    const state = get();
+    const receiver = state.pclReceivers.find((r) => r.id === receiverId);
+    const criteria = state.pclTxCriteria.get(receiverId);
+    if (!receiver || !criteria) {
+      throw new Error(
+        "Cannot select transmitters for receiver that does not exist!",
+      );
+    }
+    const fmTransmitters = useGuiStateStore.getState().fmTransmitters;
+    const matchingIds = await matchingTransmitterIds(
+      receiver.point,
+      criteria,
+      fmTransmitters,
+    );
+
+    set((state) => {
+      const currentIds =
+        state.pclTransmitterIds.get(receiverId) ?? new Set<number>();
+      const newIds = new Set(currentIds);
+      for (const id of matchingIds) {
+        newIds.add(id);
+      }
+
+      const { sensors, unusedIdSensor } = rebuildPclSensorsFor(
+        receiverId,
+        receiver,
+        newIds,
+        fmTransmitters,
+        state.pclSensors,
+        state.unusedIdSensor,
+      );
+      for (const sensor of sensors.filter(
+        (s) => s.receiver.id === receiverId,
+      )) {
+        useGuiStateStore.getState().showSensor(sensor.id);
+      }
+
+      const newTransmitterIds = structuredClone(state.pclTransmitterIds);
+      newTransmitterIds.set(receiverId, newIds);
+
+      return {
+        pclTransmitterIds: newTransmitterIds,
+        pclSensors: sensors,
+        unusedIdSensor,
+      };
+    });
+  },
+
+  deletePclReceiver: (receiverId: number) =>
+    set((state) => {
+      const sensorIds = new Set(
+        state.pclSensors
+          .filter((sensor) => sensor.receiver.id === receiverId)
+          .map((sensor) => sensor.id),
+      );
+      for (const sensorId of sensorIds) {
+        useSimulationStore.getState().deleteSensor(sensorId);
+      }
+
+      const newTransmitterIds = structuredClone(state.pclTransmitterIds);
+      newTransmitterIds.delete(receiverId);
+      const newCriteria = structuredClone(state.pclTxCriteria);
+      newCriteria.delete(receiverId);
+
+      return {
+        pclReceivers: state.pclReceivers.filter((r) => r.id !== receiverId),
+        pclSensors: state.pclSensors.filter(
+          (sensor) => !sensorIds.has(sensor.id),
+        ),
+        pclTransmitterIds: newTransmitterIds,
+        pclTxCriteria: newCriteria,
+      };
+    }),
 }));
 
 function calculateAntennaGain(

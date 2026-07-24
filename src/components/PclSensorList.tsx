@@ -5,29 +5,33 @@ import { useGuiStateStore } from "../context/GuiStateStore";
 
 import type { LatLng } from "leaflet";
 import { elevationAt } from "../backend/backend";
-import SensorListItem from "./SensorListItem";
+import PclReceiverListItem from "./PclReceiverListItem";
 
 export default function PclSensorList() {
-  const sensors = useScenarioStore((state) => state.pclSensors);
+  const receivers = useScenarioStore((state) => state.pclReceivers);
 
   const highlightedReceiverId = useGuiStateStore(
     (state) => state.selectedReceiverId,
   );
 
-  const addSensor = useScenarioStore((state) => state.updatePclReceiver);
+  const addPclReceiver = useScenarioStore((state) => state.addPclReceiver);
   const unusedIdReceiver = useScenarioStore((state) => state.unusedIdReceiver);
   const setMapClickListener = useGuiStateStore(
     (state) => state.setMapClickListener,
+  );
+  const selectReceiver = useGuiStateStore((state) => state.selectReceiver);
+  const setPclSelectionReceiverId = useGuiStateStore(
+    (state) => state.setPclSelectionReceiverId,
   );
 
   return (
     <fieldset className="SensorList">
       <legend>Sensor List</legend>
-      {sensors.map((sensor, i) => (
-        <SensorListItem
-          key={i}
-          sensor={sensor}
-          isHighlighted={sensor.receiver.id == highlightedReceiverId}
+      {receivers.map((receiver) => (
+        <PclReceiverListItem
+          key={receiver.id}
+          receiver={receiver}
+          isHighlighted={receiver.id == highlightedReceiverId}
         />
       ))}
       <Button
@@ -51,9 +55,14 @@ export default function PclSensorList() {
                 point,
                 unusedIdReceiver,
               );
-              addSensor(newRadar, {
+              addPclReceiver(newRadar, {
                 min_power: minPower,
                 max_dist: maxDistance,
+              }).then(() => {
+                // Drop straight into transmitter selection mode so the user
+                // can immediately fine-tune the just-created receiver.
+                selectReceiver(newRadar.id);
+                setPclSelectionReceiverId(newRadar.id);
               });
 
               // Deactivate the listener.

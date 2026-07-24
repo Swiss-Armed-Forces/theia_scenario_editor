@@ -13,8 +13,26 @@ function App() {
     function handleKeyDown(e: KeyboardEvent) {
       if (e.key == "Delete") {
         const receiverId = useGuiStateStore.getState().selectedReceiverId;
-        if (receiverId !== null) {
-          useScenarioStore.getState().deleteReceiver(receiverId, true);
+        if (receiverId === null) {
+          return;
+        }
+        const scenarioStore = useScenarioStore.getState();
+        if (
+          scenarioStore.blueMonostaticSensors.some(
+            (sensor) => sensor.receiver.id === receiverId,
+          )
+        ) {
+          scenarioStore.deleteReceiver(receiverId, true);
+        } else if (
+          scenarioStore.redMonostaticSensors.some(
+            (sensor) => sensor.receiver.id === receiverId,
+          )
+        ) {
+          scenarioStore.deleteReceiver(receiverId, false);
+        } else if (
+          scenarioStore.pclReceivers.some((r) => r.id === receiverId)
+        ) {
+          scenarioStore.deletePclReceiver(receiverId);
         }
       }
     }

@@ -1,3 +1,4 @@
+import { Button } from "@mui/material";
 import { useGuiStateStore } from "../context/GuiStateStore";
 import { useScenarioStore } from "../context/ScenarioStore";
 import type { Point } from "../types/types";
@@ -7,20 +8,35 @@ export default function PclSensorSettings() {
   const selectedReceiverId = useGuiStateStore(
     (state) => state.selectedReceiverId,
   );
-  const receiver = useScenarioStore((state) => state.pclSensors).find(
-    (sensor) => sensor.receiver.id === selectedReceiverId,
-  )?.receiver;
+  const receiver = useScenarioStore((state) => state.pclReceivers).find(
+    (r) => r.id === selectedReceiverId,
+  );
 
-  const updatePclReceiver = useScenarioStore(
-    (state) => state.updatePclReceiver,
+  const updatePclReceiverSettings = useScenarioStore(
+    (state) => state.updatePclReceiverSettings,
+  );
+  const updatePclTxCriteria = useScenarioStore(
+    (state) => state.updatePclTxCriteria,
+  );
+  const selectAllMatchingCriteria = useScenarioStore(
+    (state) => state.selectAllMatchingCriteria,
   );
 
   const criteria = useScenarioStore((state) => state.pclTxCriteria).get(
     receiver?.id ?? -1,
   );
-  if (receiver && !criteria) {
-    throw new Error("Criteria must be defined. Unexpected behaviour.");
-  }
+  const selectedCount = useScenarioStore(
+    (state) => state.pclTransmitterIds.get(receiver?.id ?? -1)?.size ?? 0,
+  );
+
+  const pclSelectionReceiverId = useGuiStateStore(
+    (state) => state.pclSelectionReceiverId,
+  );
+  const setPclSelectionReceiverId = useGuiStateStore(
+    (state) => state.setPclSelectionReceiverId,
+  );
+  const isSelecting =
+    receiver !== undefined && pclSelectionReceiverId === receiver.id;
 
   let content = <></>;
   if (receiver && criteria) {
@@ -32,7 +48,7 @@ export default function PclSensorSettings() {
           point={receiver.point}
           setPoint={(p: Point) => {
             newReceiver.point = p;
-            updatePclReceiver(newReceiver, criteria);
+            updatePclReceiverSettings(newReceiver);
           }}
         />
         <label>Antenna height</label>
@@ -43,7 +59,7 @@ export default function PclSensorSettings() {
           onChange={(event) => {
             const value = parseFloat(event.target.value);
             newReceiver.antenna_height = value;
-            updatePclReceiver(newReceiver, criteria);
+            updatePclReceiverSettings(newReceiver);
           }}
         />
         <label>Antenna diameter</label>
@@ -54,7 +70,7 @@ export default function PclSensorSettings() {
           onChange={(event) => {
             const value = parseFloat(event.target.value);
             newReceiver.diameter = value;
-            updatePclReceiver(newReceiver, criteria);
+            updatePclReceiverSettings(newReceiver);
           }}
         />
         <label>Antenna efficiency value</label>
@@ -65,7 +81,7 @@ export default function PclSensorSettings() {
           onChange={(event) => {
             const value = parseFloat(event.target.value);
             newReceiver.antenna_efficiency_value = value;
-            updatePclReceiver(newReceiver, criteria);
+            updatePclReceiverSettings(newReceiver);
           }}
         />
         <label>Receiver gain [dB]</label>
@@ -75,7 +91,7 @@ export default function PclSensorSettings() {
           onChange={(event) => {
             const value = parseFloat(event.target.value);
             newReceiver.gain = value;
-            updatePclReceiver(newReceiver, criteria);
+            updatePclReceiverSettings(newReceiver);
           }}
         />
         <label>Receiver losses [dB]</label>
@@ -85,7 +101,7 @@ export default function PclSensorSettings() {
           onChange={(event) => {
             const value = parseFloat(event.target.value);
             newReceiver.losses = value;
-            updatePclReceiver(newReceiver, criteria);
+            updatePclReceiverSettings(newReceiver);
           }}
         />
         <label>Receiver noise temperature [K]</label>
@@ -95,7 +111,7 @@ export default function PclSensorSettings() {
           onChange={(event) => {
             const value = parseFloat(event.target.value);
             newReceiver.noise_temperature = value;
-            updatePclReceiver(newReceiver, criteria);
+            updatePclReceiverSettings(newReceiver);
           }}
         />
         <label>T rotation [s]</label>
@@ -105,7 +121,7 @@ export default function PclSensorSettings() {
           onChange={(event) => {
             const value = parseInt(event.target.value);
             newReceiver.rotation_time = value;
-            updatePclReceiver(newReceiver, criteria);
+            updatePclReceiverSettings(newReceiver);
           }}
         />
         <label>Noise Bandwidth [MHz]</label>
@@ -115,31 +131,57 @@ export default function PclSensorSettings() {
           onChange={(event) => {
             const value = parseInt(event.target.value);
             newReceiver.bandwidth = value;
-            updatePclReceiver(newReceiver, criteria);
+            updatePclReceiverSettings(newReceiver);
           }}
         />
-        <label>Select Tx with P [W] &gt;= </label>
+        <label>Highlight Tx with P [W] &gt;= </label>
         <input
           type="number"
           value={criteria.min_power}
           onChange={(event) => {
             const value = parseInt(event.target.value);
-            const newCriteria = structuredClone(criteria)
+            const newCriteria = structuredClone(criteria);
             newCriteria.min_power = value;
-            updatePclReceiver(newReceiver, newCriteria);
+            updatePclTxCriteria(receiver.id, newCriteria);
           }}
         />
-        <label>Select Tx with d [m] &lt;= </label>
+        <label>Highlight Tx with d [m] &lt;= </label>
         <input
           type="number"
           value={criteria.max_dist}
           onChange={(event) => {
             const value = parseInt(event.target.value);
-            const newCriteria = structuredClone(criteria)
+            const newCriteria = structuredClone(criteria);
             newCriteria.max_dist = value;
-            updatePclReceiver(newReceiver, newCriteria);
+            updatePclTxCriteria(receiver.id, newCriteria);
           }}
         />
+        <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+          <span>{selectedCount} transmitter(s) selected</span>
+          {isSelecting ? (
+            <>
+              <Button
+                variant="contained"
+                onClick={() => selectAllMatchingCriteria(receiver.id)}
+              >
+                Select all matching filter
+              </Button>
+              <Button
+                variant="outlined"
+                onClick={() => setPclSelectionReceiverId(null)}
+              >
+                Done
+              </Button>
+            </>
+          ) : (
+            <Button
+              variant="contained"
+              onClick={() => setPclSelectionReceiverId(receiver.id)}
+            >
+              Select transmitters&hellip;
+            </Button>
+          )}
+        </div>
       </>
     );
   }

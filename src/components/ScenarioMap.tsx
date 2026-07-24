@@ -1,4 +1,5 @@
 import {
+  Circle,
   GeoJSON,
   MapContainer,
   Marker,
@@ -15,7 +16,6 @@ import { useState } from "react";
 import type {
   LatLonHeightGrid,
   MonostaticSensor,
-  PclSensor,
   Point,
   Receiver,
   Transmitter,
@@ -26,6 +26,7 @@ import { useScenarioStore } from "../context/ScenarioStore";
 import { useGuiStateStore } from "../context/GuiStateStore";
 import { useSimulationStore } from "../context/SimulationResultStore";
 import { elevationAt } from "../backend/backend";
+import { haversineDistance } from "../util/geo";
 
 function PclGridMarker({ grid }: { grid: LatLonHeightGrid }) {
   return (
@@ -120,6 +121,12 @@ const highlightedFmTransmitterIcon = L.divIcon({
   iconSize: [24, 24],
   iconAnchor: [12, 12], // center the icon
 });
+const fadedFmTransmitterIcon = L.divIcon({
+  html: `<div style="opacity: 0.35">${neutralTransmitterSymbol.asSVG()}</div>`,
+  className: "", // remove default 'leaflet-div-icon' styles if needed
+  iconSize: [24, 24],
+  iconAnchor: [12, 12], // center the icon
+});
 
 const highlightedRadarIcon = L.divIcon({
   html: `<div style="border: 2px solid red; width: fit-content; height: fit-content">${friendlyRadarSymbol.asSVG()}</div>`,
@@ -194,23 +201,73 @@ function ReceiverMarker({
   );
 }
 
-function PclSensorMarker({ sensor }: { sensor: PclSensor }) {
-  const selectedReceiverId = useGuiStateStore(
-    (state) => state.selectedReceiverId,
-  );
+// Renders every known FM transmitter around a receiver that's currently in
+// "select transmitters" mode, so the user can click markers directly on the
+// map to toggle their association. Distance-based highlighting here uses a
+// fast client-side straight-line estimate rather than the backend's
+// terrain-aware line-of-sight check, so it can update live as the user drags
+// the distance filter without a network round trip per keystroke.
+// Stable empty-set singleton: a fallback of `new Set()` inside a Zustand
+// selector would return a fresh reference on every call and trigger an
+// infinite render loop via useSyncExternalStore's snapshot comparison.
+const EMPTY_TRANSMITTER_IDS = new Set<number>();
 
-  const isHighlighted = selectedReceiverId === sensor.receiver.id;
+function PclTransmitterSelectionLayer({ receiverId }: { receiverId: number }) {
+  const receiver = useScenarioStore((state) =>
+    state.pclReceivers.find((r) => r.id === receiverId),
+  );
+  const criteria = useScenarioStore((state) =>
+    state.pclTxCriteria.get(receiverId),
+  );
+  const selectedIds =
+    useScenarioStore((state) => state.pclTransmitterIds.get(receiverId)) ??
+    EMPTY_TRANSMITTER_IDS;
+  const togglePclTransmitter = useScenarioStore(
+    (state) => state.togglePclTransmitter,
+  );
+  const fmTransmitters = useGuiStateStore((state) => state.fmTransmitters);
+
+  if (!receiver || !criteria) {
+    return null;
+  }
 
   return (
     <>
-      <FmTransmitterMarker
-        transmitter={sensor.transmitter}
-        isHighlighted={isHighlighted}
+      <Circle
+        center={[receiver.point.lat, receiver.point.lon]}
+        radius={criteria.max_dist}
+        pathOptions={{ fill: false, color: "blue", dashArray: "4, 4" }}
       />
-      <ReceiverMarker
-        receiver={sensor.receiver}
-        isHighlighted={isHighlighted}
-      />
+      {fmTransmitters.map((tx) => {
+        const isSelected = selectedIds.has(tx.id);
+        const isCandidate =
+          !isSelected &&
+          tx.power >= criteria.min_power &&
+          haversineDistance(tx.point, receiver.point) <= criteria.max_dist;
+        const icon = isSelected
+          ? highlightedFmTransmitterIcon
+          : isCandidate
+            ? fmTransmitterIcon
+            : fadedFmTransmitterIcon;
+        return (
+          <Marker
+            key={tx.id}
+            position={[tx.point.lat, tx.point.lon]}
+            icon={icon}
+            eventHandlers={{
+              click: () => togglePclTransmitter(receiverId, tx.id),
+            }}
+          >
+            <Tooltip>
+              FM Transmitter #{tx.id}
+              <br />
+              Power = {tx.power.toFixed(0)}W
+              <br />
+              {isSelected ? "Selected (click to remove)" : "Click to select"}
+            </Tooltip>
+          </Marker>
+        );
+      })}
     </>
   );
 }
@@ -221,6 +278,7 @@ export default function ScenarioMap() {
   const blueMonostaticSensors = useScenarioStore(
     (state) => state.blueMonostaticSensors,
   ).filter((sensor) => visibleSensorIds.has(sensor.id));
+  const pclReceivers = useScenarioStore((state) => state.pclReceivers);
   const pclSensors = useScenarioStore((state) => state.pclSensors).filter(
     (sensor) => visibleSensorIds.has(sensor.id),
   );
@@ -230,6 +288,12 @@ export default function ScenarioMap() {
 
   const pclCalcGrid = useGuiStateStore(
     (state) => state.pclCoverageCalcConf.grid,
+  );
+  const selectedReceiverId = useGuiStateStore(
+    (state) => state.selectedReceiverId,
+  );
+  const pclSelectionReceiverId = useGuiStateStore(
+    (state) => state.pclSelectionReceiverId,
   );
 
   return (
@@ -243,9 +307,25 @@ export default function ScenarioMap() {
       {blueMonostaticSensors.map((sensor, i) => (
         <MonostaticRadarMarker key={i} radar={sensor}></MonostaticRadarMarker>
       ))}
-      {pclSensors.map((sensor, i) => (
-        <PclSensorMarker key={i} sensor={sensor} />
+      {pclReceivers.map((receiver) => (
+        <ReceiverMarker
+          key={receiver.id}
+          receiver={receiver}
+          isHighlighted={selectedReceiverId === receiver.id}
+        />
       ))}
+      {pclSensors
+        .filter((sensor) => sensor.receiver.id !== pclSelectionReceiverId)
+        .map((sensor) => (
+          <FmTransmitterMarker
+            key={sensor.id}
+            transmitter={sensor.transmitter}
+            isHighlighted={selectedReceiverId === sensor.receiver.id}
+          />
+        ))}
+      {pclSelectionReceiverId !== null && (
+        <PclTransmitterSelectionLayer receiverId={pclSelectionReceiverId} />
+      )}
       {blueMonostaticCoverages.map(([_sensorId, coverage, date]) => (
         <GeoJSON key={`Coverage ${_sensorId}_${date}`} data={coverage} />
       ))}

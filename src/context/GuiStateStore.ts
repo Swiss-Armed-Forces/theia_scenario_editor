@@ -16,6 +16,8 @@ interface GuiStateStore {
   mapClickListener: MapClickListener | null;
   setMapClickListener: (listener: MapClickListener | null) => void;
   selectReceiver: (receiverId: number | null) => void;
+  pclSelectionReceiverId: number | null;
+  setPclSelectionReceiverId: (receiverId: number | null) => void;
   showSensor: (sensorId: number) => void;
   hideSensor: (sensorId: number) => void;
   updateMonostaticCoverageCalcConf: (conf: MonostaticCoverageCalcConf) => void;
@@ -58,6 +60,11 @@ export const useGuiStateStore = create<GuiStateStore>((set) => ({
   selectReceiver: (receiverId) =>
     set((_state) => {
       return { selectedReceiverId: receiverId };
+    }),
+  pclSelectionReceiverId: null,
+  setPclSelectionReceiverId: (receiverId) =>
+    set((_state) => {
+      return { pclSelectionReceiverId: receiverId };
     }),
   showSensor: (sensorId) =>
     set((state) => {

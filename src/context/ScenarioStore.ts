@@ -17,7 +17,7 @@ interface ScenarioStore {
 export const useScenarioStore = create<ScenarioStore>((set) => ({
   blueMonostaticSensors: [],
   redMonostaticSensors: [],
-  unusedIdMonostaticSensor: 0,
+  unusedIdSensor: 0,
   unusedIdReceiver: 0,
   unusedIdTransmitter: 0,
 
@@ -42,27 +42,27 @@ export const useScenarioStore = create<ScenarioStore>((set) => ({
       if (isBlue) {
         return {
           blueMonostaticSensors: newSensors,
-          unusedIdMonostaticSensor: Math.max(
-            state.unusedIdMonostaticSensor,
-            sensor.id + 1,
+          unusedIdSensor: Math.max(state.unusedIdSensor, sensor.id + 1),
+          unusedIdReceiver: Math.max(
+            state.unusedIdReceiver,
+            sensor.receiver.id + 1,
           ),
-          unusedIdReceiver: Math.max(state.unusedIdReceiver, sensor.id + 1),
           unusedIdTransmitter: Math.max(
             state.unusedIdTransmitter,
-            sensor.id + 1,
+            sensor.transmitter.id + 1,
           ),
         };
       } else {
         return {
           redMonostaticSensors: newSensors,
-          unusedIdMonostaticSensor: Math.max(
-            state.unusedIdMonostaticSensor,
-            sensor.id + 1,
+          unusedIdSensor: Math.max(state.unusedIdSensor, sensor.id + 1),
+          unusedIdReceiver: Math.max(
+            state.unusedIdReceiver,
+            sensor.receiver.id + 1,
           ),
-          unusedIdReceiver: Math.max(state.unusedIdReceiver, sensor.id + 1),
           unusedIdTransmitter: Math.max(
             state.unusedIdTransmitter,
-            sensor.id + 1,
+            sensor.transmitter.id + 1,
           ),
         };
       }

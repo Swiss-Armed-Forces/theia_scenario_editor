@@ -14,7 +14,7 @@ export default function AddRadars({
 }) {
   const addSensor = useScenarioStore((state) => state.addMonostaticSensor);
   const unusedIdMonostaticSensor = useScenarioStore(
-    (state) => state.unusedIdMonostaticSensor,
+    (state) => state.unusedIdSensor,
   );
   const unusedIdReceiver = useScenarioStore((state) => state.unusedIdReceiver);
   const unusedIdTransmitter = useScenarioStore(

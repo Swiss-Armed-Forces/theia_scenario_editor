@@ -9,6 +9,7 @@ export const POLARIZATION_VERTICAL = 1;
 export type MonostaticSensor = components["schemas"]["MonostaticSensor-Input"];
 export type PclSensor = components["schemas"]["PclSensor-Input"];
 export type GeoJSONFeature = components["schemas"]["GeoJSONFeature"];
+export type LatLonHeightGrid = components["schemas"]["LatLonHeightGrid"];
 
 export type Sensor = MonostaticSensor | PclSensor;
 

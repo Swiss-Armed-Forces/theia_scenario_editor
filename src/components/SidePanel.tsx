@@ -8,6 +8,7 @@ import MonostaticCoverageCalcSettings from "./MonostaticCoverageCalcSettings";
 import MonostaticSensorSettings from "./MonostaticSensorSettings";
 import PclSensorList from "./PclSensorList";
 import PclSensorSettings from "./PclSensorSettings";
+import PclCoverageCalcSettings from "./PclCoverageCalcSettings";
 
 export default function SidePanel() {
   const [activeTab, setActiveTab] = useState(0);
@@ -60,6 +61,10 @@ export default function SidePanel() {
           <div className="sidePanelSection">
             <PclSensorSettings />
             <PclSensorList />
+            <PclCoverageCalcSettings />
+            <Button variant="contained" onClick={(_event) => {}}>
+              Calculate min. det. RCS
+            </Button>
           </div>
         )}
       </Box>

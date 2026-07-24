@@ -3,6 +3,7 @@ import {
   MapContainer,
   Marker,
   Popup,
+  Rectangle,
   ScaleControl,
   TileLayer,
   Tooltip,
@@ -12,6 +13,7 @@ import "leaflet/dist/leaflet.css";
 import { DEFAULT_MAP_CENTER } from "../util/constants";
 import { useState } from "react";
 import type {
+  LatLonHeightGrid,
   MonostaticSensor,
   PclSensor,
   Point,
@@ -24,6 +26,20 @@ import { useScenarioStore } from "../context/ScenarioStore";
 import { useGuiStateStore } from "../context/GuiStateStore";
 import { useSimulationStore } from "../context/SimulationResultStore";
 import { elevationAt } from "../backend/backend";
+
+function PclGridMarker({ grid }: { grid: LatLonHeightGrid }) {
+  return (
+    <Rectangle
+      bounds={[
+        [grid.lat_start, grid.lon_start],
+        [grid.lat_stop, grid.lon_stop],
+      ]}
+      pathOptions={{ fill: false, color: "black", dashArray: "5, 5" }}
+    >
+      <Tooltip>PCL coverage calculation grid</Tooltip>
+      </Rectangle>
+  );
+}
 
 function ClickMarker() {
   const [pos, setPos] = useState<Point | null>(null);
@@ -211,6 +227,11 @@ export default function ScenarioMap() {
   const blueMonostaticCoverages = useSimulationStore(
     (state) => state.monostaticCoverages,
   ).filter(([sensorId, _coverage, _date]) => visibleSensorIds.has(sensorId));
+
+  const pclCalcGrid = useGuiStateStore(
+    (state) => state.pclCoverageCalcConf.grid,
+  );
+
   return (
     <MapContainer center={DEFAULT_MAP_CENTER} zoom={10}>
       <TileLayer
@@ -228,6 +249,7 @@ export default function ScenarioMap() {
       {blueMonostaticCoverages.map(([_sensorId, coverage, date]) => (
         <GeoJSON key={`Coverage ${_sensorId}_${date}`} data={coverage} />
       ))}
+      <PclGridMarker grid={pclCalcGrid} />
     </MapContainer>
   );
 }

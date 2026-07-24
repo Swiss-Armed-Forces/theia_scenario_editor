@@ -2,7 +2,9 @@ import createClient from "openapi-fetch";
 import type { paths } from "../types/schema";
 import type {
   GeoJSONFeature,
+  LatLonHeightGrid,
   MonostaticSensor,
+  PclSensor,
   Point,
   Transmitter,
 } from "../types/types";
@@ -15,6 +17,13 @@ export interface MonostaticCoverageCalcConf {
   probabilityThreshold: number;
   azimuthResolution: number;
   rangeOnly: boolean;
+}
+
+export interface PclCoverageCalcConf {
+  grid: LatLonHeightGrid;
+  snrThreshold: number;
+  dopplerThreshold: number;
+  delayThreshold: number;
 }
 
 export async function calculateMonostaticCoverage(
@@ -32,6 +41,26 @@ export async function calculateMonostaticCoverage(
       },
     },
     body: sensor,
+  });
+
+  if (error) {
+    throw new Error(JSON.stringify(error));
+  }
+
+  return data;
+}
+
+export async function calculatePclMinimumDetectableRcs(
+  sensor: PclSensor,
+  conf: PclCoverageCalcConf,
+): Promise<number[][][]> {
+  const { data, error } = await client.POST("/calculate_min_detectable_rcs", {
+    query: {
+      snr_threshold: conf.snrThreshold,
+      doppler_threshold: conf.dopplerThreshold,
+      delay_threshold: conf.delayThreshold,
+    },
+    body: { sensor: sensor, grid: conf.grid },
   });
 
   if (error) {

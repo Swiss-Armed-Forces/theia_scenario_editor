@@ -133,6 +133,7 @@ body, html {
     gap: 10px;
     min-height: 20%;
     max-height: 20%;
+    overflow-y: scroll;
 }
 
 .SensorList {

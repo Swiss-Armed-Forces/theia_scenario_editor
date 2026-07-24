@@ -18,7 +18,7 @@ export default function MonostaticSensorSettings() {
   let content = <></>;
   if (sensor) {
     content = (
-      <div className="SensorSettingsContainer">
+      <>
         <label>Position</label>
         <PositionSelector
           point={sensor.receiver.point}
@@ -201,13 +201,13 @@ export default function MonostaticSensorSettings() {
             updateMonostaticSensor(newSensor, true);
           }}
         />
-      </div>
+      </>
     );
   }
 
   return (
     <fieldset
-      className="SettingsContainer"
+      className="SensorSettingsContainer"
       style={{ maxHeight: "30%", overflow: "scroll" }}
     >
       <legend>Sensor Settings</legend>

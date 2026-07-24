@@ -1,5 +1,4 @@
 import { Button } from "@mui/material";
-import AddRadars from "./AddRadars";
 import SensorList from "./SensorList";
 import { useSimulationStore } from "../context/SimulationResultStore";
 import { useGuiStateStore } from "../context/GuiStateStore";
@@ -24,7 +23,6 @@ export default function SidePanel() {
   );
   return (
     <div className="sidePanel">
-      <AddRadars />
       <MonostaticSensorSettings />
       <SensorList />
       <CoverageCalcSettings />

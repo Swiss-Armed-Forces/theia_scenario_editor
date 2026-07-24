@@ -1,9 +1,14 @@
-import { Box, IconButton } from "@mui/material";
+import { Box, Button, IconButton } from "@mui/material";
 import { useScenarioStore } from "../context/ScenarioStore";
-import type { MonostaticSensor } from "../types/types";
+import {
+  buildDefaultMonostaticSensor,
+  type MonostaticSensor,
+} from "../types/types";
 import { useGuiStateStore } from "../context/GuiStateStore";
 import iconVisible from "../assets/eye-regular.png";
 import iconHidden from "../assets/eye-slash-regular.png";
+import type { LatLng } from "leaflet";
+import { elevationAt } from "../backend/backend";
 
 function SensorListItem({
   sensor,
@@ -59,6 +64,18 @@ export default function SensorList() {
     (state) => state.selectedReceiverId,
   );
 
+  const addSensor = useScenarioStore((state) => state.addMonostaticSensor);
+  const unusedIdMonostaticSensor = useScenarioStore(
+    (state) => state.unusedIdSensor,
+  );
+  const unusedIdReceiver = useScenarioStore((state) => state.unusedIdReceiver);
+  const unusedIdTransmitter = useScenarioStore(
+    (state) => state.unusedIdTransmitter,
+  );
+  const setMapClickListener = useGuiStateStore(
+    (state) => state.setMapClickListener,
+  );
+
   return (
     <fieldset className="SensorList">
       <legend>Sensor List</legend>
@@ -69,6 +86,37 @@ export default function SensorList() {
           isHighlighted={sensor.receiver.id == highlightedReceiverId}
         />
       ))}
+      <Button
+        variant="contained"
+        onClick={() => {
+          // We need the "() => " because otherwise, the return value would be
+          // considered an updater function.
+          // However, we want the function itself to be the values, so we define
+          // a trivial updater function that simply returns our callback.
+          setMapClickListener((p: LatLng) => {
+            // Add the radar.
+            // TODO: Select blue or red!
+            elevationAt(p.lat, p.lng).then((alt) => {
+              const newRadar = buildDefaultMonostaticSensor(
+                {
+                  lat: p.lat,
+                  lon: p.lng,
+                  alt: alt,
+                },
+                unusedIdReceiver,
+                unusedIdTransmitter,
+                unusedIdMonostaticSensor,
+              );
+              addSensor(newRadar, true);
+
+              // Deactivate the listener.
+              setMapClickListener(null);
+            });
+          });
+        }}
+      >
+        +
+      </Button>
     </fieldset>
   );
 }

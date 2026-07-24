@@ -11,7 +11,14 @@ import {
 import "leaflet/dist/leaflet.css";
 import { DEFAULT_MAP_CENTER } from "../util/constants";
 import { useState } from "react";
-import type { MapClickListener, MonostaticSensor, Point } from "../types/types";
+import type {
+  MapClickListener,
+  MonostaticSensor,
+  PclSensor,
+  Point,
+  Receiver,
+  Transmitter,
+} from "../types/types";
 import ms from "milsymbol";
 import L from "leaflet";
 import { useScenarioStore } from "../context/ScenarioStore";
@@ -52,6 +59,13 @@ function ClickMarker({
 }
 
 const friendlyRadarSymbol = new ms.Symbol("10231500002203000000", { size: 24 });
+const friendlyReceiverSymbol = new ms.Symbol("10231500002203000000", {
+  size: 24,
+  additionalInformation: "Receiver",
+});
+const neutralTransmitterSymbol = new ms.Symbol("10042000001212010000", {
+  size: 24,
+});
 // const friendlyReceiverSymbol = new ms.Symbol("10231500002203000000", {
 //   size: 24,
 //   additionalInformation: "Receiver",
@@ -62,6 +76,20 @@ const friendlyRadarSymbol = new ms.Symbol("10231500002203000000", { size: 24 });
 
 const radarIcon = L.divIcon({
   html: friendlyRadarSymbol.asSVG(),
+  className: "", // remove default 'leaflet-div-icon' styles if needed
+  iconSize: [24, 24],
+  iconAnchor: [12, 12], // center the icon
+});
+
+const receiverIcon = L.divIcon({
+  html: friendlyReceiverSymbol.asSVG(),
+  className: "", // remove default 'leaflet-div-icon' styles if needed
+  iconSize: [24, 24],
+  iconAnchor: [12, 12], // center the icon
+});
+
+const fmTransmitterIcon = L.divIcon({
+  html: neutralTransmitterSymbol.asSVG(),
   className: "", // remove default 'leaflet-div-icon' styles if needed
   iconSize: [24, 24],
   iconAnchor: [12, 12], // center the icon
@@ -94,6 +122,41 @@ function MonostaticRadarMarker({ radar }: { radar: MonostaticSensor }) {
   );
 }
 
+function FmTransmitterMarker({ transmitter }: { transmitter: Transmitter }) {
+  return (
+    <Marker
+      position={[transmitter.point.lat, transmitter.point.lon]}
+      icon={fmTransmitterIcon}
+    >
+      <Tooltip>
+        FM Transmitter #{transmitter.id}
+        <br />
+        Power = {transmitter.power.toFixed(0)}W
+      </Tooltip>
+    </Marker>
+  );
+}
+
+function ReceiverMarker({ receiver }: { receiver: Receiver }) {
+  return (
+    <Marker
+      position={[receiver.point.lat, receiver.point.lon]}
+      icon={fmTransmitterIcon}
+    >
+      <Tooltip>Receiver #{receiver.id}</Tooltip>
+    </Marker>
+  );
+}
+
+function PclSensorMarker({ sensor }: { sensor: PclSensor }) {
+  return (
+    <>
+      <FmTransmitterMarker transmitter={sensor.transmitter} />
+      <ReceiverMarker receiver={sensor.receiver} />
+    </>
+  );
+}
+
 export default function ScenarioMap({
   mapClickListener,
 }: {
@@ -101,6 +164,7 @@ export default function ScenarioMap({
 }) {
   // TODO: RED
   const visibleSensorIds = useGuiStateStore((state) => state.visibleSensorIds);
+  const fmTransmitters = useGuiStateStore((state) => state.fmTransmitters);
   const blueMonostaticSensors = useScenarioStore(
     (state) => state.blueMonostaticSensors,
   ).filter((sensor) => visibleSensorIds.has(sensor.id));
@@ -120,6 +184,9 @@ export default function ScenarioMap({
       ))}
       {blueMonostaticCoverages.map(([_sensorId, coverage, date]) => (
         <GeoJSON key={`Coverage ${_sensorId}_${date}`} data={coverage} />
+      ))}
+      {fmTransmitters.map((tx) => (
+        <FmTransmitterMarker key={tx.id} transmitter={tx} />
       ))}
     </MapContainer>
   );

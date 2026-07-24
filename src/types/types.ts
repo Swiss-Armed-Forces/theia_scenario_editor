@@ -7,6 +7,7 @@ export type Transmitter = components["schemas"]["Transmitter-Input"];
 export const POLARIZATION_HORIZONTAL = 0;
 export const POLARIZATION_VERTICAL = 1;
 export type MonostaticSensor = components["schemas"]["MonostaticSensor-Input"];
+export type PclSensor = components["schemas"]["PclSensor-Input"];
 export type GeoJSONFeature = components["schemas"]["GeoJSONFeature"];
 
 export type SensorPortfolio = {

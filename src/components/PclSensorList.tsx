@@ -51,7 +51,10 @@ export default function PclSensorList() {
                 point,
                 unusedIdReceiver,
               );
-              addSensor(newRadar, minPower, maxDistance);
+              addSensor(newRadar, {
+                min_power: minPower,
+                max_dist: maxDistance,
+              });
 
               // Deactivate the listener.
               setMapClickListener(null);

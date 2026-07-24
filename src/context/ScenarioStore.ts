@@ -4,19 +4,18 @@ import { useGuiStateStore } from "./GuiStateStore";
 import { useSimulationStore } from "./SimulationResultStore";
 import { lineOfSightDistance } from "../backend/backend";
 
+export type PclTxSelectionCriteria = { min_power: number; max_dist: number };
+
 interface ScenarioStore {
   blueMonostaticSensors: MonostaticSensor[];
   redMonostaticSensors: MonostaticSensor[];
   pclSensors: PclSensor[];
+  pclTxCriteria: Map<number, PclTxSelectionCriteria>;
   unusedIdSensor: number;
   unusedIdReceiver: number;
   unusedIdTransmitter: number;
   addMonostaticSensor: (sensor: MonostaticSensor, isBlue: boolean) => void;
-  updatePclReceiver: (
-    rx: Receiver,
-    tx_min_power: number,
-    max_distance: number,
-  ) => void;
+  updatePclReceiver: (rx: Receiver, criteria: PclTxSelectionCriteria) => void;
   deleteReceiver: (receiverId: number, isBlue: boolean) => void;
   updateMonostaticSensor: (sensor: MonostaticSensor, isBlue: boolean) => void;
 }
@@ -25,6 +24,7 @@ export const useScenarioStore = create<ScenarioStore>((set, get) => ({
   blueMonostaticSensors: [],
   redMonostaticSensors: [],
   pclSensors: [],
+  pclTxCriteria: new Map<number, { min_power: number; max_dist: number }>(),
   unusedIdSensor: 0,
   unusedIdReceiver: 0,
   unusedIdTransmitter: 0,
@@ -125,19 +125,15 @@ export const useScenarioStore = create<ScenarioStore>((set, get) => ({
       return { blueMonostaticSensors: newSensors };
     }),
 
-  updatePclReceiver: async (
-    rx: Receiver,
-    tx_min_power: number,
-    max_distance: number,
-  ) => {
+  updatePclReceiver: async (rx: Receiver, criteria: PclTxSelectionCriteria) => {
     // const transmitters =
     const fulfillsConditions = await Promise.all(
       useGuiStateStore.getState().fmTransmitters.map((tx) => {
-        if (tx.power < tx_min_power) {
+        if (tx.power < criteria.min_power) {
           return false;
         }
         return lineOfSightDistance(tx.point, rx.point).then(
-          (d) => d <= max_distance,
+          (d) => d <= criteria.max_dist,
         );
       }),
     );
@@ -171,10 +167,14 @@ export const useScenarioStore = create<ScenarioStore>((set, get) => ({
       useGuiStateStore.getState().showSensor(sensor.id);
     }
 
+    const newCriteria = structuredClone(get().pclTxCriteria);
+    newCriteria.set(rx.id, criteria);
+
     set({
       pclSensors: sensors,
       unusedIdSensor: unusedSensorId,
       unusedIdReceiver: Math.max(unusedIdReceiver, rx.id + 1),
+      pclTxCriteria: newCriteria,
     });
   },
 }));

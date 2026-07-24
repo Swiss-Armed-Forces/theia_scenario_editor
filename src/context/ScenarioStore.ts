@@ -17,7 +17,7 @@ interface ScenarioStore {
     tx_min_power: number,
     max_distance: number,
   ) => void;
-  deleteMonostaticSensor: (sensorId: number, isBlue: boolean) => void;
+  deleteReceiver: (receiverId: number, isBlue: boolean) => void;
   updateMonostaticSensor: (sensor: MonostaticSensor, isBlue: boolean) => void;
 }
 
@@ -75,22 +75,32 @@ export const useScenarioStore = create<ScenarioStore>((set, get) => ({
         };
       }
     }),
-  deleteMonostaticSensor: (sensorId: number, isBlue: boolean) =>
+  deleteReceiver: (receiverId: number, isBlue: boolean) =>
     set((state) => {
-      useSimulationStore.getState().deleteSensor(sensorId);
+      // Monostatic sensors: Delete coverage results and the sensor itself.
+      const sensorIds = new Set(
+        state.blueMonostaticSensors
+          .filter((sensor) => sensor.receiver.id === receiverId)
+          .map((sensor) => sensor.id),
+      );
+      for (const sensorId of sensorIds) {
+        useSimulationStore.getState().deleteSensor(sensorId);
+      }
       if (isBlue) {
         return {
           blueMonostaticSensors: state.blueMonostaticSensors.filter(
-            (sensor) => sensor.id != sensorId,
+            (sensor) => !sensorIds.has(sensor.id),
           ),
         };
       } else {
         return {
           redMonostaticSensors: state.redMonostaticSensors.filter(
-            (sensor) => sensor.id != sensorId,
+            (sensor) => !sensorIds.has(sensor.id),
           ),
         };
       }
+
+      // TODO: PCL sensors.
     }),
   updateMonostaticSensor: (sensor: MonostaticSensor, _isBlue: boolean) =>
     set((state) => {

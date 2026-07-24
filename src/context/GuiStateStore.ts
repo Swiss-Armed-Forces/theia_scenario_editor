@@ -7,11 +7,11 @@ import type { Transmitter } from "../types/types";
 import { useScenarioStore } from "./ScenarioStore";
 
 interface GuiStateStore {
-  selectedSensorId: number | null;
+  selectedReceiverId: number | null;
   visibleSensorIds: Set<number>;
   monostaticCoverageCalcConf: MonostaticCoverageCalcConf;
   fmTransmitters: Transmitter[];
-  selectSensor: (sensorId: number | null) => void;
+  selectReceiver: (receiverId: number | null) => void;
   showSensor: (sensorId: number) => void;
   hideSensor: (sensorId: number) => void;
   updateMonostaticCoverageCalcConf: (conf: MonostaticCoverageCalcConf) => void;
@@ -19,7 +19,7 @@ interface GuiStateStore {
 }
 
 export const useGuiStateStore = create<GuiStateStore>((set) => ({
-  selectedSensorId: null,
+  selectedReceiverId: null,
   visibleSensorIds: new Set<number>(),
   fmTransmitters: [],
   monostaticCoverageCalcConf: {
@@ -29,9 +29,9 @@ export const useGuiStateStore = create<GuiStateStore>((set) => ({
     azimuthResolution: 2.0,
     rangeOnly: false,
   },
-  selectSensor: (sensorId) =>
+  selectReceiver: (receiverId) =>
     set((_state) => {
-      return { selectedSensorId: sensorId };
+      return { selectedReceiverId: receiverId };
     }),
   showSensor: (sensorId) =>
     set((state) => {

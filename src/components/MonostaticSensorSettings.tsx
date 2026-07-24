@@ -4,9 +4,11 @@ import type { Point } from "../types/types";
 import PositionSelector from "./PositionSelector";
 
 export default function MonostaticSensorSettings() {
-  const selectedSensorId = useGuiStateStore((state) => state.selectedSensorId);
+  const selectedReceiverId = useGuiStateStore(
+    (state) => state.selectedReceiverId,
+  );
   const sensor = useScenarioStore((state) => state.blueMonostaticSensors).find(
-    (sensor) => sensor.id === selectedSensorId,
+    (sensor) => sensor.receiver.id === selectedReceiverId,
   );
 
   const updateMonostaticSensor = useScenarioStore(

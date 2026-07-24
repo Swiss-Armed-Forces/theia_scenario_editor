@@ -12,9 +12,9 @@ function App() {
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
       if (e.key == "Delete") {
-        const sensorId = useGuiStateStore.getState().selectedSensorId;
-        if (sensorId !== null) {
-          useScenarioStore.getState().deleteMonostaticSensor(sensorId, true);
+        const receiverId = useGuiStateStore.getState().selectedReceiverId;
+        if (receiverId !== null) {
+          useScenarioStore.getState().deleteReceiver(receiverId, true);
         }
       }
     }

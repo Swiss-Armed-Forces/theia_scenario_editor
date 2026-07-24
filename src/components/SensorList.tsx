@@ -55,8 +55,8 @@ export default function SensorList() {
     (state) => state.blueMonostaticSensors,
   );
 
-  const highlightedSensorId = useGuiStateStore(
-    (state) => state.selectedSensorId,
+  const highlightedReceiverId = useGuiStateStore(
+    (state) => state.selectedReceiverId,
   );
 
   return (
@@ -66,7 +66,7 @@ export default function SensorList() {
         <SensorListItem
           key={i}
           sensor={sensor}
-          isHighlighted={sensor.id == highlightedSensorId}
+          isHighlighted={sensor.receiver.id == highlightedReceiverId}
         />
       ))}
     </fieldset>

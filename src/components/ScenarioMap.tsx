@@ -103,17 +103,19 @@ const highlightedRadarIcon = L.divIcon({
 });
 
 function MonostaticRadarMarker({ radar }: { radar: MonostaticSensor }) {
-  const selectedSensorId = useGuiStateStore((state) => state.selectedSensorId);
-  const selectSensor = useGuiStateStore((state) => state.selectSensor);
+  const selectedReceiverId = useGuiStateStore(
+    (state) => state.selectedReceiverId,
+  );
+  const selectReceiver = useGuiStateStore((state) => state.selectReceiver);
 
-  const isHighlighted = selectedSensorId === radar.id;
+  const isHighlighted = selectedReceiverId === radar.receiver.id;
   return (
     <Marker
       position={[radar.receiver.point.lat, radar.receiver.point.lon]}
       icon={isHighlighted ? highlightedRadarIcon : radarIcon}
       eventHandlers={{
         click: () => {
-          selectSensor(isHighlighted ? null : radar.id);
+          selectReceiver(isHighlighted ? null : radar.receiver.id);
         },
       }}
     >

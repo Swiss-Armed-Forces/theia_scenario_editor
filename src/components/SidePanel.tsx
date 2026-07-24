@@ -57,7 +57,7 @@ export default function SidePanel() {
           </div>
         )}
         {activeTab === 1 && (
-          <div className="sidePanelSection sidePanelPlaceholder">
+          <div className="sidePanelSection">
             <PclSensorSettings />
             <PclSensorList />
           </div>

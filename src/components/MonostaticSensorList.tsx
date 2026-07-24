@@ -7,7 +7,7 @@ import type { LatLng } from "leaflet";
 import { elevationAt } from "../backend/backend";
 import SensorListItem from "./SensorListItem";
 
-export default function SensorList() {
+export default function MonostaticSensorList() {
   // TODO: Allow to switch to RED.
   const sensors = useScenarioStore((state) => state.blueMonostaticSensors);
 

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Box, Button, Tab, Tabs } from "@mui/material";
-import SensorList from "./SensorList";
+import MonostaticSensorList from "./MonostaticSensorList";
 import { useSimulationStore } from "../context/SimulationResultStore";
 import { useGuiStateStore } from "../context/GuiStateStore";
 import { useScenarioStore } from "../context/ScenarioStore";
@@ -39,7 +39,7 @@ export default function SidePanel() {
         {activeTab === 0 && (
           <div className="sidePanelSection">
             <MonostaticSensorSettings />
-            <SensorList />
+            <MonostaticSensorList />
             <CoverageCalcSettings />
             <Button
               variant="contained"

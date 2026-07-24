@@ -85,8 +85,21 @@ const receiverIcon = L.divIcon({
   iconAnchor: [12, 12], // center the icon
 });
 
+const highlightedReceiverIcon = L.divIcon({
+  html: `<div style="border: 2px solid red; width: fit-content; height: fit-content">${friendlyReceiverSymbol.asSVG()}</div>`,
+  className: "", // remove default 'leaflet-div-icon' styles if needed
+  iconSize: [24, 24],
+  iconAnchor: [12, 12], // center the icon
+});
+
 const fmTransmitterIcon = L.divIcon({
   html: neutralTransmitterSymbol.asSVG(),
+  className: "", // remove default 'leaflet-div-icon' styles if needed
+  iconSize: [24, 24],
+  iconAnchor: [12, 12], // center the icon
+});
+const highlightedFmTransmitterIcon = L.divIcon({
+  html: `<div style="border: 2px solid red; width: fit-content; height: fit-content">${neutralTransmitterSymbol.asSVG()}</div>`,
   className: "", // remove default 'leaflet-div-icon' styles if needed
   iconSize: [24, 24],
   iconAnchor: [12, 12], // center the icon
@@ -121,11 +134,17 @@ function MonostaticRadarMarker({ radar }: { radar: MonostaticSensor }) {
   );
 }
 
-function FmTransmitterMarker({ transmitter }: { transmitter: Transmitter }) {
+function FmTransmitterMarker({
+  transmitter,
+  isHighlighted,
+}: {
+  transmitter: Transmitter;
+  isHighlighted: boolean;
+}) {
   return (
     <Marker
       position={[transmitter.point.lat, transmitter.point.lon]}
-      icon={fmTransmitterIcon}
+      icon={isHighlighted ? highlightedFmTransmitterIcon : fmTransmitterIcon}
     >
       <Tooltip>
         FM Transmitter #{transmitter.id}
@@ -136,11 +155,23 @@ function FmTransmitterMarker({ transmitter }: { transmitter: Transmitter }) {
   );
 }
 
-function ReceiverMarker({ receiver }: { receiver: Receiver }) {
+function ReceiverMarker({
+  receiver,
+  isHighlighted,
+}: {
+  receiver: Receiver;
+  isHighlighted: boolean;
+}) {
+  const selectReceiver = useGuiStateStore((state) => state.selectReceiver);
   return (
     <Marker
       position={[receiver.point.lat, receiver.point.lon]}
-      icon={fmTransmitterIcon}
+      icon={isHighlighted ? highlightedReceiverIcon : receiverIcon}
+      eventHandlers={{
+        click: () => {
+          selectReceiver(isHighlighted ? null : receiver.id);
+        },
+      }}
     >
       <Tooltip>Receiver #{receiver.id}</Tooltip>
     </Marker>
@@ -148,10 +179,22 @@ function ReceiverMarker({ receiver }: { receiver: Receiver }) {
 }
 
 function PclSensorMarker({ sensor }: { sensor: PclSensor }) {
+  const selectedReceiverId = useGuiStateStore(
+    (state) => state.selectedReceiverId,
+  );
+
+  const isHighlighted = selectedReceiverId === sensor.receiver.id;
+
   return (
     <>
-      <FmTransmitterMarker transmitter={sensor.transmitter} />
-      <ReceiverMarker receiver={sensor.receiver} />
+      <FmTransmitterMarker
+        transmitter={sensor.transmitter}
+        isHighlighted={isHighlighted}
+      />
+      <ReceiverMarker
+        receiver={sensor.receiver}
+        isHighlighted={isHighlighted}
+      />
     </>
   );
 }
@@ -159,10 +202,12 @@ function PclSensorMarker({ sensor }: { sensor: PclSensor }) {
 export default function ScenarioMap() {
   // TODO: RED
   const visibleSensorIds = useGuiStateStore((state) => state.visibleSensorIds);
-  const fmTransmitters = useGuiStateStore((state) => state.fmTransmitters);
   const blueMonostaticSensors = useScenarioStore(
     (state) => state.blueMonostaticSensors,
   ).filter((sensor) => visibleSensorIds.has(sensor.id));
+  const pclSensors = useScenarioStore((state) => state.pclSensors).filter(
+    (sensor) => visibleSensorIds.has(sensor.id),
+  );
   const blueMonostaticCoverages = useSimulationStore(
     (state) => state.monostaticCoverages,
   ).filter(([sensorId, _coverage, _date]) => visibleSensorIds.has(sensorId));
@@ -177,11 +222,11 @@ export default function ScenarioMap() {
       {blueMonostaticSensors.map((sensor, i) => (
         <MonostaticRadarMarker key={i} radar={sensor}></MonostaticRadarMarker>
       ))}
+      {pclSensors.map((sensor, i) => (
+        <PclSensorMarker key={i} sensor={sensor} />
+      ))}
       {blueMonostaticCoverages.map(([_sensorId, coverage, date]) => (
         <GeoJSON key={`Coverage ${_sensorId}_${date}`} data={coverage} />
-      ))}
-      {fmTransmitters.map((tx) => (
-        <FmTransmitterMarker key={tx.id} transmitter={tx} />
       ))}
     </MapContainer>
   );

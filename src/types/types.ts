@@ -79,3 +79,35 @@ export function buildDefaultMonostaticSensor(
     },
   };
 }
+
+export function buildDefaultPclReceiver(
+  point: Point,
+  rx_id: number,
+): [Receiver, number, number] {
+  const DEFAULT_ANTENNA_HEIGHT = 8.0;
+  const DEFAULT_ANTENNA_DIAMETER = 2.0;
+  const DEFAULT_BANDWIDTH = 5.0;
+  const DEFAULT_ANTENNA_EFFICIENCY_VALUE = 0.6;
+  const MIN_TX_POWER = 1000;
+  const MAX_DISTANCE = 50_000;
+  const rx: Receiver = {
+    id: rx_id,
+    point: point,
+    antenna_height: DEFAULT_ANTENNA_HEIGHT,
+    diameter: DEFAULT_ANTENNA_DIAMETER,
+    cpi_pulses: 1,
+    pfa: 1e-6,
+    min_elevation: -Math.PI / 2,
+    max_elevation: Math.PI / 2,
+    min_azimuth: 0,
+    max_azimuth: 2 * Math.PI,
+    rotation_time: 1,
+    bandwidth: DEFAULT_BANDWIDTH,
+    gain: 0.0,
+    losses: 0.0,
+    noise_temperature: 300,
+    noise_figure: 1.9,
+    antenna_efficiency_value: DEFAULT_ANTENNA_EFFICIENCY_VALUE,
+  };
+  return [rx, MIN_TX_POWER, MAX_DISTANCE];
+}

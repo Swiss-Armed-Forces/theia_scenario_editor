@@ -6,6 +6,7 @@ import { useGuiStateStore } from "../context/GuiStateStore";
 import { useScenarioStore } from "../context/ScenarioStore";
 import CoverageCalcSettings from "./CoverageCalcSettings";
 import MonostaticSensorSettings from "./MonostaticSensorSettings";
+import PclSensorList from "./PclSensorList";
 
 export default function SidePanel() {
   const [activeTab, setActiveTab] = useState(0);
@@ -56,7 +57,7 @@ export default function SidePanel() {
         )}
         {activeTab === 1 && (
           <div className="sidePanelSection sidePanelPlaceholder">
-            PCL settings coming soon.
+            <PclSensorList />
           </div>
         )}
       </Box>

@@ -145,6 +145,7 @@ export const useScenarioStore = create<ScenarioStore>((set, get) => ({
       .getState()
       .fmTransmitters.filter((_tx, i) => fulfillsConditions[i]);
 
+    const unusedIdReceiver = get().unusedIdReceiver;
     let unusedSensorId = get().unusedIdSensor;
     const newPclSensors: PclSensor[] = transmitters.map((tx) => {
       const sensor: PclSensor = {
@@ -165,9 +166,15 @@ export const useScenarioStore = create<ScenarioStore>((set, get) => ({
     const oldPclSensors: PclSensor[] = get().pclSensors.filter(
       (sensor) => sensor.receiver.id !== rx.id,
     );
+    const sensors = [...oldPclSensors, ...newPclSensors];
+    for (const sensor of sensors) {
+      useGuiStateStore.getState().showSensor(sensor.id);
+    }
+
     set({
-      pclSensors: [...oldPclSensors, ...newPclSensors],
+      pclSensors: sensors,
       unusedIdSensor: unusedSensorId,
+      unusedIdReceiver: Math.max(unusedIdReceiver, rx.id + 1),
     });
   },
 }));

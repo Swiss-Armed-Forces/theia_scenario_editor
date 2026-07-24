@@ -1,22 +1,30 @@
 import { create } from "zustand";
-import type { MonostaticSensor } from "../types/types";
+import type { MonostaticSensor, PclSensor, Receiver } from "../types/types";
 import { useGuiStateStore } from "./GuiStateStore";
 import { useSimulationStore } from "./SimulationResultStore";
+import { lineOfSightDistance } from "../backend/backend";
 
 interface ScenarioStore {
   blueMonostaticSensors: MonostaticSensor[];
   redMonostaticSensors: MonostaticSensor[];
-  unusedIdMonostaticSensor: number;
+  pclSensors: PclSensor[];
+  unusedIdSensor: number;
   unusedIdReceiver: number;
   unusedIdTransmitter: number;
   addMonostaticSensor: (sensor: MonostaticSensor, isBlue: boolean) => void;
+  updatePclReceiver: (
+    rx: Receiver,
+    tx_min_power: number,
+    max_distance: number,
+  ) => void;
   deleteMonostaticSensor: (sensorId: number, isBlue: boolean) => void;
   updateMonostaticSensor: (sensor: MonostaticSensor, isBlue: boolean) => void;
 }
 
-export const useScenarioStore = create<ScenarioStore>((set) => ({
+export const useScenarioStore = create<ScenarioStore>((set, get) => ({
   blueMonostaticSensors: [],
   redMonostaticSensors: [],
+  pclSensors: [],
   unusedIdSensor: 0,
   unusedIdReceiver: 0,
   unusedIdTransmitter: 0,
@@ -106,6 +114,52 @@ export const useScenarioStore = create<ScenarioStore>((set) => ({
       newSensors[index] = sensor;
       return { blueMonostaticSensors: newSensors };
     }),
+
+  updatePclReceiver: async (
+    rx: Receiver,
+    tx_min_power: number,
+    max_distance: number,
+  ) => {
+    // const transmitters =
+    const fulfillsConditions = await Promise.all(
+      useGuiStateStore.getState().fmTransmitters.map((tx) => {
+        if (tx.power < tx_min_power) {
+          return false;
+        }
+        return lineOfSightDistance(tx.point, rx.point).then(
+          (d) => d <= max_distance,
+        );
+      }),
+    );
+    const transmitters = useGuiStateStore
+      .getState()
+      .fmTransmitters.filter((_tx, i) => fulfillsConditions[i]);
+
+    let unusedSensorId = get().unusedIdSensor;
+    const newPclSensors: PclSensor[] = transmitters.map((tx) => {
+      const sensor: PclSensor = {
+        id: unusedSensorId,
+        transmitter: tx,
+        receiver: rx,
+        error_model: {
+          min_bistatic_range_uncertainty: 0,
+          max_bistatic_range_uncertainty: 0,
+          min_doppler_uncertainty: 0,
+          max_doppler_uncertainty: 0,
+        },
+      };
+      unusedSensorId += 1;
+      return sensor;
+    });
+
+    const oldPclSensors: PclSensor[] = get().pclSensors.filter(
+      (sensor) => sensor.receiver.id !== rx.id,
+    );
+    set({
+      pclSensors: [...oldPclSensors, ...newPclSensors],
+      unusedIdSensor: unusedSensorId,
+    });
+  },
 }));
 
 function calculateAntennaGain(

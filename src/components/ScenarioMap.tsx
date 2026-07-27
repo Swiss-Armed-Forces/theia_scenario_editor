@@ -12,7 +12,7 @@ import {
 } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import { DEFAULT_MAP_CENTER } from "../util/constants";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type {
   LatLonHeightGrid,
   MonostaticSensor,
@@ -91,6 +91,13 @@ function ClickMarker() {
   const [pos, setPos] = useState<Point | null>(null);
 
   const mapClickListener = useGuiStateStore((state) => state.mapClickListener);
+
+  // Dismiss any leftover coordinate popup as soon as the click-listener mode
+  // changes (e.g. entering or leaving "place a new sensor" mode), otherwise
+  // it keeps reappearing on unrelated re-renders since it was never cleared.
+  useEffect(() => {
+    setPos(null);
+  }, [mapClickListener]);
 
   useMapEvents({
     click: (e) => {

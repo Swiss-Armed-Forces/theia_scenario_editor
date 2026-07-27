@@ -129,7 +129,7 @@ export default function PclSensorSettings() {
           type="number"
           value={receiver.bandwidth}
           onChange={(event) => {
-            const value = parseInt(event.target.value);
+            const value = parseFloat(event.target.value);
             newReceiver.bandwidth = value;
             updatePclReceiverSettings(newReceiver);
           }}

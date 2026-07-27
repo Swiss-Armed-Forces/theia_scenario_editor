@@ -17,6 +17,7 @@ export default function SidePanel() {
   const monostaticCalcConf = useGuiStateStore(
     (state) => state.monostaticCoverageCalcConf,
   );
+  const pclCalcConf = useGuiStateStore((state) => state.pclCoverageCalcConf);
   // TODO: RED
   const monostaticSensors = useScenarioStore(
     (state) => state.blueMonostaticSensors,
@@ -24,8 +25,15 @@ export default function SidePanel() {
   const visibleMonostaticSensors = monostaticSensors.filter((sensor) =>
     visibleSensorIds.has(sensor.id),
   );
+  const pclSensors = useScenarioStore((state) => state.pclSensors);
+  const visiblePclSensors = pclSensors.filter((sensor) =>
+    visibleSensorIds.has(sensor.id),
+  );
   const updateMonostaticCoverage = useSimulationStore(
     (state) => state.updateMonostaticCoverages,
+  );
+  const updateMinDetectableRcsGrids = useSimulationStore(
+    (state) => state.updateMinDetectableRcsGrids,
   );
   return (
     <div className="sidePanel">
@@ -62,7 +70,12 @@ export default function SidePanel() {
             <PclSensorSettings />
             <PclSensorList />
             <PclCoverageCalcSettings />
-            <Button variant="contained" onClick={(_event) => {}}>
+            <Button
+              variant="contained"
+              onClick={(_event) => {
+                updateMinDetectableRcsGrids(visiblePclSensors, pclCalcConf);
+              }}
+            >
               Calculate min. det. RCS
             </Button>
           </div>

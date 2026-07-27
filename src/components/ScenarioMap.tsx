@@ -27,6 +27,49 @@ import { useGuiStateStore } from "../context/GuiStateStore";
 import { useSimulationStore } from "../context/SimulationResultStore";
 import { elevationAt } from "../backend/backend";
 import { haversineDistance } from "../util/geo";
+import { minDetectableRcsColor } from "../util/rcsColorScale";
+
+function MinDetectableRcsOverlay({
+  grid,
+  geometry,
+}: {
+  grid: number[][][];
+  geometry: LatLonHeightGrid;
+}) {
+  const cells = [];
+  for (let i = 0; i < grid.length; i++) {
+    for (let j = 0; j < grid[i].length; j++) {
+      const value = grid[i][j][0];
+      if (value === -1) {
+        // No detection possible in this cell: leave it fully transparent
+        // instead of forcing it onto the hardcoded value scale.
+        continue;
+      }
+      const latLo = geometry.lat_start + (i - 0.5) * geometry.lat_res;
+      const lonLo = geometry.lon_start + (j - 0.5) * geometry.lon_res;
+      const color = minDetectableRcsColor(value);
+      cells.push(
+        <Rectangle
+          key={`${i}_${j}`}
+          bounds={[
+            [latLo, lonLo],
+            [latLo + geometry.lat_res, lonLo + geometry.lon_res],
+          ]}
+          pathOptions={{
+            stroke: true,
+            color: "black",
+            weight: 0.1,
+            fillColor: color,
+            fillOpacity: 0.6,
+          }}
+        >
+          <Tooltip>{value.toFixed(3)} m²</Tooltip>
+        </Rectangle>,
+      );
+    }
+  }
+  return <>{cells}</>;
+}
 
 function PclGridMarker({ grid }: { grid: LatLonHeightGrid }) {
   return (
@@ -38,7 +81,7 @@ function PclGridMarker({ grid }: { grid: LatLonHeightGrid }) {
       pathOptions={{ fill: false, color: "black", dashArray: "5, 5" }}
     >
       <Tooltip>PCL coverage calculation grid</Tooltip>
-      </Rectangle>
+    </Rectangle>
   );
 }
 
@@ -285,6 +328,9 @@ export default function ScenarioMap() {
   const blueMonostaticCoverages = useSimulationStore(
     (state) => state.monostaticCoverages,
   ).filter(([sensorId, _coverage, _date]) => visibleSensorIds.has(sensorId));
+  const minDetectableRcsGrids = useSimulationStore(
+    (state) => state.minDetectableRcsGrids,
+  ).filter(([sensorId, _grid, _date]) => visibleSensorIds.has(sensorId));
 
   const pclCalcGrid = useGuiStateStore(
     (state) => state.pclCoverageCalcConf.grid,
@@ -330,6 +376,13 @@ export default function ScenarioMap() {
         <GeoJSON key={`Coverage ${_sensorId}_${date}`} data={coverage} />
       ))}
       <PclGridMarker grid={pclCalcGrid} />
+      {minDetectableRcsGrids.map(([sensorId, grid, date]) => (
+        <MinDetectableRcsOverlay
+          key={`RCS ${sensorId}_${date}`}
+          grid={grid}
+          geometry={pclCalcGrid}
+        />
+      ))}
     </MapContainer>
   );
 }

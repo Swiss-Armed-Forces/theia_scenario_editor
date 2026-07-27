@@ -29,6 +29,7 @@ import { elevationAt } from "../backend/backend";
 import { haversineDistance } from "../util/geo";
 import { minDetectableRcsColor } from "../util/rcsColorScale";
 import { combineMinDetectableRcsGrids } from "../util/minDetectableRcsGrid";
+import { isPclReceiverVisible } from "../util/pclVisibility";
 
 function MinDetectableRcsOverlay({
   grid,
@@ -325,9 +326,13 @@ export default function ScenarioMap() {
   const blueMonostaticSensors = useScenarioStore(
     (state) => state.blueMonostaticSensors,
   ).filter((sensor) => visibleSensorIds.has(sensor.id));
-  const pclReceivers = useScenarioStore((state) => state.pclReceivers);
-  const pclSensors = useScenarioStore((state) => state.pclSensors).filter(
-    (sensor) => visibleSensorIds.has(sensor.id),
+  const allPclSensors = useScenarioStore((state) => state.pclSensors);
+  const pclReceivers = useScenarioStore((state) => state.pclReceivers).filter(
+    (receiver) =>
+      isPclReceiverVisible(receiver, allPclSensors, visibleSensorIds),
+  );
+  const pclSensors = allPclSensors.filter((sensor) =>
+    visibleSensorIds.has(sensor.id),
   );
   const blueMonostaticCoverages = useSimulationStore(
     (state) => state.monostaticCoverages,

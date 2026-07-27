@@ -63,7 +63,7 @@ function MinDetectableRcsOverlay({
             fillOpacity: 0.6,
           }}
         >
-          <Tooltip>{value.toFixed(3)} m²</Tooltip>
+          <Tooltip>{value.toFixed(1)} m²</Tooltip>
         </Rectangle>,
       );
     }
@@ -214,8 +214,11 @@ function FmTransmitterMarker({
     >
       <Tooltip>
         FM Transmitter #{transmitter.id}
-        <br />
-        Power = {transmitter.power.toFixed(0)}W
+        <table className="fmTransmitterTooltipTable">
+          <tr><td>Power</td><td>{transmitter.power.toFixed(1)}</td><td>W</td></tr>
+          <tr><td>Frequency</td><td>{transmitter.frequency.toFixed(1)}</td><td>MHz</td></tr>
+          <tr><td>Bandwidth</td><td>{transmitter.bandwidth.toFixed(1)}</td><td>MHz</td></tr>
+        </table>
       </Tooltip>
     </Marker>
   );

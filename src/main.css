@@ -156,3 +156,12 @@ body, html {
 .PointSelector > input {
     max-width: 45%;
 }
+
+.fmTransmitterTooltipTable td {
+    padding: 0 2px;
+}
+
+.fmTransmitterTooltipTable td:nth-child(2) {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+}

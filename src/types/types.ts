@@ -87,7 +87,7 @@ export function buildDefaultPclReceiver(
 ): [Receiver, number, number] {
   const DEFAULT_ANTENNA_HEIGHT = 8.0;
   const DEFAULT_ANTENNA_DIAMETER = 2.0;
-  const DEFAULT_BANDWIDTH = 5.0;
+  const DEFAULT_BANDWIDTH = 0.3;
   const DEFAULT_ANTENNA_EFFICIENCY_VALUE = 0.6;
   const MIN_TX_POWER = 1000;
   const MAX_DISTANCE = 50_000;

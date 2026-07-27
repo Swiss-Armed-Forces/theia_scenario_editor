@@ -9,6 +9,8 @@ import MonostaticSensorSettings from "./MonostaticSensorSettings";
 import PclSensorList from "./PclSensorList";
 import PclSensorSettings from "./PclSensorSettings";
 import PclCoverageCalcSettings from "./PclCoverageCalcSettings";
+import EffectorList from "./EffectorList";
+import EffectorSettings from "./EffectorSettings";
 
 export default function SidePanel() {
   const [activeTab, setActiveTab] = useState(0);
@@ -45,6 +47,7 @@ export default function SidePanel() {
       >
         <Tab label="Active Radar" />
         <Tab label="PCL" />
+        <Tab label="GBAD" />
       </Tabs>
       <Box className="sidePanelTabContent">
         {activeTab === 0 && (
@@ -78,6 +81,12 @@ export default function SidePanel() {
             >
               Calculate min. det. RCS
             </Button>
+          </div>
+        )}
+        {activeTab === 2 && (
+          <div className="sidePanelSection">
+            <EffectorSettings />
+            <EffectorList />
           </div>
         )}
       </Box>

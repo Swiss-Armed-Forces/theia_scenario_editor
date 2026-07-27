@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import type {
+  Effector,
   MonostaticSensor,
   PclSensor,
   Receiver,
@@ -18,14 +19,19 @@ export interface ScenarioStore {
   pclReceivers: Receiver[];
   pclTransmitterIds: Map<number, Set<number>>;
   pclTxCriteria: Map<number, PclTxSelectionCriteria>;
+  effectors: Effector[];
   unusedIdSensor: number;
   unusedIdReceiver: number;
   unusedIdTransmitter: number;
+  unusedIdEffector: number;
   addMonostaticSensor: (sensor: MonostaticSensor, isBlue: boolean) => void;
   addPclReceiver: (
     rx: Receiver,
     criteria: PclTxSelectionCriteria,
   ) => Promise<void>;
+  addEffector: (effector: Effector) => void;
+  updateEffector: (effector: Effector) => void;
+  deleteEffector: (effectorId: number) => void;
   updatePclReceiverSettings: (rx: Receiver) => void;
   updatePclTxCriteria: (
     receiverId: number,
@@ -107,9 +113,7 @@ async function matchingTransmitterIds(
     }),
   );
   return new Set(
-    fmTransmitters
-      .filter((_tx, i) => fulfillsConditions[i])
-      .map((tx) => tx.id),
+    fmTransmitters.filter((_tx, i) => fulfillsConditions[i]).map((tx) => tx.id),
   );
 }
 
@@ -124,9 +128,11 @@ export type SerializedScenarioState = {
   pclReceivers: Receiver[];
   pclTransmitterIds: [number, number[]][];
   pclTxCriteria: [number, PclTxSelectionCriteria][];
+  effectors: Effector[];
   unusedIdSensor: number;
   unusedIdReceiver: number;
   unusedIdTransmitter: number;
+  unusedIdEffector: number;
 };
 
 export function serializeScenarioState(
@@ -138,15 +144,14 @@ export function serializeScenarioState(
     pclSensors: state.pclSensors,
     pclReceivers: state.pclReceivers,
     pclTransmitterIds: Array.from(state.pclTransmitterIds.entries()).map(
-      ([receiverId, ids]): [number, number[]] => [
-        receiverId,
-        Array.from(ids),
-      ],
+      ([receiverId, ids]): [number, number[]] => [receiverId, Array.from(ids)],
     ),
     pclTxCriteria: Array.from(state.pclTxCriteria.entries()),
+    effectors: state.effectors,
     unusedIdSensor: state.unusedIdSensor,
     unusedIdReceiver: state.unusedIdReceiver,
     unusedIdTransmitter: state.unusedIdTransmitter,
+    unusedIdEffector: state.unusedIdEffector,
   };
 }
 
@@ -165,9 +170,11 @@ export function deserializeScenarioState(
       ]),
     ),
     pclTxCriteria: new Map(data.pclTxCriteria ?? []),
+    effectors: data.effectors ?? [],
     unusedIdSensor: data.unusedIdSensor,
     unusedIdReceiver: data.unusedIdReceiver,
     unusedIdTransmitter: data.unusedIdTransmitter,
+    unusedIdEffector: data.unusedIdEffector ?? 0,
   };
 }
 
@@ -178,9 +185,11 @@ export const useScenarioStore = create<ScenarioStore>((set, get) => ({
   pclReceivers: [],
   pclTransmitterIds: new Map<number, Set<number>>(),
   pclTxCriteria: new Map<number, PclTxSelectionCriteria>(),
+  effectors: [],
   unusedIdSensor: 0,
   unusedIdReceiver: 0,
   unusedIdTransmitter: 0,
+  unusedIdEffector: 0,
 
   addMonostaticSensor: (sensor, isBlue) =>
     set((state) => {
@@ -227,6 +236,27 @@ export const useScenarioStore = create<ScenarioStore>((set, get) => ({
           ),
         };
       }
+    }),
+  addEffector: (effector) =>
+    set((state) => {
+      return {
+        effectors: [...state.effectors, effector],
+        unusedIdEffector: Math.max(state.unusedIdEffector, effector.id + 1),
+      };
+    }),
+  updateEffector: (effector) =>
+    set((state) => {
+      const i = state.effectors.findIndex((e) => e.id === effector.id);
+      const newEffectors = structuredClone(state.effectors);
+      newEffectors[i] = effector;
+      return {
+        effectors: newEffectors,
+      };
+    }),
+  deleteEffector: (effectorId) =>
+    set((state) => {
+      const newEffectors = state.effectors.filter((e) => e.id !== effectorId);
+      return { effectors: newEffectors };
     }),
   deleteReceiver: (receiverId: number, isBlue: boolean) =>
     set((state) => {

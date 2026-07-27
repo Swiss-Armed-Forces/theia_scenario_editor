@@ -9,6 +9,7 @@ import { useScenarioStore } from "./ScenarioStore";
 
 interface GuiStateStore {
   selectedReceiverId: number | null;
+  selectedEffectorId: number | null;
   visibleSensorIds: Set<number>;
   monostaticCoverageCalcConf: MonostaticCoverageCalcConf;
   pclCoverageCalcConf: PclCoverageCalcConf;
@@ -16,6 +17,7 @@ interface GuiStateStore {
   mapClickListener: MapClickListener | null;
   setMapClickListener: (listener: MapClickListener | null) => void;
   selectReceiver: (receiverId: number | null) => void;
+  selectEffector: (effectorId: number | null) => void;
   pclSelectionReceiverId: number | null;
   setPclSelectionReceiverId: (receiverId: number | null) => void;
   showSensor: (sensorId: number) => void;
@@ -27,6 +29,7 @@ interface GuiStateStore {
 
 export const useGuiStateStore = create<GuiStateStore>((set) => ({
   selectedReceiverId: null,
+  selectedEffectorId: null,
   visibleSensorIds: new Set<number>(),
   fmTransmitters: [],
   monostaticCoverageCalcConf: {
@@ -60,6 +63,10 @@ export const useGuiStateStore = create<GuiStateStore>((set) => ({
   selectReceiver: (receiverId) =>
     set((_state) => {
       return { selectedReceiverId: receiverId };
+    }),
+  selectEffector: (effectorId) =>
+    set((_state) => {
+      return { selectedEffectorId: effectorId };
     }),
   pclSelectionReceiverId: null,
   setPclSelectionReceiverId: (receiverId) =>

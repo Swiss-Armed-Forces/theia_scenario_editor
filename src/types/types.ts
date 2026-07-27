@@ -11,6 +11,14 @@ export type PclSensor = components["schemas"]["PclSensor-Input"];
 export type GeoJSONFeature = components["schemas"]["GeoJSONFeature"];
 export type LatLonHeightGrid = components["schemas"]["LatLonHeightGrid"];
 
+export interface Effector {
+  id: number;
+  name: string;
+  point: Point;
+  combat_range: number;
+  n_attacks_left: number;
+}
+
 export type Sensor = MonostaticSensor | PclSensor;
 
 export type SensorPortfolio = {
@@ -78,6 +86,22 @@ export function buildDefaultMonostaticSensor(
       min_angular_uncertainty: 0,
       max_angular_uncertainty: 0,
     },
+  };
+}
+
+export function buildDefaultEffector(
+  point: Point,
+  id: number,
+  name: string,
+): Effector {
+  const DEFAULT_COMBAT_RANGE = 4_000;
+  const DEFAULT_N_ATTACKS = 10;
+  return {
+    id,
+    name,
+    point,
+    combat_range: DEFAULT_COMBAT_RANGE,
+    n_attacks_left: DEFAULT_N_ATTACKS,
   };
 }
 

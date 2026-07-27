@@ -12,11 +12,18 @@ function App() {
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
       if (e.key == "Delete") {
-        const receiverId = useGuiStateStore.getState().selectedReceiverId;
+        const guiState = useGuiStateStore.getState();
+        const scenarioStore = useScenarioStore.getState();
+
+        if (guiState.selectedEffectorId !== null) {
+          scenarioStore.deleteEffector(guiState.selectedEffectorId);
+          return;
+        }
+
+        const receiverId = guiState.selectedReceiverId;
         if (receiverId === null) {
           return;
         }
-        const scenarioStore = useScenarioStore.getState();
         if (
           scenarioStore.blueMonostaticSensors.some(
             (sensor) => sensor.receiver.id === receiverId,

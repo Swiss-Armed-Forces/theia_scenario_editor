@@ -14,6 +14,7 @@ import "leaflet/dist/leaflet.css";
 import { DEFAULT_MAP_CENTER } from "../util/constants";
 import { useEffect, useMemo, useState } from "react";
 import type {
+  Effector,
   LatLonHeightGrid,
   MonostaticSensor,
   Point,
@@ -80,7 +81,7 @@ function PclGridMarker({ grid }: { grid: LatLonHeightGrid }) {
         [grid.lat_start, grid.lon_start],
         [grid.lat_stop, grid.lon_stop],
       ]}
-      pathOptions={{ fill: false, color: "black", dashArray: "5, 5" }}
+      pathOptions={{ fill: false, color: "black" }}
     >
       <Tooltip>PCL coverage calculation grid</Tooltip>
     </Rectangle>
@@ -187,6 +188,23 @@ const highlightedRadarIcon = L.divIcon({
   iconAnchor: [12, 12], // center the icon
 });
 
+const friendlyEffectorSymbol = new ms.Symbol("10231000001301000000", {
+  size: 24,
+});
+
+const effectorIcon = L.divIcon({
+  html: friendlyEffectorSymbol.asSVG(),
+  className: "", // remove default 'leaflet-div-icon' styles if needed
+  iconSize: [24, 24],
+  iconAnchor: [12, 12], // center the icon
+});
+const highlightedEffectorIcon = L.divIcon({
+  html: `<div style="border: 2px solid red; width: fit-content; height: fit-content">${friendlyEffectorSymbol.asSVG()}</div>`,
+  className: "", // remove default 'leaflet-div-icon' styles if needed
+  iconSize: [24, 24],
+  iconAnchor: [12, 12], // center the icon
+});
+
 function MonostaticRadarMarker({ radar }: { radar: MonostaticSensor }) {
   const selectedReceiverId = useGuiStateStore(
     (state) => state.selectedReceiverId,
@@ -206,6 +224,41 @@ function MonostaticRadarMarker({ radar }: { radar: MonostaticSensor }) {
     >
       <Tooltip>Monostatic Sensor #{radar.id}</Tooltip>
     </Marker>
+  );
+}
+
+function EffectorMarker({ effector }: { effector: Effector }) {
+  const selectedEffectorId = useGuiStateStore(
+    (state) => state.selectedEffectorId,
+  );
+  const selectEffector = useGuiStateStore((state) => state.selectEffector);
+
+  const isHighlighted = selectedEffectorId === effector.id;
+  return (
+    <>
+      <Marker
+        position={[effector.point.lat, effector.point.lon]}
+        icon={isHighlighted ? highlightedEffectorIcon : effectorIcon}
+        eventHandlers={{
+          click: () => {
+            selectEffector(isHighlighted ? null : effector.id);
+          },
+        }}
+      >
+        <Tooltip>
+          {effector.name} #{effector.id}
+          <br />
+          Combat range = {effector.combat_range.toFixed(0)}m
+          <br />
+          {effector.n_attacks_left} attack(s) left
+        </Tooltip>
+      </Marker>
+      <Circle
+        center={[effector.point.lat, effector.point.lon]}
+        radius={effector.combat_range}
+        pathOptions={{ fill: false, color: "blue", dashArray: "4, 4" }}
+      />
+    </>
   );
 }
 
@@ -341,6 +394,7 @@ export default function ScenarioMap() {
   const pclSensors = allPclSensors.filter((sensor) =>
     visibleSensorIds.has(sensor.id),
   );
+  const effectors = useScenarioStore((state) => state.effectors);
   const blueMonostaticCoverages = useSimulationStore(
     (state) => state.monostaticCoverages,
   ).filter(([sensorId, _coverage, _date]) => visibleSensorIds.has(sensorId));
@@ -375,6 +429,9 @@ export default function ScenarioMap() {
       <ScaleControl position="bottomleft" />
       {blueMonostaticSensors.map((sensor, i) => (
         <MonostaticRadarMarker key={i} radar={sensor}></MonostaticRadarMarker>
+      ))}
+      {effectors.map((effector) => (
+        <EffectorMarker key={effector.id} effector={effector} />
       ))}
       {pclReceivers.map((receiver) => (
         <ReceiverMarker

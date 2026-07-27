@@ -6,8 +6,12 @@ import { useScenarioStore } from "./context/ScenarioStore";
 
 function App() {
   const fetchFmTransmitters = useGuiStateStore(
-      (state) => state.fetchFmTransmitters,
-    );
+    (state) => state.fetchFmTransmitters,
+  );
+
+  useEffect(() => {
+    useGuiStateStore.getState().initTileUrl();
+  }, []);
 
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {

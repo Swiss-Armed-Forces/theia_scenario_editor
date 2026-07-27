@@ -6,6 +6,7 @@ import {
 } from "../backend/backend";
 import type { MapClickListener, Transmitter } from "../types/types";
 import { useScenarioStore } from "./ScenarioStore";
+import { isApiReachable } from "../util/isApiReachable";
 
 interface GuiStateStore {
   selectedReceiverId: number | null;
@@ -25,7 +26,13 @@ interface GuiStateStore {
   updateMonostaticCoverageCalcConf: (conf: MonostaticCoverageCalcConf) => void;
   updatePclCoverageCalcConf: (conf: PclCoverageCalcConf) => void;
   fetchFmTransmitters: () => void;
+  mapTileUrl: string;
+  initTileUrl: () => void;
+  maxZoomLevel: number;
 }
+
+const TILE_SERVER_OSM = "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png";
+const TILE_SERVER_LOCAL = "http://localhost:8080/{z}/{x}/{y}.png";
 
 export const useGuiStateStore = create<GuiStateStore>((set) => ({
   selectedReceiverId: null,
@@ -98,6 +105,22 @@ export const useGuiStateStore = create<GuiStateStore>((set) => ({
     set({ fmTransmitters: transmitters });
     useScenarioStore.setState({
       unusedIdTransmitter: Math.max(...transmitters.map((tx) => tx.id)) + 1,
+    });
+  },
+  mapTileUrl: TILE_SERVER_LOCAL, // sensible default while we check
+  maxZoomLevel: 12,
+  initTileUrl: async () => {
+    const isReachable = await isApiReachable(
+      TILE_SERVER_OSM.replace("{s}", "a")
+        .replace("{z}", "8")
+        .replace("{x}", "134")
+        .replace("{y}", "89"),
+      1000,
+    );
+    console.log("Reachable?", isReachable);
+    set({
+      mapTileUrl: isReachable ? TILE_SERVER_OSM : TILE_SERVER_LOCAL,
+      maxZoomLevel: isReachable ? 20 : 12,
     });
   },
 }));

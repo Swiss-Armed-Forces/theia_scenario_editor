@@ -277,9 +277,21 @@ function FmTransmitterMarker({
       <Tooltip>
         FM Transmitter #{transmitter.id}
         <table className="fmTransmitterTooltipTable">
-          <tr><td>Power</td><td>{transmitter.power.toFixed(1)}</td><td>W</td></tr>
-          <tr><td>Frequency</td><td>{transmitter.frequency.toFixed(1)}</td><td>MHz</td></tr>
-          <tr><td>Bandwidth</td><td>{transmitter.bandwidth.toFixed(1)}</td><td>MHz</td></tr>
+          <tr>
+            <td>Power</td>
+            <td>{transmitter.power.toFixed(1)}</td>
+            <td>W</td>
+          </tr>
+          <tr>
+            <td>Frequency</td>
+            <td>{transmitter.frequency.toFixed(1)}</td>
+            <td>MHz</td>
+          </tr>
+          <tr>
+            <td>Bandwidth</td>
+            <td>{transmitter.bandwidth.toFixed(1)}</td>
+            <td>MHz</td>
+          </tr>
         </table>
       </Tooltip>
     </Marker>
@@ -418,12 +430,19 @@ export default function ScenarioMap() {
   const pclSelectionReceiverId = useGuiStateStore(
     (state) => state.pclSelectionReceiverId,
   );
+  const maxZoom = useGuiStateStore((state) => state.maxZoomLevel)
+
+  console.log(maxZoom)
 
   return (
-    <MapContainer center={DEFAULT_MAP_CENTER} zoom={10}>
+    <MapContainer
+      center={DEFAULT_MAP_CENTER}
+      zoom={10}
+      maxZoom={maxZoom}
+    >
       <TileLayer
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+        url={useGuiStateStore((state) => state.mapTileUrl)}
       />
       <ClickMarker />;
       <ScaleControl position="bottomleft" />

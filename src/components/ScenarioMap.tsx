@@ -12,7 +12,7 @@ import {
 } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import { DEFAULT_MAP_CENTER } from "../util/constants";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import type {
   LatLonHeightGrid,
   MonostaticSensor,
@@ -28,6 +28,7 @@ import { useSimulationStore } from "../context/SimulationResultStore";
 import { elevationAt } from "../backend/backend";
 import { haversineDistance } from "../util/geo";
 import { minDetectableRcsColor } from "../util/rcsColorScale";
+import { combineMinDetectableRcsGrids } from "../util/minDetectableRcsGrid";
 
 function MinDetectableRcsOverlay({
   grid,
@@ -40,7 +41,7 @@ function MinDetectableRcsOverlay({
   for (let i = 0; i < grid.length; i++) {
     for (let j = 0; j < grid[i].length; j++) {
       const value = grid[i][j][0];
-      if (value === -1) {
+      if (Number.isNaN(value)) {
         // No detection possible in this cell: leave it fully transparent
         // instead of forcing it onto the hardcoded value scale.
         continue;
@@ -334,6 +335,13 @@ export default function ScenarioMap() {
   const minDetectableRcsGrids = useSimulationStore(
     (state) => state.minDetectableRcsGrids,
   ).filter(([sensorId, _grid, _date]) => visibleSensorIds.has(sensorId));
+  const combinedMinDetectableRcsGrid = useMemo(
+    () =>
+      combineMinDetectableRcsGrids(
+        minDetectableRcsGrids.map(([, grid]) => grid),
+      ),
+    [minDetectableRcsGrids],
+  );
 
   const pclCalcGrid = useGuiStateStore(
     (state) => state.pclCoverageCalcConf.grid,
@@ -379,13 +387,12 @@ export default function ScenarioMap() {
         <GeoJSON key={`Coverage ${_sensorId}_${date}`} data={coverage} />
       ))}
       <PclGridMarker grid={pclCalcGrid} />
-      {minDetectableRcsGrids.map(([sensorId, grid, date]) => (
+      {combinedMinDetectableRcsGrid.length > 0 && (
         <MinDetectableRcsOverlay
-          key={`RCS ${sensorId}_${date}`}
-          grid={grid}
+          grid={combinedMinDetectableRcsGrid}
           geometry={pclCalcGrid}
         />
-      ))}
+      )}
     </MapContainer>
   );
 }

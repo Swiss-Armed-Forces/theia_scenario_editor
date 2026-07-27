@@ -67,7 +67,12 @@ export async function calculatePclMinimumDetectableRcs(
     throw new Error(JSON.stringify(error));
   }
 
-  return data;
+  // JSON has no NaN representation, so the backend encodes "not detectable"
+  // as -1. Convert it back to NaN here so all downstream code can rely on
+  // normal NaN semantics instead of a magic sentinel value.
+  return data.map((row) =>
+    row.map((col) => col.map((v) => (v === -1 ? NaN : v))),
+  );
 }
 
 export async function elevationAt(lat: number, lon: number): Promise<number> {

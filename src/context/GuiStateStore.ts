@@ -117,10 +117,9 @@ export const useGuiStateStore = create<GuiStateStore>((set) => ({
         .replace("{y}", "89"),
       1000,
     );
-    console.log("Reachable?", isReachable);
     set({
       mapTileUrl: isReachable ? TILE_SERVER_OSM : TILE_SERVER_LOCAL,
-      maxZoomLevel: isReachable ? 20 : 12,
+      maxZoomLevel: isReachable ? 18 : 12,
     });
   },
 }));

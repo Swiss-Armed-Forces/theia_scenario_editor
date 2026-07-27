@@ -11,7 +11,6 @@ export async function isApiReachable(
       signal: controller.signal,
       cache: "no-store",
     });
-    console.log(res);
     return res.ok; // true for 2xx status codes
   } catch {
     return false; // network error, timeout, or CORS block

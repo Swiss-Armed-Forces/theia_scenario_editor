@@ -8,6 +8,7 @@ import {
   ScaleControl,
   TileLayer,
   Tooltip,
+  useMap,
   useMapEvents,
 } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
@@ -31,6 +32,16 @@ import { haversineDistance } from "../util/geo";
 import { minDetectableRcsColor } from "../util/rcsColorScale";
 import { combineMinDetectableRcsGrids } from "../util/minDetectableRcsGrid";
 import { isPclReceiverVisible } from "../util/pclVisibility";
+
+function MaxZoomUpdater({ maxZoom }: { maxZoom: number }) {
+  const map = useMap();
+
+  useEffect(() => {
+    map.setMaxZoom(maxZoom);
+  }, [map, maxZoom]);
+
+  return null;
+}
 
 function MinDetectableRcsOverlay({
   grid,
@@ -432,14 +443,13 @@ export default function ScenarioMap() {
   );
   const maxZoom = useGuiStateStore((state) => state.maxZoomLevel)
 
-  console.log(maxZoom)
-
   return (
     <MapContainer
       center={DEFAULT_MAP_CENTER}
       zoom={10}
       maxZoom={maxZoom}
     >
+      <MaxZoomUpdater maxZoom={maxZoom} />
       <TileLayer
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         url={useGuiStateStore((state) => state.mapTileUrl)}

@@ -4,7 +4,7 @@ import {
   type MonostaticCoverageCalcConf,
   type PclCoverageCalcConf,
 } from "../backend/backend";
-import type { MapClickListener, Transmitter } from "../types/types";
+import type { MapClickListener, Point, Transmitter } from "../types/types";
 import { useScenarioStore } from "./ScenarioStore";
 import { isApiReachable } from "../util/isApiReachable";
 
@@ -17,6 +17,9 @@ interface GuiStateStore {
   fmTransmitters: Transmitter[];
   mapClickListener: MapClickListener | null;
   setMapClickListener: (listener: MapClickListener | null) => void;
+  distancePoints: Point[];
+  addDistancePoint: (point: Point) => void;
+  clearDistancePoints: () => void;
   selectReceiver: (receiverId: number | null) => void;
   selectEffector: (effectorId: number | null) => void;
   pclSelectionReceiverId: number | null;
@@ -66,6 +69,15 @@ export const useGuiStateStore = create<GuiStateStore>((set) => ({
   setMapClickListener: (mapClickListener: MapClickListener | null) =>
     set((_state) => {
       return { mapClickListener: mapClickListener };
+    }),
+  distancePoints: [],
+  addDistancePoint: (point: Point) =>
+    set((state) => {
+      return { distancePoints: [...state.distancePoints, point] };
+    }),
+  clearDistancePoints: () =>
+    set((_state) => {
+      return { distancePoints: [] };
     }),
   selectReceiver: (receiverId) =>
     set((_state) => {

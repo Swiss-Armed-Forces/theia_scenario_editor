@@ -3,6 +3,7 @@ import {
   GeoJSON,
   MapContainer,
   Marker,
+  Polyline,
   Popup,
   Rectangle,
   ScaleControl,
@@ -27,7 +28,7 @@ import L from "leaflet";
 import { useScenarioStore } from "../context/ScenarioStore";
 import { useGuiStateStore } from "../context/GuiStateStore";
 import { useSimulationStore } from "../context/SimulationResultStore";
-import { elevationAt } from "../backend/backend";
+import { elevationAt, lineOfSightDistance } from "../backend/backend";
 import { haversineDistance } from "../util/geo";
 import { minDetectableRcsColor } from "../util/rcsColorScale";
 import { combineMinDetectableRcsGrids } from "../util/minDetectableRcsGrid";
@@ -103,6 +104,11 @@ function ClickMarker() {
   const [pos, setPos] = useState<Point | null>(null);
 
   const mapClickListener = useGuiStateStore((state) => state.mapClickListener);
+  const distancePoints = useGuiStateStore((state) => state.distancePoints);
+  const addDistancePoint = useGuiStateStore((state) => state.addDistancePoint);
+  const clearDistancePoints = useGuiStateStore(
+    (state) => state.clearDistancePoints,
+  );
 
   // Dismiss any leftover coordinate popup as soon as the click-listener mode
   // changes (e.g. entering or leaving "place a new sensor" mode), otherwise
@@ -113,6 +119,23 @@ function ClickMarker() {
 
   useMapEvents({
     click: (e) => {
+      // Any click dismisses a leftover coordinate popup from an earlier
+      // plain click; the branches below re-open it only when appropriate.
+      setPos(null);
+
+      if (e.originalEvent.shiftKey) {
+        // Shift+click: start (or extend) the distance measurement tool.
+        elevationAt(e.latlng.lat, e.latlng.lng).then((alt) => {
+          addDistancePoint({ lat: e.latlng.lat, lon: e.latlng.lng, alt: alt });
+        });
+        return;
+      }
+      if (distancePoints.length > 0) {
+        // A plain click while the distance tool is active removes it,
+        // rather than falling through to the default click behavior below.
+        clearDistancePoints();
+        return;
+      }
       if (mapClickListener) {
         // Pass information to listener.
         mapClickListener(e.latlng);
@@ -134,6 +157,79 @@ function ClickMarker() {
       {pos.lat.toFixed(4)}, {pos.lon.toFixed(4)}, {pos.alt.toFixed(0)}
     </Popup>
   ) : null;
+}
+
+const distancePointIcon = L.divIcon({
+  html: `<div style="width:10px;height:10px;border-radius:50%;background:#ff5722;border:2px solid white;box-shadow:0 0 2px rgba(0,0,0,0.6)"></div>`,
+  className: "",
+  iconSize: [10, 10],
+  iconAnchor: [5, 5],
+});
+
+// Renders the active distance-measurement tool: a marker per clicked vertex,
+// a dashed line per segment labeled with that segment's line-of-sight
+// distance, and a running total on the last vertex. Segment distances come
+// from the terrain-aware backend endpoint, so they're fetched asynchronously
+// and re-fetched whenever the vertex list changes.
+function DistanceMeasurementLayer() {
+  const points = useGuiStateStore((state) => state.distancePoints);
+  const [segmentDistances, setSegmentDistances] = useState<number[]>([]);
+
+  useEffect(() => {
+    if (points.length < 2) {
+      setSegmentDistances([]);
+      return;
+    }
+    let cancelled = false;
+    Promise.all(
+      points.slice(1).map((p, i) => lineOfSightDistance(points[i], p)),
+    ).then((distances) => {
+      if (!cancelled) {
+        setSegmentDistances(distances);
+      }
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [points]);
+
+  if (points.length === 0) {
+    return null;
+  }
+
+  const total = segmentDistances.reduce((sum, d) => sum + d, 0);
+
+  return (
+    <>
+      {points.slice(1).map((p, i) => {
+        const prev = points[i];
+        const distance = segmentDistances[i];
+        return (
+          <Polyline
+            key={i}
+            positions={[
+              [prev.lat, prev.lon],
+              [p.lat, p.lon],
+            ]}
+            pathOptions={{ color: "#ff5722", weight: 2, dashArray: "6, 4" }}
+          >
+            <Tooltip permanent direction="center">
+              {distance !== undefined ? `${distance.toFixed(0)} m` : "..."}
+            </Tooltip>
+          </Polyline>
+        );
+      })}
+      {points.map((p, i) => (
+        <Marker key={i} position={[p.lat, p.lon]} icon={distancePointIcon}>
+          {i === points.length - 1 && points.length > 1 && (
+            <Tooltip permanent direction="top" offset={[0, -8]}>
+              Total: {total.toFixed(0)} m
+            </Tooltip>
+          )}
+        </Marker>
+      ))}
+    </>
+  );
 }
 
 const friendlyRadarSymbol = new ms.Symbol("10231500002203000000", { size: 24 });
@@ -442,12 +538,17 @@ export default function ScenarioMap() {
     (state) => state.pclSelectionReceiverId,
   );
   const maxZoom = useGuiStateStore((state) => state.maxZoomLevel)
+  const distancePoints = useGuiStateStore((state) => state.distancePoints);
 
   return (
     <MapContainer
       center={DEFAULT_MAP_CENTER}
       zoom={10}
       maxZoom={maxZoom}
+      // Rapid clicks while placing distance-tool vertices can otherwise be
+      // read by the browser as a native dblclick, which Leaflet's default
+      // double-click-zoom handler would then act on regardless of Shift.
+      doubleClickZoom={distancePoints.length === 0}
     >
       <MaxZoomUpdater maxZoom={maxZoom} />
       <TileLayer
@@ -455,6 +556,7 @@ export default function ScenarioMap() {
         url={useGuiStateStore((state) => state.mapTileUrl)}
       />
       <ClickMarker />;
+      <DistanceMeasurementLayer />
       <ScaleControl position="bottomleft" />
       {blueMonostaticSensors.map((sensor, i) => (
         <MonostaticRadarMarker key={i} radar={sensor}></MonostaticRadarMarker>

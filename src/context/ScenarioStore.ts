@@ -122,36 +122,34 @@ async function matchingTransmitterIds(
 // JSON-safe representation of the store rather than dumping getState()
 // directly.
 export type SerializedScenarioState = {
-  blueMonostaticSensors: MonostaticSensor[];
-  redMonostaticSensors: MonostaticSensor[];
-  pclSensors: PclSensor[];
-  pclReceivers: Receiver[];
-  pclTransmitterIds: [number, number[]][];
-  pclTxCriteria: [number, PclTxSelectionCriteria][];
+  monostatic_sensors: MonostaticSensor[];
+  pcl_sensors: PclSensor[];
+  pcl_receivers: Receiver[];
+  pcl_transmitter_ids: [number, number[]][];
+  pcl_tx_criteria: [number, PclTxSelectionCriteria][];
   effectors: Effector[];
-  unusedIdSensor: number;
-  unusedIdReceiver: number;
-  unusedIdTransmitter: number;
-  unusedIdEffector: number;
+  unused_id_sensor: number;
+  unused_id_receiver: number;
+  unused_id_transmitter: number;
+  unused_id_effector: number;
 };
 
 export function serializeScenarioState(
   state: ScenarioStore,
 ): SerializedScenarioState {
   return {
-    blueMonostaticSensors: state.blueMonostaticSensors,
-    redMonostaticSensors: state.redMonostaticSensors,
-    pclSensors: state.pclSensors,
-    pclReceivers: state.pclReceivers,
-    pclTransmitterIds: Array.from(state.pclTransmitterIds.entries()).map(
+    monostatic_sensors: state.blueMonostaticSensors,
+    pcl_sensors: state.pclSensors,
+    pcl_receivers: state.pclReceivers,
+    pcl_transmitter_ids: Array.from(state.pclTransmitterIds.entries()).map(
       ([receiverId, ids]): [number, number[]] => [receiverId, Array.from(ids)],
     ),
-    pclTxCriteria: Array.from(state.pclTxCriteria.entries()),
+    pcl_tx_criteria: Array.from(state.pclTxCriteria.entries()),
     effectors: state.effectors,
-    unusedIdSensor: state.unusedIdSensor,
-    unusedIdReceiver: state.unusedIdReceiver,
-    unusedIdTransmitter: state.unusedIdTransmitter,
-    unusedIdEffector: state.unusedIdEffector,
+    unused_id_sensor: state.unusedIdSensor,
+    unused_id_receiver: state.unusedIdReceiver,
+    unused_id_transmitter: state.unusedIdTransmitter,
+    unused_id_effector: state.unusedIdEffector,
   };
 }
 
@@ -159,22 +157,21 @@ export function deserializeScenarioState(
   data: SerializedScenarioState,
 ): Partial<ScenarioStore> {
   return {
-    blueMonostaticSensors: data.blueMonostaticSensors,
-    redMonostaticSensors: data.redMonostaticSensors,
-    pclSensors: data.pclSensors,
-    pclReceivers: data.pclReceivers ?? [],
+    blueMonostaticSensors: data.monostatic_sensors,
+    pclSensors: data.pcl_sensors,
+    pclReceivers: data.pcl_receivers ?? [],
     pclTransmitterIds: new Map(
-      (data.pclTransmitterIds ?? []).map(([receiverId, ids]) => [
+      (data.pcl_transmitter_ids ?? []).map(([receiverId, ids]) => [
         receiverId,
         new Set(ids),
       ]),
     ),
-    pclTxCriteria: new Map(data.pclTxCriteria ?? []),
+    pclTxCriteria: new Map(data.pcl_tx_criteria ?? []),
     effectors: data.effectors ?? [],
-    unusedIdSensor: data.unusedIdSensor,
-    unusedIdReceiver: data.unusedIdReceiver,
-    unusedIdTransmitter: data.unusedIdTransmitter,
-    unusedIdEffector: data.unusedIdEffector ?? 0,
+    unusedIdSensor: data.unused_id_sensor,
+    unusedIdReceiver: data.unused_id_receiver,
+    unusedIdTransmitter: data.unused_id_transmitter,
+    unusedIdEffector: data.unused_id_effector ?? 0,
   };
 }
 

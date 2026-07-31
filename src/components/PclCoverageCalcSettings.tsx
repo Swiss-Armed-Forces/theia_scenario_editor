@@ -1,3 +1,4 @@
+import { Button } from "@mui/material";
 import { useGuiStateStore } from "../context/GuiStateStore";
 
 export default function MonostaticCoverageCalcSettings() {
@@ -5,6 +6,7 @@ export default function MonostaticCoverageCalcSettings() {
   const updateConf = useGuiStateStore(
     (state) => state.updatePclCoverageCalcConf,
   );
+  const resetConf = useGuiStateStore((state) => state.resetPclCoverageCalcConf);
 
   return (
     <fieldset className="MonostaticCoverageSettingsContainer">
@@ -123,6 +125,9 @@ export default function MonostaticCoverageCalcSettings() {
           updateConf({ ...conf, snrThreshold: parseFloat(e.target.value) });
         }}
       />
+      <Button variant="outlined" onClick={() => resetConf()}>
+        Reset to default
+      </Button>
     </fieldset>
   );
 }

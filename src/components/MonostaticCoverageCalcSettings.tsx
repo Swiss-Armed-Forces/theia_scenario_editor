@@ -1,9 +1,13 @@
+import { Button } from "@mui/material";
 import { useGuiStateStore } from "../context/GuiStateStore";
 
 export default function MonostaticCoverageCalcSettings() {
   const conf = useGuiStateStore((state) => state.monostaticCoverageCalcConf);
   const updateConf = useGuiStateStore(
     (state) => state.updateMonostaticCoverageCalcConf,
+  );
+  const resetConf = useGuiStateStore(
+    (state) => state.resetMonostaticCoverageCalcConf,
   );
 
   return (
@@ -51,6 +55,9 @@ export default function MonostaticCoverageCalcSettings() {
           });
         }}
       />
+      <Button variant="outlined" onClick={() => resetConf()}>
+        Reset to default
+      </Button>
     </fieldset>
   );
 }

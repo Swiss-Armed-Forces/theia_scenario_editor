@@ -25,3 +25,19 @@ export function combineMinDetectableRcsGrids(
     ),
   );
 }
+
+// JSON.stringify turns NaN into null, so it can't round-trip through the
+// save file directly. Encode/decode using the same -1 sentinel the backend
+// uses for "not detectable" (see calculatePclMinimumDetectableRcs in
+// backend.ts) around the JSON boundary instead.
+export function encodeMinDetectableRcsGrid(grid: number[][][]): number[][][] {
+  return grid.map((row) =>
+    row.map((col) => col.map((v) => (Number.isNaN(v) ? -1 : v))),
+  );
+}
+
+export function decodeMinDetectableRcsGrid(grid: number[][][]): number[][][] {
+  return grid.map((row) =>
+    row.map((col) => col.map((v) => (v === -1 ? NaN : v))),
+  );
+}

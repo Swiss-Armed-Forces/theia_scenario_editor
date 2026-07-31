@@ -10,6 +10,10 @@ import {
   type MonostaticCoverageCalcConf,
   type PclCoverageCalcConf,
 } from "../backend/backend";
+import {
+  decodeMinDetectableRcsGrid,
+  encodeMinDetectableRcsGrid,
+} from "../util/minDetectableRcsGrid";
 
 export interface SimulationStore {
   // sensorId, coverage, calculatedAt (epoch)
@@ -75,8 +79,6 @@ export const useSimulationStore = create<SimulationStore>((set) => ({
     }),
 }));
 
-// Both tuple fields are already JSON-safe (no Map/Set), so no transformation
-// is needed beyond picking the fields out of the store.
 export type SerializedSimulationState = {
   monostaticCoverages: [number, GeoJSONFeature, number][];
   minDetectableRcsGrids: [number, number[][][], number][];
@@ -87,7 +89,15 @@ export function serializeSimulationState(
 ): SerializedSimulationState {
   return {
     monostaticCoverages: state.monostaticCoverages,
-    minDetectableRcsGrids: state.minDetectableRcsGrids,
+    // NaN ("not detectable") doesn't survive JSON.stringify, so encode it
+    // with the same -1 sentinel used at the backend boundary.
+    minDetectableRcsGrids: state.minDetectableRcsGrids.map(
+      ([sensorId, grid, calculatedAt]) => [
+        sensorId,
+        encodeMinDetectableRcsGrid(grid),
+        calculatedAt,
+      ],
+    ),
   };
 }
 
@@ -96,6 +106,12 @@ export function deserializeSimulationState(
 ): Partial<SimulationStore> {
   return {
     monostaticCoverages: data?.monostaticCoverages ?? [],
-    minDetectableRcsGrids: data?.minDetectableRcsGrids ?? [],
+    minDetectableRcsGrids: (data?.minDetectableRcsGrids ?? []).map(
+      ([sensorId, grid, calculatedAt]) => [
+        sensorId,
+        decodeMinDetectableRcsGrid(grid),
+        calculatedAt,
+      ],
+    ),
   };
 }

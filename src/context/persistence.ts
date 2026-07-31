@@ -1,0 +1,39 @@
+import {
+  deserializeScenarioState,
+  serializeScenarioState,
+  useScenarioStore,
+  type ScenarioStore,
+  type SerializedScenarioState,
+} from "./ScenarioStore";
+import {
+  deserializeSimulationState,
+  serializeSimulationState,
+  useSimulationStore,
+  type SerializedSimulationState,
+  type SimulationStore,
+} from "./SimulationResultStore";
+
+// The save file combines the authored scenario (sensors, receivers,
+// effectors, ...) with the computed coverage results, so a load can restore
+// coverage exactly as it was calculated rather than requiring the user to
+// recalculate it after every import.
+export type SerializedFile = SerializedScenarioState & {
+  simulationResults?: SerializedSimulationState;
+};
+
+export function serializeFile(): SerializedFile {
+  return {
+    ...serializeScenarioState(useScenarioStore.getState()),
+    simulationResults: serializeSimulationState(useSimulationStore.getState()),
+  };
+}
+
+export function deserializeFile(data: SerializedFile): {
+  scenario: Partial<ScenarioStore>;
+  simulation: Partial<SimulationStore>;
+} {
+  return {
+    scenario: deserializeScenarioState(data),
+    simulation: deserializeSimulationState(data.simulationResults),
+  };
+}

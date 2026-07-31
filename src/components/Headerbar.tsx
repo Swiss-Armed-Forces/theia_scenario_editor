@@ -1,6 +1,6 @@
 import { Button } from "@mui/material";
 import { downloadJSON } from "../util/export";
-import { serializeScenarioState, useScenarioStore } from "../context/ScenarioStore";
+import { serializeFile } from "../context/persistence";
 import ImportButton from "./ImportButton";
 
 export default function Headerbar() {
@@ -8,12 +8,7 @@ export default function Headerbar() {
     <div className="headerBar">
       <Button
         variant="contained"
-        onClick={() =>
-          downloadJSON(
-            serializeScenarioState(useScenarioStore.getState()),
-            "scenario.json",
-          )
-        }
+        onClick={() => downloadJSON(serializeFile(), "scenario.json")}
       >
         Save
       </Button>

@@ -11,7 +11,7 @@ import {
   type PclCoverageCalcConf,
 } from "../backend/backend";
 
-interface SimulationStore {
+export interface SimulationStore {
   // sensorId, coverage, calculatedAt (epoch)
   monostaticCoverages: [number, GeoJSONFeature, number][];
   // sensorId, grid of shape (lat, lon, MASL), calculatedAt (epoch)
@@ -74,3 +74,28 @@ export const useSimulationStore = create<SimulationStore>((set) => ({
       };
     }),
 }));
+
+// Both tuple fields are already JSON-safe (no Map/Set), so no transformation
+// is needed beyond picking the fields out of the store.
+export type SerializedSimulationState = {
+  monostaticCoverages: [number, GeoJSONFeature, number][];
+  minDetectableRcsGrids: [number, number[][][], number][];
+};
+
+export function serializeSimulationState(
+  state: SimulationStore,
+): SerializedSimulationState {
+  return {
+    monostaticCoverages: state.monostaticCoverages,
+    minDetectableRcsGrids: state.minDetectableRcsGrids,
+  };
+}
+
+export function deserializeSimulationState(
+  data: Partial<SerializedSimulationState> | undefined,
+): Partial<SimulationStore> {
+  return {
+    monostaticCoverages: data?.monostaticCoverages ?? [],
+    minDetectableRcsGrids: data?.minDetectableRcsGrids ?? [],
+  };
+}

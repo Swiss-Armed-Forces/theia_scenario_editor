@@ -1,11 +1,9 @@
 import { Button } from "@mui/material";
 import { useRef } from "react";
-import {
-  deserializeScenarioState,
-  useScenarioStore,
-  type SerializedScenarioState,
-} from "../context/ScenarioStore";
+import { useScenarioStore } from "../context/ScenarioStore";
+import { useSimulationStore } from "../context/SimulationResultStore";
 import { useGuiStateStore } from "../context/GuiStateStore";
+import { deserializeFile, type SerializedFile } from "../context/persistence";
 
 export default function ImportButton() {
   const inputRef = useRef<HTMLInputElement>(null);
@@ -25,9 +23,11 @@ export default function ImportButton() {
           const file = files[0];
           file
             .text()
-            .then((text) => JSON.parse(text) as SerializedScenarioState)
+            .then((text) => JSON.parse(text) as SerializedFile)
             .then((data) => {
-              useScenarioStore.setState(deserializeScenarioState(data));
+              const { scenario, simulation } = deserializeFile(data);
+              useScenarioStore.setState(scenario);
+              useSimulationStore.setState(simulation);
               const scenarioState = useScenarioStore.getState();
               for (const sensor of scenarioState.blueMonostaticSensors) {
                 showSensor(sensor.id);

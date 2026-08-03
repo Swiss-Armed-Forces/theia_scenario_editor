@@ -30,18 +30,18 @@ function App() {
         }
         if (
           scenarioStore.blueMonostaticSensors.some(
-            (sensor) => sensor.receiver.id === receiverId,
+            (sensor) => sensor.sensor.receiver.id === receiverId,
           )
         ) {
           scenarioStore.deleteReceiver(receiverId, true);
         } else if (
           scenarioStore.redMonostaticSensors.some(
-            (sensor) => sensor.receiver.id === receiverId,
+            (sensor) => sensor.sensor.receiver.id === receiverId,
           )
         ) {
           scenarioStore.deleteReceiver(receiverId, false);
         } else if (
-          scenarioStore.pclReceivers.some((r) => r.id === receiverId)
+          scenarioStore.pclReceivers.some((r) => r.receiver.id === receiverId)
         ) {
           scenarioStore.deletePclReceiver(receiverId);
         }

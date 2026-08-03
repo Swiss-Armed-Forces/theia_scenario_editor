@@ -28,12 +28,48 @@ export type SensorPortfolio = {
 
 export type MapClickListener = (p: LatLng) => void;
 
+// A "target" is any entity that can itself be detected by another sensor:
+// monostatic sensors, PCL receivers, and effectors. target_id is unique
+// across all three kinds (see unusedTargetId in ScenarioStore), unlike the
+// per-kind ids (Receiver.id, Transmitter.id, ...) which are each their
+// own id space.
+export const DEFAULT_RCS = 1.0;
+
+export interface DetectableMonostaticSensor {
+  target_id: number;
+  rcs: number;
+  sensor: MonostaticSensor;
+}
+
+export interface DetectablePclReceiver {
+  target_id: number;
+  rcs: number;
+  receiver: Receiver;
+}
+
+// One object per (receiver, transmitter) pairing, but target_id/rcs always mirror
+// the pairing's DetectablePclReceiver: both refer to the same physical
+// receiver, so they must be identical across every PclSensor derived from
+// it (see rebuildPclSensorsFor in ScenarioStore.ts).
+export interface DetectablePclSensor {
+  target_id: number;
+  rcs: number;
+  sensor: PclSensor;
+}
+
+export interface DetectableEffector {
+  target_id: number;
+  rcs: number;
+  effector: Effector;
+}
+
 export function buildDefaultMonostaticSensor(
   point: Point,
   rx_id: number,
   tx_id: number,
   sensor_id: number,
-): MonostaticSensor {
+  target_id: number,
+): DetectableMonostaticSensor {
   const DEFAULT_ANTENNA_HEIGHT = 8.0;
   const DEFAULT_ANTENNA_DIAMETER = 2.0;
   const DEFAULT_FREQUENCY = 3000.0;
@@ -77,14 +113,18 @@ export function buildDefaultMonostaticSensor(
   };
 
   return {
-    id: sensor_id,
-    transmitter: tx,
-    receiver: rx,
-    error_model: {
-      min_range_uncertainty: 0,
-      max_range_uncertainty: 0,
-      min_angular_uncertainty: 0,
-      max_angular_uncertainty: 0,
+    target_id,
+    rcs: DEFAULT_RCS,
+    sensor: {
+      id: sensor_id,
+      transmitter: tx,
+      receiver: rx,
+      error_model: {
+        min_range_uncertainty: 0,
+        max_range_uncertainty: 0,
+        min_angular_uncertainty: 0,
+        max_angular_uncertainty: 0,
+      },
     },
   };
 }
@@ -93,22 +133,28 @@ export function buildDefaultEffector(
   point: Point,
   id: number,
   name: string,
-): Effector {
+  target_id: number,
+): DetectableEffector {
   const DEFAULT_COMBAT_RANGE = 4_000;
   const DEFAULT_N_ATTACKS = 10;
   return {
-    id,
-    name,
-    point,
-    combat_range: DEFAULT_COMBAT_RANGE,
-    n_attacks_left: DEFAULT_N_ATTACKS,
+    target_id,
+    rcs: DEFAULT_RCS,
+    effector: {
+      id,
+      name,
+      point,
+      combat_range: DEFAULT_COMBAT_RANGE,
+      n_attacks_left: DEFAULT_N_ATTACKS,
+    },
   };
 }
 
 export function buildDefaultPclReceiver(
   point: Point,
   rx_id: number,
-): [Receiver, number, number] {
+  target_id: number,
+): [DetectablePclReceiver, number, number] {
   const DEFAULT_ANTENNA_HEIGHT = 8.0;
   const DEFAULT_ANTENNA_DIAMETER = 2.0;
   const DEFAULT_BANDWIDTH = 0.3;
@@ -134,5 +180,9 @@ export function buildDefaultPclReceiver(
     noise_figure: 1.9,
     antenna_efficiency_value: DEFAULT_ANTENNA_EFFICIENCY_VALUE,
   };
-  return [rx, MIN_TX_POWER, MAX_DISTANCE];
+  return [
+    { target_id, rcs: DEFAULT_RCS, receiver: rx },
+    MIN_TX_POWER,
+    MAX_DISTANCE,
+  ];
 }

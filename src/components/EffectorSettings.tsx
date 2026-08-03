@@ -7,14 +7,15 @@ export default function EffectorSettings() {
   const selectedEffectorId = useGuiStateStore(
     (state) => state.selectedEffectorId,
   );
-  const effector = useScenarioStore((state) => state.effectors).find(
-    (effector) => effector.id === selectedEffectorId,
+  const detectableEffector = useScenarioStore((state) => state.effectors).find(
+    (d) => d.effector.id === selectedEffectorId,
   );
 
   const updateEffector = useScenarioStore((state) => state.updateEffector);
 
   let content = <></>;
-  if (effector) {
+  if (detectableEffector) {
+    const effector = detectableEffector.effector;
     content = (
       <>
         <label>Name</label>
@@ -22,18 +23,29 @@ export default function EffectorSettings() {
           type="text"
           value={effector.name}
           onChange={(event) => {
-            const newEffector = structuredClone(effector);
-            newEffector.name = event.target.value;
-            updateEffector(newEffector);
+            const newDetectableEffector = structuredClone(detectableEffector);
+            newDetectableEffector.effector.name = event.target.value;
+            updateEffector(newDetectableEffector);
           }}
         />
         <label>Position</label>
         <PositionSelector
           point={effector.point}
           setPoint={(p: Point) => {
-            const newEffector = structuredClone(effector);
-            newEffector.point = p;
-            updateEffector(newEffector);
+            const newDetectableEffector = structuredClone(detectableEffector);
+            newDetectableEffector.effector.point = p;
+            updateEffector(newDetectableEffector);
+          }}
+        />
+        <label>RCS [m²]</label>
+        <input
+          type="number"
+          value={detectableEffector.rcs}
+          onChange={(event) => {
+            const value = parseFloat(event.target.value);
+            const newDetectableEffector = structuredClone(detectableEffector);
+            newDetectableEffector.rcs = value;
+            updateEffector(newDetectableEffector);
           }}
         />
         <label>Combat range [m]</label>
@@ -42,9 +54,9 @@ export default function EffectorSettings() {
           value={effector.combat_range}
           onChange={(event) => {
             const value = parseFloat(event.target.value);
-            const newEffector = structuredClone(effector);
-            newEffector.combat_range = value;
-            updateEffector(newEffector);
+            const newDetectableEffector = structuredClone(detectableEffector);
+            newDetectableEffector.effector.combat_range = value;
+            updateEffector(newDetectableEffector);
           }}
         />
         <label>N attacks left</label>
@@ -53,9 +65,9 @@ export default function EffectorSettings() {
           value={effector.n_attacks_left}
           onChange={(event) => {
             const value = parseInt(event.target.value);
-            const newEffector = structuredClone(effector);
-            newEffector.n_attacks_left = value;
-            updateEffector(newEffector);
+            const newDetectableEffector = structuredClone(detectableEffector);
+            newDetectableEffector.effector.n_attacks_left = value;
+            updateEffector(newDetectableEffector);
           }}
         />
       </>

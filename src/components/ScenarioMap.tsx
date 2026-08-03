@@ -440,9 +440,9 @@ function ReceiverMarker({
 const EMPTY_TRANSMITTER_IDS = new Set<number>();
 
 function PclTransmitterSelectionLayer({ receiverId }: { receiverId: number }) {
-  const receiver = useScenarioStore((state) =>
-    state.pclReceivers.find((r) => r.id === receiverId),
-  );
+  const receiver = useScenarioStore(
+    (state) => state.pclReceivers.find((r) => r.receiver.id === receiverId),
+  )?.receiver;
   const criteria = useScenarioStore((state) =>
     state.pclTxCriteria.get(receiverId),
   );
@@ -504,14 +504,13 @@ export default function ScenarioMap() {
   const visibleSensorIds = useGuiStateStore((state) => state.visibleSensorIds);
   const blueMonostaticSensors = useScenarioStore(
     (state) => state.blueMonostaticSensors,
-  ).filter((sensor) => visibleSensorIds.has(sensor.id));
+  ).filter((sensor) => visibleSensorIds.has(sensor.sensor.id));
   const allPclSensors = useScenarioStore((state) => state.pclSensors);
   const pclReceivers = useScenarioStore((state) => state.pclReceivers).filter(
-    (receiver) =>
-      isPclReceiverVisible(receiver, allPclSensors, visibleSensorIds),
+    (dr) => isPclReceiverVisible(dr.receiver, allPclSensors, visibleSensorIds),
   );
-  const pclSensors = allPclSensors.filter((sensor) =>
-    visibleSensorIds.has(sensor.id),
+  const pclSensors = allPclSensors.filter((d) =>
+    visibleSensorIds.has(d.sensor.id),
   );
   const effectors = useScenarioStore((state) => state.effectors);
   const blueMonostaticCoverages = useSimulationStore(
@@ -559,25 +558,31 @@ export default function ScenarioMap() {
       <DistanceMeasurementLayer />
       <ScaleControl position="bottomleft" />
       {blueMonostaticSensors.map((sensor, i) => (
-        <MonostaticRadarMarker key={i} radar={sensor}></MonostaticRadarMarker>
+        <MonostaticRadarMarker
+          key={i}
+          radar={sensor.sensor}
+        ></MonostaticRadarMarker>
       ))}
-      {effectors.map((effector) => (
-        <EffectorMarker key={effector.id} effector={effector} />
+      {effectors.map((detectableEffector) => (
+        <EffectorMarker
+          key={detectableEffector.effector.id}
+          effector={detectableEffector.effector}
+        />
       ))}
-      {pclReceivers.map((receiver) => (
+      {pclReceivers.map((dr) => (
         <ReceiverMarker
-          key={receiver.id}
-          receiver={receiver}
-          isHighlighted={selectedReceiverId === receiver.id}
+          key={dr.receiver.id}
+          receiver={dr.receiver}
+          isHighlighted={selectedReceiverId === dr.receiver.id}
         />
       ))}
       {pclSensors
-        .filter((sensor) => sensor.receiver.id !== pclSelectionReceiverId)
-        .map((sensor) => (
+        .filter((d) => d.sensor.receiver.id !== pclSelectionReceiverId)
+        .map((d) => (
           <FmTransmitterMarker
-            key={sensor.id}
-            transmitter={sensor.transmitter}
-            isHighlighted={selectedReceiverId === sensor.receiver.id}
+            key={d.sensor.id}
+            transmitter={d.sensor.transmitter}
+            isHighlighted={selectedReceiverId === d.sensor.receiver.id}
           />
         ))}
       {pclSelectionReceiverId !== null && (

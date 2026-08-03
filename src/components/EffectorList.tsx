@@ -17,6 +17,7 @@ export default function EffectorList() {
 
   const addEffector = useScenarioStore((state) => state.addEffector);
   const unusedIdEffector = useScenarioStore((state) => state.unusedIdEffector);
+  const unusedTargetId = useScenarioStore((state) => state.unusedTargetId);
   const setMapClickListener = useGuiStateStore(
     (state) => state.setMapClickListener,
   );
@@ -24,11 +25,11 @@ export default function EffectorList() {
   return (
     <fieldset className="SensorList">
       <legend>Effector List</legend>
-      {effectors.map((effector) => (
+      {effectors.map((detectableEffector) => (
         <EffectorListItem
-          key={effector.id}
-          effector={effector}
-          isHighlighted={effector.id === selectedEffectorId}
+          key={detectableEffector.effector.id}
+          effector={detectableEffector.effector}
+          isHighlighted={detectableEffector.effector.id === selectedEffectorId}
         />
       ))}
       <Button
@@ -50,9 +51,10 @@ export default function EffectorList() {
                 point,
                 unusedIdEffector,
                 `Effector ${unusedIdEffector}`,
+                unusedTargetId,
               );
               addEffector(newEffector);
-              selectEffector(newEffector.id);
+              selectEffector(newEffector.effector.id);
 
               // Deactivate the listener.
               setMapClickListener(null);

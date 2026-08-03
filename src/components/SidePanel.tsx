@@ -24,13 +24,13 @@ export default function SidePanel() {
   const monostaticSensors = useScenarioStore(
     (state) => state.blueMonostaticSensors,
   );
-  const visibleMonostaticSensors = monostaticSensors.filter((sensor) =>
-    visibleSensorIds.has(sensor.id),
-  );
+  const visibleMonostaticSensors = monostaticSensors
+    .filter((sensor) => visibleSensorIds.has(sensor.sensor.id))
+    .map((sensor) => sensor.sensor);
   const pclSensors = useScenarioStore((state) => state.pclSensors);
-  const visiblePclSensors = pclSensors.filter((sensor) =>
-    visibleSensorIds.has(sensor.id),
-  );
+  const visiblePclSensors = pclSensors
+    .filter((sensor) => visibleSensorIds.has(sensor.sensor.id))
+    .map((sensor) => sensor.sensor);
   const updateMonostaticCoverage = useSimulationStore(
     (state) => state.updateMonostaticCoverages,
   );

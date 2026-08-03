@@ -30,13 +30,13 @@ export default function ImportButton() {
               useSimulationStore.setState(simulation);
               const scenarioState = useScenarioStore.getState();
               for (const sensor of scenarioState.blueMonostaticSensors) {
-                showSensor(sensor.id);
+                showSensor(sensor.sensor.id);
               }
               for (const sensor of scenarioState.redMonostaticSensors) {
-                showSensor(sensor.id);
+                showSensor(sensor.sensor.id);
               }
               for (const sensor of scenarioState.pclSensors) {
-                showSensor(sensor.id);
+                showSensor(sensor.sensor.id);
               }
             });
         }}

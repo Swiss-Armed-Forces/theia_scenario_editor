@@ -23,6 +23,7 @@ export default function MonostaticSensorList() {
   const unusedIdTransmitter = useScenarioStore(
     (state) => state.unusedIdTransmitter,
   );
+  const unusedTargetId = useScenarioStore((state) => state.unusedTargetId);
   const setMapClickListener = useGuiStateStore(
     (state) => state.setMapClickListener,
   );
@@ -33,8 +34,8 @@ export default function MonostaticSensorList() {
       {sensors.map((sensor, i) => (
         <SensorListItem
           key={i}
-          sensor={sensor}
-          isHighlighted={sensor.receiver.id == highlightedReceiverId}
+          sensor={sensor.sensor}
+          isHighlighted={sensor.sensor.receiver.id == highlightedReceiverId}
         />
       ))}
       <Button
@@ -59,6 +60,7 @@ export default function MonostaticSensorList() {
                 unusedIdReceiver,
                 unusedIdTransmitter,
                 unusedIdMonostaticSensor,
+                unusedTargetId,
               );
               addSensor(newRadar, true);
 

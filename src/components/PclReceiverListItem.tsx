@@ -18,9 +18,9 @@ export default function PclReceiverListItem({
   const showSensor = useGuiStateStore((state) => state.showSensor);
   const hideSensor = useGuiStateStore((state) => state.hideSensor);
   const pclSensors = useScenarioStore((state) => state.pclSensors).filter(
-    (sensor) => sensor.receiver.id === receiver.id,
+    (d) => d.sensor.receiver.id === receiver.id,
   );
-  const sensorIds = pclSensors.map((sensor) => sensor.id);
+  const sensorIds = pclSensors.map((d) => d.sensor.id);
   const transmitterCount = useScenarioStore(
     (state) => state.pclTransmitterIds.get(receiver.id)?.size ?? 0,
   );
@@ -62,8 +62,8 @@ export default function PclReceiverListItem({
           Receiver #{receiver.id} ({transmitterCount} Tx)
         </span>
       </Box>
-      {pclSensors.map((sensor) => (
-        <PclTransmitterListItem key={sensor.id} sensor={sensor} />
+      {pclSensors.map((d) => (
+        <PclTransmitterListItem key={d.sensor.id} sensor={d.sensor} />
       ))}
     </Box>
   );

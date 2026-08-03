@@ -16,6 +16,7 @@ export default function PclSensorList() {
 
   const addPclReceiver = useScenarioStore((state) => state.addPclReceiver);
   const unusedIdReceiver = useScenarioStore((state) => state.unusedIdReceiver);
+  const unusedTargetId = useScenarioStore((state) => state.unusedTargetId);
   const setMapClickListener = useGuiStateStore(
     (state) => state.setMapClickListener,
   );
@@ -27,11 +28,13 @@ export default function PclSensorList() {
   return (
     <fieldset className="SensorList">
       <legend>Sensor List</legend>
-      {receivers.map((receiver) => (
+      {receivers.map((detectableReceiver) => (
         <PclReceiverListItem
-          key={receiver.id}
-          receiver={receiver}
-          isHighlighted={receiver.id == highlightedReceiverId}
+          key={detectableReceiver.receiver.id}
+          receiver={detectableReceiver.receiver}
+          isHighlighted={
+            detectableReceiver.receiver.id == highlightedReceiverId
+          }
         />
       ))}
       <Button
@@ -54,6 +57,7 @@ export default function PclSensorList() {
               const [newRadar, minPower, maxDistance] = buildDefaultPclReceiver(
                 point,
                 unusedIdReceiver,
+                unusedTargetId,
               );
               addPclReceiver(newRadar, {
                 min_power: minPower,
@@ -61,8 +65,8 @@ export default function PclSensorList() {
               }).then(() => {
                 // Drop straight into transmitter selection mode so the user
                 // can immediately fine-tune the just-created receiver.
-                selectReceiver(newRadar.id);
-                setPclSelectionReceiverId(newRadar.id);
+                selectReceiver(newRadar.receiver.id);
+                setPclSelectionReceiverId(newRadar.receiver.id);
               });
 
               // Deactivate the listener.

@@ -8,9 +8,9 @@ export default function PclSensorSettings() {
   const selectedReceiverId = useGuiStateStore(
     (state) => state.selectedReceiverId,
   );
-  const receiver = useScenarioStore((state) => state.pclReceivers).find(
-    (r) => r.id === selectedReceiverId,
-  );
+  const detectableReceiver = useScenarioStore(
+    (state) => state.pclReceivers,
+  ).find((d) => d.receiver.id === selectedReceiverId);
 
   const updatePclReceiverSettings = useScenarioStore(
     (state) => state.updatePclReceiverSettings,
@@ -23,10 +23,12 @@ export default function PclSensorSettings() {
   );
 
   const criteria = useScenarioStore((state) => state.pclTxCriteria).get(
-    receiver?.id ?? -1,
+    detectableReceiver?.receiver.id ?? -1,
   );
   const selectedCount = useScenarioStore(
-    (state) => state.pclTransmitterIds.get(receiver?.id ?? -1)?.size ?? 0,
+    (state) =>
+      state.pclTransmitterIds.get(detectableReceiver?.receiver.id ?? -1)
+        ?.size ?? 0,
   );
 
   const pclSelectionReceiverId = useGuiStateStore(
@@ -36,19 +38,31 @@ export default function PclSensorSettings() {
     (state) => state.setPclSelectionReceiverId,
   );
   const isSelecting =
-    receiver !== undefined && pclSelectionReceiverId === receiver.id;
+    detectableReceiver !== undefined &&
+    pclSelectionReceiverId === detectableReceiver.receiver.id;
 
   let content = <></>;
-  if (receiver && criteria) {
-    const newReceiver = structuredClone(receiver);
+  if (detectableReceiver && criteria) {
+    const receiver = detectableReceiver.receiver;
+    const newDetectableReceiver = structuredClone(detectableReceiver);
     content = (
       <>
         <label>Position</label>
         <PositionSelector
           point={receiver.point}
           setPoint={(p: Point) => {
-            newReceiver.point = p;
-            updatePclReceiverSettings(newReceiver);
+            newDetectableReceiver.receiver.point = p;
+            updatePclReceiverSettings(newDetectableReceiver);
+          }}
+        />
+        <label>RCS [m²]</label>
+        <input
+          type="number"
+          value={detectableReceiver.rcs}
+          onChange={(event) => {
+            const value = parseFloat(event.target.value);
+            newDetectableReceiver.rcs = value;
+            updatePclReceiverSettings(newDetectableReceiver);
           }}
         />
         <label>Antenna height</label>
@@ -58,8 +72,8 @@ export default function PclSensorSettings() {
           value={receiver.antenna_height}
           onChange={(event) => {
             const value = parseFloat(event.target.value);
-            newReceiver.antenna_height = value;
-            updatePclReceiverSettings(newReceiver);
+            newDetectableReceiver.receiver.antenna_height = value;
+            updatePclReceiverSettings(newDetectableReceiver);
           }}
         />
         <label>Antenna diameter</label>
@@ -69,8 +83,8 @@ export default function PclSensorSettings() {
           value={receiver.diameter}
           onChange={(event) => {
             const value = parseFloat(event.target.value);
-            newReceiver.diameter = value;
-            updatePclReceiverSettings(newReceiver);
+            newDetectableReceiver.receiver.diameter = value;
+            updatePclReceiverSettings(newDetectableReceiver);
           }}
         />
         <label>Antenna efficiency value</label>
@@ -80,8 +94,8 @@ export default function PclSensorSettings() {
           value={receiver.antenna_efficiency_value}
           onChange={(event) => {
             const value = parseFloat(event.target.value);
-            newReceiver.antenna_efficiency_value = value;
-            updatePclReceiverSettings(newReceiver);
+            newDetectableReceiver.receiver.antenna_efficiency_value = value;
+            updatePclReceiverSettings(newDetectableReceiver);
           }}
         />
         <label>Receiver gain [dB]</label>
@@ -90,8 +104,8 @@ export default function PclSensorSettings() {
           value={receiver.gain}
           onChange={(event) => {
             const value = parseFloat(event.target.value);
-            newReceiver.gain = value;
-            updatePclReceiverSettings(newReceiver);
+            newDetectableReceiver.receiver.gain = value;
+            updatePclReceiverSettings(newDetectableReceiver);
           }}
         />
         <label>Receiver losses [dB]</label>
@@ -100,8 +114,8 @@ export default function PclSensorSettings() {
           value={receiver.losses}
           onChange={(event) => {
             const value = parseFloat(event.target.value);
-            newReceiver.losses = value;
-            updatePclReceiverSettings(newReceiver);
+            newDetectableReceiver.receiver.losses = value;
+            updatePclReceiverSettings(newDetectableReceiver);
           }}
         />
         <label>Receiver noise temperature [K]</label>
@@ -110,8 +124,8 @@ export default function PclSensorSettings() {
           value={receiver.noise_temperature}
           onChange={(event) => {
             const value = parseFloat(event.target.value);
-            newReceiver.noise_temperature = value;
-            updatePclReceiverSettings(newReceiver);
+            newDetectableReceiver.receiver.noise_temperature = value;
+            updatePclReceiverSettings(newDetectableReceiver);
           }}
         />
         <label>T rotation [s]</label>
@@ -120,8 +134,8 @@ export default function PclSensorSettings() {
           value={receiver.rotation_time}
           onChange={(event) => {
             const value = parseInt(event.target.value);
-            newReceiver.rotation_time = value;
-            updatePclReceiverSettings(newReceiver);
+            newDetectableReceiver.receiver.rotation_time = value;
+            updatePclReceiverSettings(newDetectableReceiver);
           }}
         />
         <label>Noise Bandwidth [MHz]</label>
@@ -130,8 +144,8 @@ export default function PclSensorSettings() {
           value={receiver.bandwidth}
           onChange={(event) => {
             const value = parseFloat(event.target.value);
-            newReceiver.bandwidth = value;
-            updatePclReceiverSettings(newReceiver);
+            newDetectableReceiver.receiver.bandwidth = value;
+            updatePclReceiverSettings(newDetectableReceiver);
           }}
         />
         <label>Highlight Tx with P [W] &gt;= </label>

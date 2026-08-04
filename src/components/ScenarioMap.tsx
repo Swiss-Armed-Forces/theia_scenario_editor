@@ -515,14 +515,14 @@ export default function ScenarioMap() {
   const effectors = useScenarioStore((state) => state.effectors);
   const blueMonostaticCoverages = useSimulationStore(
     (state) => state.monostaticCoverages,
-  ).filter(([sensorId, _coverage, _date]) => visibleSensorIds.has(sensorId));
+  ).filter(([result, _date]) => visibleSensorIds.has(result.sensorId));
   const minDetectableRcsGrids = useSimulationStore(
     (state) => state.minDetectableRcsGrids,
-  ).filter(([sensorId, _grid, _date]) => visibleSensorIds.has(sensorId));
+  ).filter(([result, _date]) => visibleSensorIds.has(result.sensorId));
   const combinedMinDetectableRcsGrid = useMemo(
     () =>
       combineMinDetectableRcsGrids(
-        minDetectableRcsGrids.map(([, grid]) => grid),
+        minDetectableRcsGrids.map(([result, _time]) => result.grid),
       ),
     [minDetectableRcsGrids],
   );
@@ -588,8 +588,11 @@ export default function ScenarioMap() {
       {pclSelectionReceiverId !== null && (
         <PclTransmitterSelectionLayer receiverId={pclSelectionReceiverId} />
       )}
-      {blueMonostaticCoverages.map(([_sensorId, coverage, date]) => (
-        <GeoJSON key={`Coverage ${_sensorId}_${date}`} data={coverage} />
+      {blueMonostaticCoverages.map(([result, date]) => (
+        <GeoJSON
+          key={`Coverage ${result.sensorId}_${date}`}
+          data={result.coverage}
+        />
       ))}
       <PclGridMarker grid={pclCalcGrid} />
       {combinedMinDetectableRcsGrid.length > 0 && (

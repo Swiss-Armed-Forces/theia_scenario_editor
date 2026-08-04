@@ -1,14 +1,12 @@
 import { create } from "zustand";
-import type {
-  GeoJSONFeature,
-  MonostaticSensor,
-  PclSensor,
-} from "../types/types";
+import type { MonostaticSensor, PclSensor } from "../types/types";
 import {
   calculateMonostaticCoverage,
   calculatePclMinimumDetectableRcs,
   type MonostaticCoverageCalcConf,
+  type MonostaticCoverageResult,
   type PclCoverageCalcConf,
+  type PclMinDetectableRcsResult,
 } from "../backend/backend";
 import {
   decodeMinDetectableRcsGrid,
@@ -16,10 +14,10 @@ import {
 } from "../util/minDetectableRcsGrid";
 
 export interface SimulationStore {
-  // sensorId, coverage, calculatedAt (epoch)
-  monostaticCoverages: [number, GeoJSONFeature, number][];
-  // sensorId, grid of shape (lat, lon, MASL), calculatedAt (epoch)
-  minDetectableRcsGrids: [number, number[][][], number][];
+  // result, calculatedAt (epoch)
+  monostaticCoverages: [MonostaticCoverageResult, number][];
+  // result, calculatedAt (epoch)
+  minDetectableRcsGrids: [PclMinDetectableRcsResult, number][];
   updateMonostaticCoverages: (
     sensors: MonostaticSensor[],
     conf: MonostaticCoverageCalcConf,
@@ -39,13 +37,10 @@ export const useSimulationStore = create<SimulationStore>((set) => ({
     conf: MonostaticCoverageCalcConf,
   ) => {
     const coverages = await Promise.all(
-      sensors.map((sensor) =>
-        Promise.all([
-          sensor.id,
-          calculateMonostaticCoverage(sensor, conf),
-          Date.now(),
-        ] as [number, Promise<GeoJSONFeature>, number]),
-      ),
+      sensors.map(async (sensor): Promise<[MonostaticCoverageResult, number]> => [
+        await calculateMonostaticCoverage(sensor, conf),
+        Date.now(),
+      ]),
     );
     set({ monostaticCoverages: coverages });
   },
@@ -54,23 +49,20 @@ export const useSimulationStore = create<SimulationStore>((set) => ({
     conf: PclCoverageCalcConf,
   ) => {
     const grids = await Promise.all(
-      sensors.map((sensor) =>
-        Promise.all([
-          sensor.id,
-          calculatePclMinimumDetectableRcs(sensor, conf),
-          Date.now(),
-        ] as [number, Promise<number[][][]>, number]),
-      ),
+      sensors.map(async (sensor): Promise<[PclMinDetectableRcsResult, number]> => [
+        await calculatePclMinimumDetectableRcs(sensor, conf),
+        Date.now(),
+      ]),
     );
     set({ minDetectableRcsGrids: grids });
   },
   deleteSensor: (sensorId: number) =>
     set((state) => {
       const newCoverages = state.monostaticCoverages.filter(
-        ([id, _coverage, _lastUpdated]) => id !== sensorId,
+        ([result, _lastUpdated]) => result.sensorId !== sensorId,
       );
       const newGrids = state.minDetectableRcsGrids.filter(
-        ([id, _grid, _lastUpdated]) => id !== sensorId,
+        ([result, _lastUpdated]) => result.sensorId !== sensorId,
       );
       return {
         monostaticCoverages: newCoverages,
@@ -80,8 +72,8 @@ export const useSimulationStore = create<SimulationStore>((set) => ({
 }));
 
 export type SerializedSimulationState = {
-  monostaticCoverages: [number, GeoJSONFeature, number][];
-  minDetectableRcsGrids: [number, number[][][], number][];
+  monostaticCoverages: [MonostaticCoverageResult, number][];
+  minDetectableRcsGrids: [PclMinDetectableRcsResult, number][];
 };
 
 export function serializeSimulationState(
@@ -92,9 +84,8 @@ export function serializeSimulationState(
     // NaN ("not detectable") doesn't survive JSON.stringify, so encode it
     // with the same -1 sentinel used at the backend boundary.
     minDetectableRcsGrids: state.minDetectableRcsGrids.map(
-      ([sensorId, grid, calculatedAt]) => [
-        sensorId,
-        encodeMinDetectableRcsGrid(grid),
+      ([result, calculatedAt]) => [
+        { ...result, grid: encodeMinDetectableRcsGrid(result.grid) },
         calculatedAt,
       ],
     ),
@@ -107,9 +98,8 @@ export function deserializeSimulationState(
   return {
     monostaticCoverages: data?.monostaticCoverages ?? [],
     minDetectableRcsGrids: (data?.minDetectableRcsGrids ?? []).map(
-      ([sensorId, grid, calculatedAt]) => [
-        sensorId,
-        decodeMinDetectableRcsGrid(grid),
+      ([result, calculatedAt]) => [
+        { ...result, grid: decodeMinDetectableRcsGrid(result.grid) },
         calculatedAt,
       ],
     ),

@@ -26,10 +26,22 @@ export interface PclCoverageCalcConf {
   delayThreshold: number;
 }
 
+export interface MonostaticCoverageResult {
+  sensorId: number;
+  settings: MonostaticCoverageCalcConf;
+  coverage: GeoJSONFeature;
+}
+
+export interface PclMinDetectableRcsResult {
+  sensorId: number;
+  settings: PclCoverageCalcConf;
+  grid: number[][][];
+}
+
 export async function calculateMonostaticCoverage(
   sensor: MonostaticSensor,
   conf: MonostaticCoverageCalcConf,
-): Promise<GeoJSONFeature> {
+): Promise<MonostaticCoverageResult> {
   const { data, error } = await client.POST("/calculate_monostatic_coverage", {
     params: {
       query: {
@@ -47,13 +59,13 @@ export async function calculateMonostaticCoverage(
     throw new Error(JSON.stringify(error));
   }
 
-  return data;
+  return { sensorId: sensor.id, settings: conf, coverage: data };
 }
 
 export async function calculatePclMinimumDetectableRcs(
   sensor: PclSensor,
   conf: PclCoverageCalcConf,
-): Promise<number[][][]> {
+): Promise<PclMinDetectableRcsResult> {
   const { data, error } = await client.POST("/calculate_min_detectable_rcs", {
     query: {
       snr_threshold: conf.snrThreshold,
@@ -70,9 +82,10 @@ export async function calculatePclMinimumDetectableRcs(
   // JSON has no NaN representation, so the backend encodes "not detectable"
   // as -1. Convert it back to NaN here so all downstream code can rely on
   // normal NaN semantics instead of a magic sentinel value.
-  return data.map((row) =>
+  const grid = data.map((row) =>
     row.map((col) => col.map((v) => (v === -1 ? NaN : v))),
   );
+  return { sensorId: sensor.id, settings: conf, grid: grid };
 }
 
 export async function elevationAt(lat: number, lon: number): Promise<number> {

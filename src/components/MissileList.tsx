@@ -66,7 +66,7 @@ export default function MissileList() {
                     unusedIdMissile,
                     `Missile ${unusedIdMissile}`,
                     unusedTargetId,
-                    terrainModels[0] ?? "",
+                    { terrain_name: terrainModels[0] ?? "" },
                   );
                   addMissile(newMissile);
                   selectMissile(newMissile.id);

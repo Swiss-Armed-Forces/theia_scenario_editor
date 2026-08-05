@@ -74,15 +74,17 @@ export default function MissileSettings() {
         />
         <label>Terrain</label>
         <select
-          value={missile.terrain}
+          value={missile.terrain.terrain_name}
           onChange={(event) => {
             const newMissile = structuredClone(missile);
-            newMissile.terrain = event.target.value;
+            newMissile.terrain = { terrain_name: event.target.value };
             updateMissile(newMissile);
           }}
         >
-          {!terrainModels.includes(missile.terrain) && (
-            <option value={missile.terrain}>{missile.terrain}</option>
+          {!terrainModels.includes(missile.terrain.terrain_name) && (
+            <option value={missile.terrain.terrain_name}>
+              {missile.terrain.terrain_name}
+            </option>
           )}
           {terrainModels.map((terrain) => (
             <option key={terrain} value={terrain}>

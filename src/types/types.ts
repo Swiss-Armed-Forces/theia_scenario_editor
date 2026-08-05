@@ -65,13 +65,15 @@ export interface DetectableEffector {
 
 export const DEFAULT_LAUNCH_ANGLE = 45;
 
+export type Terrain = { terrain_name: string };
+
 export interface Missile {
   id: number;
   name: string;
   p_start: Point;
   p_stop: Point;
   t_start: string;
-  terrain: string;
+  terrain: Terrain;
   target_id: number;
   rcs: number;
   alpha: number;
@@ -170,7 +172,7 @@ export function buildDefaultMissile(
   id: number,
   name: string,
   target_id: number,
-  terrain: string,
+  terrain: Terrain,
 ): Missile {
   return {
     id,

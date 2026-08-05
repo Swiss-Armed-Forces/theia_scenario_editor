@@ -64,8 +64,8 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Calculate Monostatic Coverage */
-        post: operations["calculate_monostatic_coverage_calculate_monostatic_coverage_post"];
+        /** Calculate Line Of Sight */
+        post: operations["calculate_line_of_sight_calculate_monostatic_coverage_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -85,6 +85,9 @@ export interface paths {
          * Calculate Min Detectable Rcs
          * @description Calculate the minimum detectable radar cross section for the given
          *     sensor on a grid. The grid dimensions are (lat, lon, MASL).
+         *
+         *     The value -1 indicates a NaN, i. e. the sensor cannot detect a target
+         *     at all at that position.
          */
         post: operations["calculate_min_detectable_rcs_calculate_min_detectable_rcs_post"];
         delete?: never;
@@ -323,6 +326,23 @@ export interface paths {
         };
         /** Get Haversine Distance */
         get: operations["get_haversine_distance_haversine_distance__lat1___lon1___lat2___lon2__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/terrain_models": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Terrain Models */
+        get: operations["get_terrain_models_terrain_models_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -976,14 +996,12 @@ export interface operations {
             };
         };
     };
-    calculate_monostatic_coverage_calculate_monostatic_coverage_post: {
+    calculate_line_of_sight_calculate_monostatic_coverage_post: {
         parameters: {
             query: {
                 target_alt: number;
-                rcs: number;
-                probability_threshold: number;
+                max_range: number;
                 azimuth_resolution_degree: number;
-                range_only?: boolean;
             };
             header?: never;
             path?: never;
@@ -991,7 +1009,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["MonostaticSensor-Input"];
+                "application/json": components["schemas"]["Point"];
             };
         };
         responses: {
@@ -1406,6 +1424,26 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_terrain_models_terrain_models_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": string[];
                 };
             };
         };

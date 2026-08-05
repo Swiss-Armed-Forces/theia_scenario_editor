@@ -143,14 +143,19 @@ async function matchingTransmitterIds(
 // silently dropping its contents), so save/load needs an explicit,
 // JSON-safe representation of the store rather than dumping getState()
 // directly.
-export type SerializedScenarioState = {
+//
+// The save file groups entities into "static_dispositive" (everything
+// stationary: sensors, receivers, effectors, plus all bookkeeping counters)
+// and "mobile_dispositive" (ballistic missiles, and oneway_drones as an
+// always-empty placeholder for a not-yet-implemented entity kind), matching
+// the downstream consumer's expected file layout.
+export type SerializedStaticDispositive = {
   monostatic_sensors: DetectableMonostaticSensor[];
   pcl_sensors: DetectablePclSensor[];
   pcl_receivers: DetectablePclReceiver[];
   pcl_transmitter_ids: [number, number[]][];
   pcl_tx_criteria: [number, PclTxSelectionCriteria][];
   effectors: DetectableEffector[];
-  ballistic_missiles: Missile[];
   unused_id_sensor: number;
   unused_id_receiver: number;
   unused_id_transmitter: number;
@@ -159,25 +164,43 @@ export type SerializedScenarioState = {
   unused_target_id: number;
 };
 
+export type SerializedMobileDispositive = {
+  oneway_drones: unknown[];
+  ballistic_missiles: Missile[];
+};
+
+export type SerializedScenarioState = {
+  static_dispositive: SerializedStaticDispositive;
+  mobile_dispositive: SerializedMobileDispositive;
+};
+
 export function serializeScenarioState(
   state: ScenarioStore,
 ): SerializedScenarioState {
   return {
-    monostatic_sensors: state.blueMonostaticSensors,
-    pcl_sensors: state.pclSensors,
-    pcl_receivers: state.pclReceivers,
-    pcl_transmitter_ids: Array.from(state.pclTransmitterIds.entries()).map(
-      ([receiverId, ids]): [number, number[]] => [receiverId, Array.from(ids)],
-    ),
-    pcl_tx_criteria: Array.from(state.pclTxCriteria.entries()),
-    effectors: state.effectors,
-    ballistic_missiles: state.ballisticMissiles,
-    unused_id_sensor: state.unusedIdSensor,
-    unused_id_receiver: state.unusedIdReceiver,
-    unused_id_transmitter: state.unusedIdTransmitter,
-    unused_id_effector: state.unusedIdEffector,
-    unused_id_missile: state.unusedIdMissile,
-    unused_target_id: state.unusedTargetId,
+    static_dispositive: {
+      monostatic_sensors: state.blueMonostaticSensors,
+      pcl_sensors: state.pclSensors,
+      pcl_receivers: state.pclReceivers,
+      pcl_transmitter_ids: Array.from(state.pclTransmitterIds.entries()).map(
+        ([receiverId, ids]): [number, number[]] => [
+          receiverId,
+          Array.from(ids),
+        ],
+      ),
+      pcl_tx_criteria: Array.from(state.pclTxCriteria.entries()),
+      effectors: state.effectors,
+      unused_id_sensor: state.unusedIdSensor,
+      unused_id_receiver: state.unusedIdReceiver,
+      unused_id_transmitter: state.unusedIdTransmitter,
+      unused_id_effector: state.unusedIdEffector,
+      unused_id_missile: state.unusedIdMissile,
+      unused_target_id: state.unusedTargetId,
+    },
+    mobile_dispositive: {
+      oneway_drones: [],
+      ballistic_missiles: state.ballisticMissiles,
+    },
   };
 }
 
@@ -188,6 +211,13 @@ function hasTargetId(item: object): item is { target_id: number; rcs: number } {
 export function deserializeScenarioState(
   data: SerializedScenarioState,
 ): Partial<ScenarioStore> {
+  const staticDispositive = data.static_dispositive ?? ({} as Partial<
+    SerializedStaticDispositive
+  >);
+  const mobileDispositive = data.mobile_dispositive ?? ({} as Partial<
+    SerializedMobileDispositive
+  >);
+
   // Save files written before target_id/rcs existed have bare entities in
   // these three arrays instead of the Detectable* wrapper. That mismatch is
   // only visible at runtime (the file is loaded via an unchecked JSON.parse
@@ -195,9 +225,9 @@ export function deserializeScenarioState(
   // that doesn't already have them, minting target_ids from a single counter
   // shared across all three lists in a fixed order: monostatic sensors, then
   // PCL receivers, then effectors.
-  let nextTargetId = data.unused_target_id ?? 0;
+  let nextTargetId = staticDispositive.unused_target_id ?? 0;
 
-  const monostaticSensors = (data.monostatic_sensors ?? []).map(
+  const monostaticSensors = (staticDispositive.monostatic_sensors ?? []).map(
     (item): DetectableMonostaticSensor =>
       hasTargetId(item)
         ? item
@@ -205,10 +235,10 @@ export function deserializeScenarioState(
             target_id: nextTargetId++,
             rcs: DEFAULT_RCS,
             sensor:
-              item as unknown as SerializedScenarioState["monostatic_sensors"][number]["sensor"],
+              item as unknown as SerializedStaticDispositive["monostatic_sensors"][number]["sensor"],
           },
   );
-  const pclReceivers = (data.pcl_receivers ?? []).map(
+  const pclReceivers = (staticDispositive.pcl_receivers ?? []).map(
     (item): DetectablePclReceiver =>
       hasTargetId(item)
         ? item
@@ -225,7 +255,7 @@ export function deserializeScenarioState(
   const targetIdByReceiverId = new Map(
     pclReceivers.map((d) => [d.receiver.id, d]),
   );
-  const pclSensors = (data.pcl_sensors ?? []).map(
+  const pclSensors = (staticDispositive.pcl_sensors ?? []).map(
     (item): DetectablePclSensor => {
       if (hasTargetId(item)) {
         return item;
@@ -241,7 +271,7 @@ export function deserializeScenarioState(
     },
   );
 
-  const effectors = (data.effectors ?? []).map(
+  const effectors = (staticDispositive.effectors ?? []).map(
     (item): DetectableEffector =>
       hasTargetId(item)
         ? item
@@ -255,26 +285,25 @@ export function deserializeScenarioState(
   // Missiles were introduced after target_id/rcs already existed everywhere
   // else, so every save file that has a "ballistic_missiles" array at all
   // already has target_id/rcs on each entry - no legacy backfill needed here.
-  const ballisticMissiles = data.ballistic_missiles ?? [];
+  const ballisticMissiles = mobileDispositive.ballistic_missiles ?? [];
 
   return {
     blueMonostaticSensors: monostaticSensors,
     pclSensors,
     pclReceivers,
     pclTransmitterIds: new Map(
-      (data.pcl_transmitter_ids ?? []).map(([receiverId, ids]) => [
-        receiverId,
-        new Set(ids),
-      ]),
+      (staticDispositive.pcl_transmitter_ids ?? []).map(
+        ([receiverId, ids]) => [receiverId, new Set(ids)],
+      ),
     ),
-    pclTxCriteria: new Map(data.pcl_tx_criteria ?? []),
+    pclTxCriteria: new Map(staticDispositive.pcl_tx_criteria ?? []),
     effectors,
     ballisticMissiles,
-    unusedIdSensor: data.unused_id_sensor,
-    unusedIdReceiver: data.unused_id_receiver,
-    unusedIdTransmitter: data.unused_id_transmitter,
-    unusedIdEffector: data.unused_id_effector ?? 0,
-    unusedIdMissile: data.unused_id_missile ?? 0,
+    unusedIdSensor: staticDispositive.unused_id_sensor,
+    unusedIdReceiver: staticDispositive.unused_id_receiver,
+    unusedIdTransmitter: staticDispositive.unused_id_transmitter,
+    unusedIdEffector: staticDispositive.unused_id_effector ?? 0,
+    unusedIdMissile: staticDispositive.unused_id_missile ?? 0,
     unusedTargetId: nextTargetId,
   };
 }
@@ -373,6 +402,10 @@ export const useScenarioStore = create<ScenarioStore>((set, get) => ({
         ballisticMissiles: [...state.ballisticMissiles, missile],
         unusedIdMissile: Math.max(state.unusedIdMissile, missile.id + 1),
         unusedTargetId: Math.max(state.unusedTargetId, missile.target_id + 1),
+        unusedIdEffector: Math.max(
+          state.unusedIdEffector,
+          missile.effector_id + 1,
+        ),
       };
     }),
   updateMissile: (missile) =>

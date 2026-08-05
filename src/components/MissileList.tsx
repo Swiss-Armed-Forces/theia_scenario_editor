@@ -18,6 +18,7 @@ export default function MissileList() {
   const addMissile = useScenarioStore((state) => state.addMissile);
   const unusedIdMissile = useScenarioStore((state) => state.unusedIdMissile);
   const unusedTargetId = useScenarioStore((state) => state.unusedTargetId);
+  const unusedIdEffector = useScenarioStore((state) => state.unusedIdEffector);
   const terrainModels = useGuiStateStore((state) => state.terrainModels);
   const setMapClickListener = useGuiStateStore(
     (state) => state.setMapClickListener,
@@ -66,6 +67,7 @@ export default function MissileList() {
                     unusedIdMissile,
                     `Missile ${unusedIdMissile}`,
                     unusedTargetId,
+                    unusedIdEffector,
                     { terrain_name: terrainModels[0] ?? "" },
                   );
                   addMissile(newMissile);

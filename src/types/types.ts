@@ -75,6 +75,7 @@ export interface Missile {
   t_start: string;
   terrain: Terrain;
   target_id: number;
+  effector_id: number;
   rcs: number;
   alpha: number;
 }
@@ -172,6 +173,7 @@ export function buildDefaultMissile(
   id: number,
   name: string,
   target_id: number,
+  effector_id: number,
   terrain: Terrain,
 ): Missile {
   return {
@@ -182,6 +184,7 @@ export function buildDefaultMissile(
     t_start: new Date().toISOString(),
     terrain,
     target_id,
+    effector_id,
     rcs: DEFAULT_RCS,
     alpha: DEFAULT_LAUNCH_ANGLE,
   };

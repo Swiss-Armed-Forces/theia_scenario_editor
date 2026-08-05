@@ -4,6 +4,7 @@ import type {
   DetectableMonostaticSensor,
   DetectablePclReceiver,
   DetectablePclSensor,
+  Missile,
   Receiver,
   Transmitter,
 } from "../types/types";
@@ -22,10 +23,12 @@ export interface ScenarioStore {
   pclTransmitterIds: Map<number, Set<number>>;
   pclTxCriteria: Map<number, PclTxSelectionCriteria>;
   effectors: DetectableEffector[];
+  ballisticMissiles: Missile[];
   unusedIdSensor: number;
   unusedIdReceiver: number;
   unusedIdTransmitter: number;
   unusedIdEffector: number;
+  unusedIdMissile: number;
   unusedTargetId: number;
   addMonostaticSensor: (
     sensor: DetectableMonostaticSensor,
@@ -38,6 +41,9 @@ export interface ScenarioStore {
   addEffector: (effector: DetectableEffector) => void;
   updateEffector: (effector: DetectableEffector) => void;
   deleteEffector: (effectorId: number) => void;
+  addMissile: (missile: Missile) => void;
+  updateMissile: (missile: Missile) => void;
+  deleteMissile: (missileId: number) => void;
   updatePclReceiverSettings: (rx: DetectablePclReceiver) => void;
   updatePclTxCriteria: (
     receiverId: number,
@@ -144,10 +150,12 @@ export type SerializedScenarioState = {
   pcl_transmitter_ids: [number, number[]][];
   pcl_tx_criteria: [number, PclTxSelectionCriteria][];
   effectors: DetectableEffector[];
+  ballistic_missiles: Missile[];
   unused_id_sensor: number;
   unused_id_receiver: number;
   unused_id_transmitter: number;
   unused_id_effector: number;
+  unused_id_missile: number;
   unused_target_id: number;
 };
 
@@ -163,10 +171,12 @@ export function serializeScenarioState(
     ),
     pcl_tx_criteria: Array.from(state.pclTxCriteria.entries()),
     effectors: state.effectors,
+    ballistic_missiles: state.ballisticMissiles,
     unused_id_sensor: state.unusedIdSensor,
     unused_id_receiver: state.unusedIdReceiver,
     unused_id_transmitter: state.unusedIdTransmitter,
     unused_id_effector: state.unusedIdEffector,
+    unused_id_missile: state.unusedIdMissile,
     unused_target_id: state.unusedTargetId,
   };
 }
@@ -242,6 +252,11 @@ export function deserializeScenarioState(
           },
   );
 
+  // Missiles were introduced after target_id/rcs already existed everywhere
+  // else, so every save file that has a "ballistic_missiles" array at all
+  // already has target_id/rcs on each entry - no legacy backfill needed here.
+  const ballisticMissiles = data.ballistic_missiles ?? [];
+
   return {
     blueMonostaticSensors: monostaticSensors,
     pclSensors,
@@ -254,10 +269,12 @@ export function deserializeScenarioState(
     ),
     pclTxCriteria: new Map(data.pcl_tx_criteria ?? []),
     effectors,
+    ballisticMissiles,
     unusedIdSensor: data.unused_id_sensor,
     unusedIdReceiver: data.unused_id_receiver,
     unusedIdTransmitter: data.unused_id_transmitter,
     unusedIdEffector: data.unused_id_effector ?? 0,
+    unusedIdMissile: data.unused_id_missile ?? 0,
     unusedTargetId: nextTargetId,
   };
 }
@@ -270,10 +287,12 @@ export const useScenarioStore = create<ScenarioStore>((set, get) => ({
   pclTransmitterIds: new Map<number, Set<number>>(),
   pclTxCriteria: new Map<number, PclTxSelectionCriteria>(),
   effectors: [],
+  ballisticMissiles: [],
   unusedIdSensor: 0,
   unusedIdReceiver: 0,
   unusedIdTransmitter: 0,
   unusedIdEffector: 0,
+  unusedIdMissile: 0,
   unusedTargetId: 0,
 
   addMonostaticSensor: (detectableSensor, isBlue) =>
@@ -347,6 +366,30 @@ export const useScenarioStore = create<ScenarioStore>((set, get) => ({
         (e) => e.effector.id !== effectorId,
       );
       return { effectors: newEffectors };
+    }),
+  addMissile: (missile) =>
+    set((state) => {
+      return {
+        ballisticMissiles: [...state.ballisticMissiles, missile],
+        unusedIdMissile: Math.max(state.unusedIdMissile, missile.id + 1),
+        unusedTargetId: Math.max(state.unusedTargetId, missile.target_id + 1),
+      };
+    }),
+  updateMissile: (missile) =>
+    set((state) => {
+      const i = state.ballisticMissiles.findIndex((m) => m.id === missile.id);
+      const newMissiles = structuredClone(state.ballisticMissiles);
+      newMissiles[i] = missile;
+      return {
+        ballisticMissiles: newMissiles,
+      };
+    }),
+  deleteMissile: (missileId) =>
+    set((state) => {
+      const newMissiles = state.ballisticMissiles.filter(
+        (m) => m.id !== missileId,
+      );
+      return { ballisticMissiles: newMissiles };
     }),
   deleteReceiver: (receiverId: number, isBlue: boolean) =>
     set((state) => {

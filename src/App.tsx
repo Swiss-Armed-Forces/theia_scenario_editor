@@ -8,6 +8,9 @@ function App() {
   const fetchFmTransmitters = useGuiStateStore(
     (state) => state.fetchFmTransmitters,
   );
+  const fetchTerrainModels = useGuiStateStore(
+    (state) => state.fetchTerrainModels,
+  );
 
   useEffect(() => {
     useGuiStateStore.getState().initTileUrl();
@@ -21,6 +24,11 @@ function App() {
 
         if (guiState.selectedEffectorId !== null) {
           scenarioStore.deleteEffector(guiState.selectedEffectorId);
+          return;
+        }
+
+        if (guiState.selectedMissileId !== null) {
+          scenarioStore.deleteMissile(guiState.selectedMissileId);
           return;
         }
 
@@ -55,6 +63,7 @@ function App() {
   // Call at initialization.
   useEffect(() => {
     fetchFmTransmitters();
+    fetchTerrainModels();
   }, []);
 
   return (

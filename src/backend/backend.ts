@@ -118,6 +118,16 @@ export async function fetchFmTransmitters(): Promise<Transmitter[]> {
   return data;
 }
 
+export async function fetchTerrainModels(): Promise<string[]> {
+  const { data, error } = await client.GET("/terrain_models");
+
+  if (error) {
+    throw new Error(error);
+  }
+
+  return data;
+}
+
 export async function lineOfSightDistance(
   p1: Point,
   p2: Point,

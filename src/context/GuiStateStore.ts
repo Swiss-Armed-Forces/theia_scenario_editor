@@ -2,6 +2,7 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import {
   fetchFmTransmitters,
+  fetchTerrainModels,
   type MonostaticCoverageCalcConf,
   type PclCoverageCalcConf,
 } from "../backend/backend";
@@ -38,17 +39,22 @@ export const DEFAULT_PCL_COVERAGE_CALC_CONF: PclCoverageCalcConf = {
 interface GuiStateStore {
   selectedReceiverId: number | null;
   selectedEffectorId: number | null;
+  selectedMissileId: number | null;
   visibleSensorIds: Set<number>;
   monostaticCoverageCalcConf: MonostaticCoverageCalcConf;
   pclCoverageCalcConf: PclCoverageCalcConf;
   fmTransmitters: Transmitter[];
+  terrainModels: string[];
   mapClickListener: MapClickListener | null;
   setMapClickListener: (listener: MapClickListener | null) => void;
   distancePoints: Point[];
   addDistancePoint: (point: Point) => void;
   clearDistancePoints: () => void;
+  pendingMissileStart: Point | null;
+  setPendingMissileStart: (point: Point | null) => void;
   selectReceiver: (receiverId: number | null) => void;
   selectEffector: (effectorId: number | null) => void;
+  selectMissile: (missileId: number | null) => void;
   pclSelectionReceiverId: number | null;
   setPclSelectionReceiverId: (receiverId: number | null) => void;
   showSensor: (sensorId: number) => void;
@@ -58,6 +64,7 @@ interface GuiStateStore {
   resetMonostaticCoverageCalcConf: () => void;
   resetPclCoverageCalcConf: () => void;
   fetchFmTransmitters: () => void;
+  fetchTerrainModels: () => void;
   mapTileUrl: string;
   initTileUrl: () => void;
   maxZoomLevel: number;
@@ -71,8 +78,10 @@ export const useGuiStateStore = create<GuiStateStore>()(
     (set) => ({
       selectedReceiverId: null,
       selectedEffectorId: null,
+      selectedMissileId: null,
       visibleSensorIds: new Set<number>(),
       fmTransmitters: [],
+      terrainModels: [],
       monostaticCoverageCalcConf: DEFAULT_MONOSTATIC_COVERAGE_CALC_CONF,
       pclCoverageCalcConf: DEFAULT_PCL_COVERAGE_CALC_CONF,
       mapClickListener: null,
@@ -89,6 +98,11 @@ export const useGuiStateStore = create<GuiStateStore>()(
         set((_state) => {
           return { distancePoints: [] };
         }),
+      pendingMissileStart: null,
+      setPendingMissileStart: (point: Point | null) =>
+        set((_state) => {
+          return { pendingMissileStart: point };
+        }),
       selectReceiver: (receiverId) =>
         set((_state) => {
           return { selectedReceiverId: receiverId };
@@ -96,6 +110,10 @@ export const useGuiStateStore = create<GuiStateStore>()(
       selectEffector: (effectorId) =>
         set((_state) => {
           return { selectedEffectorId: effectorId };
+        }),
+      selectMissile: (missileId) =>
+        set((_state) => {
+          return { selectedMissileId: missileId };
         }),
       pclSelectionReceiverId: null,
       setPclSelectionReceiverId: (receiverId) =>
@@ -138,6 +156,10 @@ export const useGuiStateStore = create<GuiStateStore>()(
         useScenarioStore.setState({
           unusedIdTransmitter: Math.max(...transmitters.map((tx) => tx.id)) + 1,
         });
+      },
+      fetchTerrainModels: async () => {
+        const terrainModels = await fetchTerrainModels();
+        set({ terrainModels: terrainModels });
       },
       mapTileUrl: TILE_SERVER_LOCAL, // sensible default while we check
       maxZoomLevel: 12,

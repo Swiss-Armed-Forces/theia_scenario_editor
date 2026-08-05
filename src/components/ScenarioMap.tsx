@@ -18,6 +18,7 @@ import { useEffect, useMemo, useState } from "react";
 import type {
   Effector,
   LatLonHeightGrid,
+  Missile,
   MonostaticSensor,
   Point,
   Receiver,
@@ -312,6 +313,38 @@ const highlightedEffectorIcon = L.divIcon({
   iconAnchor: [12, 12], // center the icon
 });
 
+const missileStartSymbol = new ms.Symbol("10031500001110000000", {
+  size: 24,
+});
+const missileStopSymbol = new ms.Symbol("10032500002406010000", {
+  size: 24,
+});
+
+const missileStartIcon = L.divIcon({
+  html: missileStartSymbol.asSVG(),
+  className: "",
+  iconSize: [24, 24],
+  iconAnchor: [12, 12],
+});
+const highlightedMissileStartIcon = L.divIcon({
+  html: `<div style="border: 2px solid red; width: fit-content; height: fit-content">${missileStartSymbol.asSVG()}</div>`,
+  className: "",
+  iconSize: [24, 24],
+  iconAnchor: [12, 12],
+});
+const missileStopIcon = L.divIcon({
+  html: missileStopSymbol.asSVG(),
+  className: "",
+  iconSize: [24, 24],
+  iconAnchor: [12, 12],
+});
+const highlightedMissileStopIcon = L.divIcon({
+  html: `<div style="border: 2px solid red; width: fit-content; height: fit-content">${missileStopSymbol.asSVG()}</div>`,
+  className: "",
+  iconSize: [24, 24],
+  iconAnchor: [12, 12],
+});
+
 function MonostaticRadarMarker({ radar }: { radar: MonostaticSensor }) {
   const selectedReceiverId = useGuiStateStore(
     (state) => state.selectedReceiverId,
@@ -365,6 +398,52 @@ function EffectorMarker({ effector }: { effector: Effector }) {
         radius={effector.combat_range}
         pathOptions={{ fill: false, color: "blue", dashArray: "4, 4" }}
       />
+    </>
+  );
+}
+
+function MissileMarker({ missile }: { missile: Missile }) {
+  const selectedMissileId = useGuiStateStore(
+    (state) => state.selectedMissileId,
+  );
+  const selectMissile = useGuiStateStore((state) => state.selectMissile);
+
+  const isHighlighted = selectedMissileId === missile.id;
+  return (
+    <>
+      <Polyline
+        positions={[
+          [missile.p_start.lat, missile.p_start.lon],
+          [missile.p_stop.lat, missile.p_stop.lon],
+        ]}
+        pathOptions={{ color: "#ff5722", weight: 2, dashArray: "6, 4" }}
+      />
+      <Marker
+        position={[missile.p_start.lat, missile.p_start.lon]}
+        icon={isHighlighted ? highlightedMissileStartIcon : missileStartIcon}
+        eventHandlers={{
+          click: () => {
+            selectMissile(isHighlighted ? null : missile.id);
+          },
+        }}
+      >
+        <Tooltip>
+          {missile.name} #{missile.id} (start)
+        </Tooltip>
+      </Marker>
+      <Marker
+        position={[missile.p_stop.lat, missile.p_stop.lon]}
+        icon={isHighlighted ? highlightedMissileStopIcon : missileStopIcon}
+        eventHandlers={{
+          click: () => {
+            selectMissile(isHighlighted ? null : missile.id);
+          },
+        }}
+      >
+        <Tooltip>
+          {missile.name} #{missile.id} (stop)
+        </Tooltip>
+      </Marker>
     </>
   );
 }
@@ -513,6 +592,12 @@ export default function ScenarioMap() {
     visibleSensorIds.has(d.sensor.id),
   );
   const effectors = useScenarioStore((state) => state.effectors);
+  const ballisticMissiles = useScenarioStore(
+    (state) => state.ballisticMissiles,
+  );
+  const pendingMissileStart = useGuiStateStore(
+    (state) => state.pendingMissileStart,
+  );
   const blueMonostaticCoverages = useSimulationStore(
     (state) => state.monostaticCoverages,
   ).filter(([result, _date]) => visibleSensorIds.has(result.sensorId));
@@ -569,6 +654,19 @@ export default function ScenarioMap() {
           effector={detectableEffector.effector}
         />
       ))}
+      {ballisticMissiles.map((missile) => (
+        <MissileMarker key={missile.id} missile={missile} />
+      ))}
+      {pendingMissileStart && (
+        <Marker
+          position={[pendingMissileStart.lat, pendingMissileStart.lon]}
+          icon={distancePointIcon}
+        >
+          <Tooltip permanent direction="top" offset={[0, -8]}>
+            Click to place the stop point
+          </Tooltip>
+        </Marker>
+      )}
       {pclReceivers.map((dr) => (
         <ReceiverMarker
           key={dr.receiver.id}

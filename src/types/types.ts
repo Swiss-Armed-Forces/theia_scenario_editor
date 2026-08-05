@@ -63,6 +63,20 @@ export interface DetectableEffector {
   effector: Effector;
 }
 
+export const DEFAULT_LAUNCH_ANGLE = 45;
+
+export interface Missile {
+  id: number;
+  name: string;
+  p_start: Point;
+  p_stop: Point;
+  t_start: string;
+  terrain: string;
+  target_id: number;
+  rcs: number;
+  alpha: number;
+}
+
 export function buildDefaultMonostaticSensor(
   point: Point,
   rx_id: number,
@@ -147,6 +161,27 @@ export function buildDefaultEffector(
       combat_range: DEFAULT_COMBAT_RANGE,
       n_attacks_left: DEFAULT_N_ATTACKS,
     },
+  };
+}
+
+export function buildDefaultMissile(
+  pStart: Point,
+  pStop: Point,
+  id: number,
+  name: string,
+  target_id: number,
+  terrain: string,
+): Missile {
+  return {
+    id,
+    name,
+    p_start: pStart,
+    p_stop: pStop,
+    t_start: new Date().toISOString(),
+    terrain,
+    target_id,
+    rcs: DEFAULT_RCS,
+    alpha: DEFAULT_LAUNCH_ANGLE,
   };
 }
 

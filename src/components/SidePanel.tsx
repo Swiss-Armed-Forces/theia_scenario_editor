@@ -11,6 +11,8 @@ import PclSensorSettings from "./PclSensorSettings";
 import PclCoverageCalcSettings from "./PclCoverageCalcSettings";
 import EffectorList from "./EffectorList";
 import EffectorSettings from "./EffectorSettings";
+import MissileList from "./MissileList";
+import MissileSettings from "./MissileSettings";
 
 export default function SidePanel() {
   const [activeTab, setActiveTab] = useState(0);
@@ -48,6 +50,7 @@ export default function SidePanel() {
         <Tab label="Active Radar" />
         <Tab label="PCL" />
         <Tab label="GBAD" />
+        <Tab label="Missiles" />
       </Tabs>
       <Box className="sidePanelTabContent">
         {activeTab === 0 && (
@@ -87,6 +90,12 @@ export default function SidePanel() {
           <div className="sidePanelSection">
             <EffectorSettings />
             <EffectorList />
+          </div>
+        )}
+        {activeTab === 3 && (
+          <div className="sidePanelSection">
+            <MissileSettings />
+            <MissileList />
           </div>
         )}
       </Box>

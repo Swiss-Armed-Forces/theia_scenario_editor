@@ -18,11 +18,9 @@ export default function MissileListItem({
         border: isHighlighted ? "solid red" : "none",
         cursor: "pointer",
       }}
-      onClick={() => selectMissile(isHighlighted ? null : missile.id)}
+      onClick={() => selectMissile(isHighlighted ? null : missile.target_id)}
     >
-      <span>
-        {missile.name} #{missile.id}
-      </span>
+      <span>Missile #{missile.target_id}</span>
     </Box>
   );
 }

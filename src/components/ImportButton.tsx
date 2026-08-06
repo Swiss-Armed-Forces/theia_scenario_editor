@@ -29,10 +29,7 @@ export default function ImportButton() {
               useScenarioStore.setState(scenario);
               useSimulationStore.setState(simulation);
               const scenarioState = useScenarioStore.getState();
-              for (const sensor of scenarioState.blueMonostaticSensors) {
-                showSensor(sensor.sensor.id);
-              }
-              for (const sensor of scenarioState.redMonostaticSensors) {
+              for (const sensor of scenarioState.monostaticSensors) {
                 showSensor(sensor.sensor.id);
               }
               for (const sensor of scenarioState.pclSensors) {

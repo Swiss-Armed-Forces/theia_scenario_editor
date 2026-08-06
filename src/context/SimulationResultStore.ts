@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import type { MonostaticSensor, PclSensor } from "../types/types";
+import type { LatLonHeightGrid, MonostaticSensor, PclSensor } from "../types/types";
 import {
   calculateMonostaticCoverage,
   calculatePclMinimumDetectableRcs,
@@ -14,10 +14,10 @@ import {
 } from "../util/minDetectableRcsGrid";
 
 export interface SimulationStore {
-  // result, calculatedAt (epoch)
-  monostaticCoverages: [MonostaticCoverageResult, number][];
-  // result, calculatedAt (epoch)
-  minDetectableRcsGrids: [PclMinDetectableRcsResult, number][];
+  // result, calculatedAt (ISO date-time)
+  monostaticCoverages: [MonostaticCoverageResult, string][];
+  // result, calculatedAt (ISO date-time)
+  minDetectableRcsGrids: [PclMinDetectableRcsResult, string][];
   updateMonostaticCoverages: (
     sensors: MonostaticSensor[],
     conf: MonostaticCoverageCalcConf,
@@ -37,9 +37,9 @@ export const useSimulationStore = create<SimulationStore>((set) => ({
     conf: MonostaticCoverageCalcConf,
   ) => {
     const coverages = await Promise.all(
-      sensors.map(async (sensor): Promise<[MonostaticCoverageResult, number]> => [
+      sensors.map(async (sensor): Promise<[MonostaticCoverageResult, string]> => [
         await calculateMonostaticCoverage(sensor, conf),
-        Date.now(),
+        new Date().toISOString(),
       ]),
     );
     set({ monostaticCoverages: coverages });
@@ -49,9 +49,9 @@ export const useSimulationStore = create<SimulationStore>((set) => ({
     conf: PclCoverageCalcConf,
   ) => {
     const grids = await Promise.all(
-      sensors.map(async (sensor): Promise<[PclMinDetectableRcsResult, number]> => [
+      sensors.map(async (sensor): Promise<[PclMinDetectableRcsResult, string]> => [
         await calculatePclMinimumDetectableRcs(sensor, conf),
-        Date.now(),
+        new Date().toISOString(),
       ]),
     );
     set({ minDetectableRcsGrids: grids });
@@ -71,9 +71,24 @@ export const useSimulationStore = create<SimulationStore>((set) => ({
     }),
 }));
 
+// The persisted shape follows orbat_file_schema.json's PclMinDetectableRcsCalculation,
+// which uses snake_case field names (sensor_id, snr_threshold, ...) and calls the
+// grid "values" - distinct from the in-memory PclMinDetectableRcsResult's camelCase
+// naming and "grid" field.
+export type SerializedPclMinDetectableRcsCalculation = {
+  sensor_id: number;
+  settings: {
+    grid: LatLonHeightGrid;
+    snr_threshold: number;
+    doppler_threshold: number;
+    delay_threshold: number;
+  };
+  values: number[][][];
+};
+
 export type SerializedSimulationState = {
-  monostaticCoverages: [MonostaticCoverageResult, number][];
-  minDetectableRcsGrids: [PclMinDetectableRcsResult, number][];
+  monostaticCoverages: [MonostaticCoverageResult, string][];
+  pclMinDetectableRcsGrids: [SerializedPclMinDetectableRcsCalculation, string][];
 };
 
 export function serializeSimulationState(
@@ -81,11 +96,20 @@ export function serializeSimulationState(
 ): SerializedSimulationState {
   return {
     monostaticCoverages: state.monostaticCoverages,
-    // NaN ("not detectable") doesn't survive JSON.stringify, so encode it
-    // with the same -1 sentinel used at the backend boundary.
-    minDetectableRcsGrids: state.minDetectableRcsGrids.map(
+    pclMinDetectableRcsGrids: state.minDetectableRcsGrids.map(
       ([result, calculatedAt]) => [
-        { ...result, grid: encodeMinDetectableRcsGrid(result.grid) },
+        {
+          sensor_id: result.sensorId,
+          settings: {
+            grid: result.settings.grid,
+            snr_threshold: result.settings.snrThreshold,
+            doppler_threshold: result.settings.dopplerThreshold,
+            delay_threshold: result.settings.delayThreshold,
+          },
+          // NaN ("not detectable") doesn't survive JSON.stringify, so encode
+          // it with the same -1 sentinel used at the backend boundary.
+          values: encodeMinDetectableRcsGrid(result.grid),
+        },
         calculatedAt,
       ],
     ),
@@ -97,9 +121,18 @@ export function deserializeSimulationState(
 ): Partial<SimulationStore> {
   return {
     monostaticCoverages: data?.monostaticCoverages ?? [],
-    minDetectableRcsGrids: (data?.minDetectableRcsGrids ?? []).map(
-      ([result, calculatedAt]) => [
-        { ...result, grid: decodeMinDetectableRcsGrid(result.grid) },
+    minDetectableRcsGrids: (data?.pclMinDetectableRcsGrids ?? []).map(
+      ([calculation, calculatedAt]) => [
+        {
+          sensorId: calculation.sensor_id,
+          settings: {
+            grid: calculation.settings.grid,
+            snrThreshold: calculation.settings.snr_threshold,
+            dopplerThreshold: calculation.settings.doppler_threshold,
+            delayThreshold: calculation.settings.delay_threshold,
+          },
+          grid: decodeMinDetectableRcsGrid(calculation.values),
+        },
         calculatedAt,
       ],
     ),

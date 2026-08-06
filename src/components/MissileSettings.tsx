@@ -17,11 +17,11 @@ function fromDatetimeLocalValue(value: string): string {
 }
 
 export default function MissileSettings() {
-  const selectedMissileId = useGuiStateStore(
-    (state) => state.selectedMissileId,
+  const selectedMissileTargetId = useGuiStateStore(
+    (state) => state.selectedMissileTargetId,
   );
   const missile = useScenarioStore((state) => state.ballisticMissiles).find(
-    (m) => m.id === selectedMissileId,
+    (m) => m.target_id === selectedMissileTargetId,
   );
   const terrainModels = useGuiStateStore((state) => state.terrainModels);
 
@@ -31,16 +31,6 @@ export default function MissileSettings() {
   if (missile) {
     content = (
       <>
-        <label>Name</label>
-        <input
-          type="text"
-          value={missile.name}
-          onChange={(event) => {
-            const newMissile = structuredClone(missile);
-            newMissile.name = event.target.value;
-            updateMissile(newMissile);
-          }}
-        />
         <label>Start position</label>
         <PositionSelector
           point={missile.p_start}

@@ -21,11 +21,6 @@ export interface Effector {
 
 export type Sensor = MonostaticSensor | PclSensor;
 
-export type SensorPortfolio = {
-  blueMonostaticSensors: MonostaticSensor[];
-  redMonostaticSensors: MonostaticSensor[];
-};
-
 export type MapClickListener = (p: LatLng) => void;
 
 // A "target" is any entity that can itself be detected by another sensor:
@@ -68,8 +63,6 @@ export const DEFAULT_LAUNCH_ANGLE = 45;
 export type Terrain = { terrain_name: string };
 
 export interface Missile {
-  id: number;
-  name: string;
   p_start: Point;
   p_stop: Point;
   t_start: string;
@@ -170,15 +163,11 @@ export function buildDefaultEffector(
 export function buildDefaultMissile(
   pStart: Point,
   pStop: Point,
-  id: number,
-  name: string,
   target_id: number,
   effector_id: number,
   terrain: Terrain,
 ): Missile {
   return {
-    id,
-    name,
     p_start: pStart,
     p_stop: pStop,
     t_start: new Date().toISOString(),

@@ -403,12 +403,12 @@ function EffectorMarker({ effector }: { effector: Effector }) {
 }
 
 function MissileMarker({ missile }: { missile: Missile }) {
-  const selectedMissileId = useGuiStateStore(
-    (state) => state.selectedMissileId,
+  const selectedMissileTargetId = useGuiStateStore(
+    (state) => state.selectedMissileTargetId,
   );
   const selectMissile = useGuiStateStore((state) => state.selectMissile);
 
-  const isHighlighted = selectedMissileId === missile.id;
+  const isHighlighted = selectedMissileTargetId === missile.target_id;
   return (
     <>
       <Polyline
@@ -423,26 +423,22 @@ function MissileMarker({ missile }: { missile: Missile }) {
         icon={isHighlighted ? highlightedMissileStartIcon : missileStartIcon}
         eventHandlers={{
           click: () => {
-            selectMissile(isHighlighted ? null : missile.id);
+            selectMissile(isHighlighted ? null : missile.target_id);
           },
         }}
       >
-        <Tooltip>
-          {missile.name} #{missile.id} (start)
-        </Tooltip>
+        <Tooltip>Missile #{missile.target_id} (start)</Tooltip>
       </Marker>
       <Marker
         position={[missile.p_stop.lat, missile.p_stop.lon]}
         icon={isHighlighted ? highlightedMissileStopIcon : missileStopIcon}
         eventHandlers={{
           click: () => {
-            selectMissile(isHighlighted ? null : missile.id);
+            selectMissile(isHighlighted ? null : missile.target_id);
           },
         }}
       >
-        <Tooltip>
-          {missile.name} #{missile.id} (stop)
-        </Tooltip>
+        <Tooltip>Missile #{missile.target_id} (stop)</Tooltip>
       </Marker>
     </>
   );
@@ -579,10 +575,9 @@ function PclTransmitterSelectionLayer({ receiverId }: { receiverId: number }) {
 }
 
 export default function ScenarioMap() {
-  // TODO: RED
   const visibleSensorIds = useGuiStateStore((state) => state.visibleSensorIds);
-  const blueMonostaticSensors = useScenarioStore(
-    (state) => state.blueMonostaticSensors,
+  const monostaticSensors = useScenarioStore(
+    (state) => state.monostaticSensors,
   ).filter((sensor) => visibleSensorIds.has(sensor.sensor.id));
   const allPclSensors = useScenarioStore((state) => state.pclSensors);
   const pclReceivers = useScenarioStore((state) => state.pclReceivers).filter(
@@ -642,7 +637,7 @@ export default function ScenarioMap() {
       <ClickMarker />;
       <DistanceMeasurementLayer />
       <ScaleControl position="bottomleft" />
-      {blueMonostaticSensors.map((sensor, i) => (
+      {monostaticSensors.map((sensor, i) => (
         <MonostaticRadarMarker
           key={i}
           radar={sensor.sensor}
@@ -655,7 +650,7 @@ export default function ScenarioMap() {
         />
       ))}
       {ballisticMissiles.map((missile) => (
-        <MissileMarker key={missile.id} missile={missile} />
+        <MissileMarker key={missile.target_id} missile={missile} />
       ))}
       {pendingMissileStart && (
         <Marker

@@ -8,8 +8,7 @@ import { elevationAt } from "../backend/backend";
 import SensorListItem from "./SensorListItem";
 
 export default function MonostaticSensorList() {
-  // TODO: Allow to switch to RED.
-  const sensors = useScenarioStore((state) => state.blueMonostaticSensors);
+  const sensors = useScenarioStore((state) => state.monostaticSensors);
 
   const highlightedReceiverId = useGuiStateStore(
     (state) => state.selectedReceiverId,
@@ -47,7 +46,6 @@ export default function MonostaticSensorList() {
           // a trivial updater function that simply returns our callback.
           setMapClickListener((p: LatLng) => {
             // Add the radar.
-            // TODO: Select blue or red!
             elevationAt(p.lat, p.lng).then((alt) => {
               const point = {
                 lat: p.lat,
@@ -62,7 +60,7 @@ export default function MonostaticSensorList() {
                 unusedIdMonostaticSensor,
                 unusedTargetId,
               );
-              addSensor(newRadar, true);
+              addSensor(newRadar);
 
               // Deactivate the listener.
               setMapClickListener(null);

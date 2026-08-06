@@ -46,7 +46,6 @@ export default function PclSensorList() {
           // a trivial updater function that simply returns our callback.
           setMapClickListener((p: LatLng) => {
             // Add the radar.
-            // TODO: Select blue or red!
             elevationAt(p.lat, p.lng).then((alt) => {
               const point = {
                 lat: p.lat,

@@ -27,8 +27,8 @@ function App() {
           return;
         }
 
-        if (guiState.selectedMissileId !== null) {
-          scenarioStore.deleteMissile(guiState.selectedMissileId);
+        if (guiState.selectedMissileTargetId !== null) {
+          scenarioStore.deleteMissile(guiState.selectedMissileTargetId);
           return;
         }
 
@@ -37,17 +37,11 @@ function App() {
           return;
         }
         if (
-          scenarioStore.blueMonostaticSensors.some(
+          scenarioStore.monostaticSensors.some(
             (sensor) => sensor.sensor.receiver.id === receiverId,
           )
         ) {
-          scenarioStore.deleteReceiver(receiverId, true);
-        } else if (
-          scenarioStore.redMonostaticSensors.some(
-            (sensor) => sensor.sensor.receiver.id === receiverId,
-          )
-        ) {
-          scenarioStore.deleteReceiver(receiverId, false);
+          scenarioStore.deleteReceiver(receiverId);
         } else if (
           scenarioStore.pclReceivers.some((r) => r.receiver.id === receiverId)
         ) {

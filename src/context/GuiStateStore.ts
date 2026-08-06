@@ -39,7 +39,7 @@ export const DEFAULT_PCL_COVERAGE_CALC_CONF: PclCoverageCalcConf = {
 interface GuiStateStore {
   selectedReceiverId: number | null;
   selectedEffectorId: number | null;
-  selectedMissileId: number | null;
+  selectedMissileTargetId: number | null;
   visibleSensorIds: Set<number>;
   monostaticCoverageCalcConf: MonostaticCoverageCalcConf;
   pclCoverageCalcConf: PclCoverageCalcConf;
@@ -54,7 +54,7 @@ interface GuiStateStore {
   setPendingMissileStart: (point: Point | null) => void;
   selectReceiver: (receiverId: number | null) => void;
   selectEffector: (effectorId: number | null) => void;
-  selectMissile: (missileId: number | null) => void;
+  selectMissile: (missileTargetId: number | null) => void;
   pclSelectionReceiverId: number | null;
   setPclSelectionReceiverId: (receiverId: number | null) => void;
   showSensor: (sensorId: number) => void;
@@ -78,7 +78,7 @@ export const useGuiStateStore = create<GuiStateStore>()(
     (set) => ({
       selectedReceiverId: null,
       selectedEffectorId: null,
-      selectedMissileId: null,
+      selectedMissileTargetId: null,
       visibleSensorIds: new Set<number>(),
       fmTransmitters: [],
       terrainModels: [],
@@ -111,9 +111,9 @@ export const useGuiStateStore = create<GuiStateStore>()(
         set((_state) => {
           return { selectedEffectorId: effectorId };
         }),
-      selectMissile: (missileId) =>
+      selectMissile: (missileTargetId) =>
         set((_state) => {
-          return { selectedMissileId: missileId };
+          return { selectedMissileTargetId: missileTargetId };
         }),
       pclSelectionReceiverId: null,
       setPclSelectionReceiverId: (receiverId) =>

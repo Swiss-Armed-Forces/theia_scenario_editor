@@ -12,11 +12,12 @@ export default function MissileList() {
     (state) => state.ballisticMissiles,
   );
 
-  const selectedMissileId = useGuiStateStore((state) => state.selectedMissileId);
+  const selectedMissileTargetId = useGuiStateStore(
+    (state) => state.selectedMissileTargetId,
+  );
   const selectMissile = useGuiStateStore((state) => state.selectMissile);
 
   const addMissile = useScenarioStore((state) => state.addMissile);
-  const unusedIdMissile = useScenarioStore((state) => state.unusedIdMissile);
   const unusedTargetId = useScenarioStore((state) => state.unusedTargetId);
   const unusedIdEffector = useScenarioStore((state) => state.unusedIdEffector);
   const terrainModels = useGuiStateStore((state) => state.terrainModels);
@@ -32,9 +33,9 @@ export default function MissileList() {
       <legend>Missile List</legend>
       {ballisticMissiles.map((missile) => (
         <MissileListItem
-          key={missile.id}
+          key={missile.target_id}
           missile={missile}
-          isHighlighted={missile.id === selectedMissileId}
+          isHighlighted={missile.target_id === selectedMissileTargetId}
         />
       ))}
       <Button
@@ -64,14 +65,12 @@ export default function MissileList() {
                   const newMissile = buildDefaultMissile(
                     p_start,
                     p_stop,
-                    unusedIdMissile,
-                    `Missile ${unusedIdMissile}`,
                     unusedTargetId,
                     unusedIdEffector,
                     { terrain_name: terrainModels[0] ?? "" },
                   );
                   addMissile(newMissile);
-                  selectMissile(newMissile.id);
+                  selectMissile(newMissile.target_id);
 
                   setPendingMissileStart(null);
                   setMapClickListener(null);

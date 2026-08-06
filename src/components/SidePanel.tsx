@@ -22,9 +22,8 @@ export default function SidePanel() {
     (state) => state.monostaticCoverageCalcConf,
   );
   const pclCalcConf = useGuiStateStore((state) => state.pclCoverageCalcConf);
-  // TODO: RED
   const monostaticSensors = useScenarioStore(
-    (state) => state.blueMonostaticSensors,
+    (state) => state.monostaticSensors,
   );
   const visibleMonostaticSensors = monostaticSensors
     .filter((sensor) => visibleSensorIds.has(sensor.sensor.id))

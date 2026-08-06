@@ -8,7 +8,7 @@ export default function MonostaticSensorSettings() {
     (state) => state.selectedReceiverId,
   );
   const detectableSensor = useScenarioStore(
-    (state) => state.blueMonostaticSensors,
+    (state) => state.monostaticSensors,
   ).find((d) => d.sensor.receiver.id === selectedReceiverId);
 
   const updateMonostaticSensor = useScenarioStore(
@@ -27,7 +27,7 @@ export default function MonostaticSensorSettings() {
             const newDetectableSensor = structuredClone(detectableSensor);
             newDetectableSensor.sensor.receiver.point = p;
             newDetectableSensor.sensor.transmitter.point = p;
-            updateMonostaticSensor(newDetectableSensor, true);
+            updateMonostaticSensor(newDetectableSensor);
           }}
         />
         <label>RCS [m²]</label>
@@ -38,7 +38,7 @@ export default function MonostaticSensorSettings() {
             const value = parseFloat(event.target.value);
             const newDetectableSensor = structuredClone(detectableSensor);
             newDetectableSensor.rcs = value;
-            updateMonostaticSensor(newDetectableSensor, true);
+            updateMonostaticSensor(newDetectableSensor);
           }}
         />
         <label>Antenna height</label>
@@ -51,7 +51,7 @@ export default function MonostaticSensorSettings() {
             const newDetectableSensor = structuredClone(detectableSensor);
             newDetectableSensor.sensor.receiver.antenna_height = value;
             newDetectableSensor.sensor.transmitter.antenna_height = value;
-            updateMonostaticSensor(newDetectableSensor, true);
+            updateMonostaticSensor(newDetectableSensor);
           }}
         />
         <label>Antenna diameter</label>
@@ -64,7 +64,7 @@ export default function MonostaticSensorSettings() {
             const newDetectableSensor = structuredClone(detectableSensor);
             newDetectableSensor.sensor.receiver.diameter = value;
             newDetectableSensor.sensor.transmitter.antenna_diameter = value;
-            updateMonostaticSensor(newDetectableSensor, true);
+            updateMonostaticSensor(newDetectableSensor);
           }}
         />
         <label>Antenna efficiency value</label>
@@ -79,7 +79,7 @@ export default function MonostaticSensorSettings() {
               value;
             newDetectableSensor.sensor.transmitter.antenna_efficiency_value =
               value;
-            updateMonostaticSensor(newDetectableSensor, true);
+            updateMonostaticSensor(newDetectableSensor);
           }}
         />
         <label>Receiver gain [dB]</label>
@@ -90,7 +90,7 @@ export default function MonostaticSensorSettings() {
             const value = parseFloat(event.target.value);
             const newDetectableSensor = structuredClone(detectableSensor);
             newDetectableSensor.sensor.receiver.gain = value;
-            updateMonostaticSensor(newDetectableSensor, true);
+            updateMonostaticSensor(newDetectableSensor);
           }}
         />
         <label>Receiver losses [dB]</label>
@@ -101,7 +101,7 @@ export default function MonostaticSensorSettings() {
             const value = parseFloat(event.target.value);
             const newDetectableSensor = structuredClone(detectableSensor);
             newDetectableSensor.sensor.receiver.losses = value;
-            updateMonostaticSensor(newDetectableSensor, true);
+            updateMonostaticSensor(newDetectableSensor);
           }}
         />
         <label>Receiver noise temperature [K]</label>
@@ -112,7 +112,7 @@ export default function MonostaticSensorSettings() {
             const value = parseFloat(event.target.value);
             const newDetectableSensor = structuredClone(detectableSensor);
             newDetectableSensor.sensor.receiver.noise_temperature = value;
-            updateMonostaticSensor(newDetectableSensor, true);
+            updateMonostaticSensor(newDetectableSensor);
           }}
         />
         <label>N coherently integrated pulses</label>
@@ -123,7 +123,7 @@ export default function MonostaticSensorSettings() {
             const value = parseInt(event.target.value);
             const newDetectableSensor = structuredClone(detectableSensor);
             newDetectableSensor.sensor.receiver.cpi_pulses = value;
-            updateMonostaticSensor(newDetectableSensor, true);
+            updateMonostaticSensor(newDetectableSensor);
           }}
         />
         <label>Coherent integration time [s]</label>
@@ -135,7 +135,7 @@ export default function MonostaticSensorSettings() {
             const newDetectableSensor = structuredClone(detectableSensor);
             newDetectableSensor.sensor.transmitter.max_coherent_integration_time =
               value;
-            updateMonostaticSensor(newDetectableSensor, true);
+            updateMonostaticSensor(newDetectableSensor);
           }}
         />
         <label>T rotation [s]</label>
@@ -146,7 +146,7 @@ export default function MonostaticSensorSettings() {
             const value = parseInt(event.target.value);
             const newDetectableSensor = structuredClone(detectableSensor);
             newDetectableSensor.sensor.receiver.rotation_time = value;
-            updateMonostaticSensor(newDetectableSensor, true);
+            updateMonostaticSensor(newDetectableSensor);
           }}
         />
         <label>Probability of false alarm</label>
@@ -157,7 +157,7 @@ export default function MonostaticSensorSettings() {
             const value = parseFloat(event.target.value);
             const newDetectableSensor = structuredClone(detectableSensor);
             newDetectableSensor.sensor.receiver.pfa = value;
-            updateMonostaticSensor(newDetectableSensor, true);
+            updateMonostaticSensor(newDetectableSensor);
           }}
         />
         <label>Noise Bandwidth [MHz]</label>
@@ -169,7 +169,7 @@ export default function MonostaticSensorSettings() {
             const newDetectableSensor = structuredClone(detectableSensor);
             newDetectableSensor.sensor.receiver.bandwidth = value;
             newDetectableSensor.sensor.transmitter.bandwidth = value;
-            updateMonostaticSensor(newDetectableSensor, true);
+            updateMonostaticSensor(newDetectableSensor);
           }}
         />
         <label>Power [W]</label>
@@ -180,7 +180,7 @@ export default function MonostaticSensorSettings() {
             const value = parseInt(event.target.value);
             const newDetectableSensor = structuredClone(detectableSensor);
             newDetectableSensor.sensor.transmitter.power = value;
-            updateMonostaticSensor(newDetectableSensor, true);
+            updateMonostaticSensor(newDetectableSensor);
           }}
         />
         <label>ERP [W]</label>
@@ -191,7 +191,7 @@ export default function MonostaticSensorSettings() {
             const value = parseInt(event.target.value);
             const newDetectableSensor = structuredClone(detectableSensor);
             newDetectableSensor.sensor.transmitter.erp = value;
-            updateMonostaticSensor(newDetectableSensor, true);
+            updateMonostaticSensor(newDetectableSensor);
           }}
         />
         <label>Frequency [MHz]</label>
@@ -202,7 +202,7 @@ export default function MonostaticSensorSettings() {
             const value = parseInt(event.target.value);
             const newDetectableSensor = structuredClone(detectableSensor);
             newDetectableSensor.sensor.transmitter.frequency = value;
-            updateMonostaticSensor(newDetectableSensor, true);
+            updateMonostaticSensor(newDetectableSensor);
           }}
         />
         <label>Pulse width [us]</label>
@@ -213,7 +213,7 @@ export default function MonostaticSensorSettings() {
             const value = parseInt(event.target.value);
             const newDetectableSensor = structuredClone(detectableSensor);
             newDetectableSensor.sensor.transmitter.pulse_width = value;
-            updateMonostaticSensor(newDetectableSensor, true);
+            updateMonostaticSensor(newDetectableSensor);
           }}
         />
       </>

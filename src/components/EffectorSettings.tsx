@@ -1,6 +1,6 @@
 import { useGuiStateStore } from "../context/GuiStateStore";
 import { useScenarioStore } from "../context/ScenarioStore";
-import type { Point } from "../types/types";
+import { EFFECTOR_ALTITUDE_OFFSET, type Point } from "../types/types";
 import PositionSelector from "./PositionSelector";
 
 export default function EffectorSettings() {
@@ -34,6 +34,9 @@ export default function EffectorSettings() {
           setPoint={(p: Point) => {
             const newDetectableEffector = structuredClone(detectableEffector);
             newDetectableEffector.effector.point = p;
+            // Avoid problems during LOS check when
+            // an effector lies exactly on the earth's surface.
+            newDetectableEffector.effector.point.alt += EFFECTOR_ALTITUDE_OFFSET;
             updateEffector(newDetectableEffector);
           }}
         />

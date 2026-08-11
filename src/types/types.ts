@@ -30,6 +30,12 @@ export type MapClickListener = (p: LatLng) => void;
 // own id space.
 export const DEFAULT_RCS = 1.0;
 
+// Effectors have no physical antenna height to lift them off the ground
+// (unlike receivers/transmitters, which do), so a point placed directly from
+// elevationAt() lies exactly on the terrain surface and can trip the
+// backend's LOS check. Applied wherever an effector's point is set.
+export const EFFECTOR_ALTITUDE_OFFSET = 2.0;
+
 export interface DetectableMonostaticSensor {
   target_id: number;
   rcs: number;
@@ -153,7 +159,7 @@ export function buildDefaultEffector(
     effector: {
       id,
       name,
-      point,
+      point: { ...point, alt: point.alt + EFFECTOR_ALTITUDE_OFFSET },
       combat_range: DEFAULT_COMBAT_RANGE,
       n_attacks_left: DEFAULT_N_ATTACKS,
     },

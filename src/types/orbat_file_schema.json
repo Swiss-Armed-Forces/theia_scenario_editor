@@ -842,6 +842,10 @@
                         "title": "Rcs",
                         "type": "number"
                     },
+                    "cadence": {
+                        "title": "Cadence",
+                        "type": "number"
+                    },
                     "effector": {
                         "$ref": "#/components/schemas/DirectFireEffectorFactory"
                     }
@@ -849,6 +853,7 @@
                 "required": [
                     "target_id",
                     "rcs",
+                    "cadence",
                     "effector"
                 ],
                 "title": "StaticDirectFireEffectorFactory",

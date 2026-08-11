@@ -73,6 +73,17 @@ export default function EffectorSettings() {
             updateEffector(newDetectableEffector);
           }}
         />
+        <label>Cadence [shots/s]</label>
+        <input
+          type="number"
+          value={effector.cadence}
+          onChange={(event) => {
+            const value = parseFloat(event.target.value);
+            const newDetectableEffector = structuredClone(detectableEffector);
+            newDetectableEffector.effector.cadence = value;
+            updateEffector(newDetectableEffector);
+          }}
+        />
       </>
     );
   }

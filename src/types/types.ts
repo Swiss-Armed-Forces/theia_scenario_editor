@@ -17,6 +17,7 @@ export interface Effector {
   point: Point;
   combat_range: number;
   n_attacks_left: number;
+  cadence: number;
 }
 
 export type Sensor = MonostaticSensor | PclSensor;
@@ -153,6 +154,7 @@ export function buildDefaultEffector(
 ): DetectableEffector {
   const DEFAULT_COMBAT_RANGE = 4_000;
   const DEFAULT_N_ATTACKS = 10;
+  const DEFAULT_CADENCE = 0.3;
   return {
     target_id,
     rcs: DEFAULT_RCS,
@@ -162,6 +164,7 @@ export function buildDefaultEffector(
       point: { ...point, alt: point.alt + EFFECTOR_ALTITUDE_OFFSET },
       combat_range: DEFAULT_COMBAT_RANGE,
       n_attacks_left: DEFAULT_N_ATTACKS,
+      cadence: DEFAULT_CADENCE,
     },
   };
 }

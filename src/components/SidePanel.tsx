@@ -13,6 +13,8 @@ import EffectorList from "./EffectorList";
 import EffectorSettings from "./EffectorSettings";
 import MissileList from "./MissileList";
 import MissileSettings from "./MissileSettings";
+import DroneSwarmList from "./DroneSwarmList";
+import DroneSwarmSettings from "./DroneSwarmSettings";
 
 export default function SidePanel() {
   const [activeTab, setActiveTab] = useState(0);
@@ -50,6 +52,7 @@ export default function SidePanel() {
         <Tab label="PCL" />
         <Tab label="GBAD" />
         <Tab label="Missiles" />
+        <Tab label="Drones" />
       </Tabs>
       <Box className="sidePanelTabContent">
         {activeTab === 0 && (
@@ -95,6 +98,12 @@ export default function SidePanel() {
           <div className="sidePanelSection">
             <MissileSettings />
             <MissileList />
+          </div>
+        )}
+        {activeTab === 4 && (
+          <div className="sidePanelSection">
+            <DroneSwarmSettings />
+            <DroneSwarmList />
           </div>
         )}
       </Box>

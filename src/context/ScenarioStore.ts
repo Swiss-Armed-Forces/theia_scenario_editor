@@ -4,6 +4,8 @@ import type {
   DetectableMonostaticSensor,
   DetectablePclReceiver,
   DetectablePclSensor,
+  DroneSwarm,
+  DroneSwarmFactory,
   Missile,
   Receiver,
   Transmitter,
@@ -12,6 +14,10 @@ import { DEFAULT_RCS } from "../types/types";
 import { useGuiStateStore } from "./GuiStateStore";
 import { useSimulationStore } from "./SimulationResultStore";
 import { lineOfSightDistance } from "../backend/backend";
+import {
+  buildDroneSwarmFactory,
+  droneSwarmFromFactory,
+} from "../util/swarmTrajectory";
 
 export type PclTxSelectionCriteria = { min_power: number; max_dist: number };
 
@@ -23,6 +29,7 @@ export interface ScenarioStore {
   pclTxCriteria: Map<number, PclTxSelectionCriteria>;
   effectors: DetectableEffector[];
   ballisticMissiles: Missile[];
+  droneSwarms: DroneSwarm[];
   unusedIdSensor: number;
   unusedIdReceiver: number;
   unusedIdTransmitter: number;
@@ -39,6 +46,9 @@ export interface ScenarioStore {
   addMissile: (missile: Missile) => void;
   updateMissile: (missile: Missile) => void;
   deleteMissile: (targetId: number) => void;
+  addDroneSwarm: (droneSwarm: DroneSwarm) => void;
+  updateDroneSwarm: (droneSwarm: DroneSwarm) => void;
+  deleteDroneSwarm: (targetId: number) => void;
   updatePclReceiverSettings: (rx: DetectablePclReceiver) => void;
   updatePclTxCriteria: (
     receiverId: number,
@@ -146,6 +156,7 @@ export type SerializedScenarioState = {
   effectors: DetectableEffector[];
   oneway_drones: unknown[];
   ballistic_missiles: Missile[];
+  drone_swarms: DroneSwarmFactory[];
   unused_id_sensor: number;
   unused_id_receiver: number;
   unused_id_transmitter: number;
@@ -162,6 +173,7 @@ export function serializeScenarioState(
     effectors: state.effectors,
     oneway_drones: [],
     ballistic_missiles: state.ballisticMissiles,
+    drone_swarms: state.droneSwarms.map(buildDroneSwarmFactory),
     unused_id_sensor: state.unusedIdSensor,
     unused_id_receiver: state.unusedIdReceiver,
     unused_id_transmitter: state.unusedIdTransmitter,
@@ -233,6 +245,8 @@ export function deserializeScenarioState(
   // no Detectable*-style wrapper or legacy backfill applies to missiles.
   const ballisticMissiles = data.ballistic_missiles ?? [];
 
+  const droneSwarms = (data.drone_swarms ?? []).map(droneSwarmFromFactory);
+
   // pcl_receivers/pcl_transmitter_ids aren't persisted (each PclSensorFactory
   // entry already carries the full receiver plus its target_id/rcs, which
   // are identical across every entry for the same receiver - see
@@ -263,6 +277,7 @@ export function deserializeScenarioState(
     pclTxCriteria: new Map(),
     effectors,
     ballisticMissiles,
+    droneSwarms,
     unusedIdSensor: data.unused_id_sensor,
     unusedIdReceiver: data.unused_id_receiver,
     unusedIdTransmitter: data.unused_id_transmitter,
@@ -279,6 +294,7 @@ export const useScenarioStore = create<ScenarioStore>((set, get) => ({
   pclTxCriteria: new Map<number, PclTxSelectionCriteria>(),
   effectors: [],
   ballisticMissiles: [],
+  droneSwarms: [],
   unusedIdSensor: 0,
   unusedIdReceiver: 0,
   unusedIdTransmitter: 0,
@@ -375,6 +391,32 @@ export const useScenarioStore = create<ScenarioStore>((set, get) => ({
         (m) => m.target_id !== targetId,
       );
       return { ballisticMissiles: newMissiles };
+    }),
+  addDroneSwarm: (droneSwarm) =>
+    set((state) => {
+      return {
+        droneSwarms: [...state.droneSwarms, droneSwarm],
+        unusedTargetId: Math.max(
+          state.unusedTargetId,
+          droneSwarm.target_id + 1,
+        ),
+      };
+    }),
+  updateDroneSwarm: (droneSwarm) =>
+    set((state) => {
+      const i = state.droneSwarms.findIndex(
+        (d) => d.target_id === droneSwarm.target_id,
+      );
+      const newDroneSwarms = structuredClone(state.droneSwarms);
+      newDroneSwarms[i] = droneSwarm;
+      return { droneSwarms: newDroneSwarms };
+    }),
+  deleteDroneSwarm: (targetId) =>
+    set((state) => {
+      const newDroneSwarms = state.droneSwarms.filter(
+        (d) => d.target_id !== targetId,
+      );
+      return { droneSwarms: newDroneSwarms };
     }),
   deleteReceiver: (receiverId: number) =>
     set((state) => {

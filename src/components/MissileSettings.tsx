@@ -2,19 +2,7 @@ import { useGuiStateStore } from "../context/GuiStateStore";
 import { useScenarioStore } from "../context/ScenarioStore";
 import type { Point } from "../types/types";
 import PositionSelector from "./PositionSelector";
-
-// <input type="datetime-local"> works in local time with no timezone
-// suffix, while t_start is persisted as a UTC ISO string; these convert
-// between the two without losing the user's intended wall-clock time.
-function toDatetimeLocalValue(iso: string): string {
-  const date = new Date(iso);
-  const localTime = new Date(date.getTime() - date.getTimezoneOffset() * 60000);
-  return localTime.toISOString().slice(0, 16);
-}
-
-function fromDatetimeLocalValue(value: string): string {
-  return new Date(value).toISOString();
-}
+import { fromDatetimeLocalValue, toDatetimeLocalValue } from "../util/datetime";
 
 export default function MissileSettings() {
   const selectedMissileTargetId = useGuiStateStore(

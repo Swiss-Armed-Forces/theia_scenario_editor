@@ -3,6 +3,7 @@ import {
   GeoJSON,
   MapContainer,
   Marker,
+  Polygon,
   Polyline,
   Popup,
   Rectangle,
@@ -16,6 +17,7 @@ import "leaflet/dist/leaflet.css";
 import { DEFAULT_MAP_CENTER } from "../util/constants";
 import { useEffect, useMemo, useState } from "react";
 import type {
+  DroneSwarm,
   Effector,
   LatLonHeightGrid,
   Missile,
@@ -34,6 +36,7 @@ import { haversineDistance } from "../util/geo";
 import { minDetectableRcsColor } from "../util/rcsColorScale";
 import { combineMinDetectableRcsGrids } from "../util/minDetectableRcsGrid";
 import { isPclReceiverVisible } from "../util/pclVisibility";
+import { buildLateralBand } from "../util/waypoints";
 
 function MaxZoomUpdater({ maxZoom }: { maxZoom: number }) {
   const map = useMap();
@@ -162,6 +165,19 @@ function ClickMarker() {
 
 const distancePointIcon = L.divIcon({
   html: `<div style="width:10px;height:10px;border-radius:50%;background:#ff5722;border:2px solid white;box-shadow:0 0 2px rgba(0,0,0,0.6)"></div>`,
+  className: "",
+  iconSize: [10, 10],
+  iconAnchor: [5, 5],
+});
+
+const droneWaypointIcon = L.divIcon({
+  html: `<div style="width:10px;height:10px;border-radius:50%;background:#3388FF;border:2px solid white;box-shadow:0 0 2px rgba(0,0,0,0.6);cursor:grab"></div>`,
+  className: "",
+  iconSize: [10, 10],
+  iconAnchor: [5, 5],
+});
+const highlightedDroneWaypointIcon = L.divIcon({
+  html: `<div style="width:10px;height:10px;border-radius:50%;background:#ff5722;border:2px solid white;box-shadow:0 0 2px rgba(0,0,0,0.6);cursor:grab"></div>`,
   className: "",
   iconSize: [10, 10],
   iconAnchor: [5, 5],
@@ -444,6 +460,75 @@ function MissileMarker({ missile }: { missile: Missile }) {
   );
 }
 
+function DroneSwarmLayer({ droneSwarm }: { droneSwarm: DroneSwarm }) {
+  const selectedDroneSwarmTargetId = useGuiStateStore(
+    (state) => state.selectedDroneSwarmTargetId,
+  );
+  const selectDroneSwarm = useGuiStateStore((state) => state.selectDroneSwarm);
+  const updateDroneSwarm = useScenarioStore((state) => state.updateDroneSwarm);
+
+  const isHighlighted =
+    selectedDroneSwarmTargetId === droneSwarm.target_id;
+
+  // Depicts the swarm as a piecewise straight line through the waypointsP, so dragging a node shows
+  // exactly the shape being edited. The lateral sampling width is shown as
+  // a shaded band.
+  const band = useMemo(
+    () => buildLateralBand(droneSwarm.waypoints, droneSwarm.lateral_max_deviation),
+    [droneSwarm.waypoints, droneSwarm.lateral_max_deviation],
+  );
+
+  return (
+    <>
+      <Polygon
+        positions={band.map((p) => [p.lat, p.lon] as [number, number])}
+        pathOptions={{ stroke: false, fillColor: "#3388FF", fillOpacity: 0.15 }}
+      />
+      <Polyline
+        positions={droneSwarm.waypoints.map(
+          (w) => [w.lat, w.lon] as [number, number],
+        )}
+        pathOptions={{
+          color: isHighlighted ? "#ff5722" : "#3388FF",
+          weight: 2,
+        }}
+        eventHandlers={{
+          click: () => selectDroneSwarm(isHighlighted ? null : droneSwarm.target_id),
+        }}
+      >
+        <Tooltip>
+          Drone Swarm #{droneSwarm.target_id} ({droneSwarm.n_drones} drones)
+        </Tooltip>
+      </Polyline>
+      {droneSwarm.waypoints.map((waypoint, i) => (
+        <Marker
+          key={i}
+          position={[waypoint.lat, waypoint.lon]}
+          icon={isHighlighted ? highlightedDroneWaypointIcon : droneWaypointIcon}
+          draggable
+          eventHandlers={{
+            click: () =>
+              selectDroneSwarm(isHighlighted ? null : droneSwarm.target_id),
+            dragend: (e) => {
+              const latLng = e.target.getLatLng();
+              const newDroneSwarm = structuredClone(droneSwarm);
+              newDroneSwarm.waypoints[i] = {
+                lat: latLng.lat,
+                lon: latLng.lng,
+              };
+              updateDroneSwarm(newDroneSwarm);
+            },
+          }}
+        >
+          <Tooltip>
+            Drone Swarm #{droneSwarm.target_id} waypoint #{i}
+          </Tooltip>
+        </Marker>
+      ))}
+    </>
+  );
+}
+
 function FmTransmitterMarker({
   transmitter,
   isHighlighted,
@@ -590,6 +675,7 @@ export default function ScenarioMap() {
   const ballisticMissiles = useScenarioStore(
     (state) => state.ballisticMissiles,
   );
+  const droneSwarms = useScenarioStore((state) => state.droneSwarms);
   const pendingMissileStart = useGuiStateStore(
     (state) => state.pendingMissileStart,
   );
@@ -651,6 +737,9 @@ export default function ScenarioMap() {
       ))}
       {ballisticMissiles.map((missile) => (
         <MissileMarker key={missile.target_id} missile={missile} />
+      ))}
+      {droneSwarms.map((droneSwarm) => (
+        <DroneSwarmLayer key={droneSwarm.target_id} droneSwarm={droneSwarm} />
       ))}
       {pendingMissileStart && (
         <Marker

@@ -1,5 +1,6 @@
 import type { LatLng } from "leaflet";
 import type { components } from "./schema";
+import { offsetLatLon } from "../util/geo";
 
 export type Point = components["schemas"]["Point"];
 export type Receiver = components["schemas"]["Receiver-Input"];
@@ -223,4 +224,103 @@ export function buildDefaultPclReceiver(
     MIN_TX_POWER,
     MAX_DISTANCE,
   ];
+}
+
+// A spline node for a drone swarm's trajectory. No altitude: cruise altitude
+// is a single swarm-wide value (DroneSwarm.cruiseAltitude), so dragging a
+// waypoint never needs an elevationAt() round-trip.
+export interface Waypoint {
+  lat: number;
+  lon: number;
+}
+
+// Hand-written mirrors of src/types/orbat_file_schema.json's Trajectory /
+// ConstantRcsModel / DroneSwarmFactory - not derived from schema.d.ts, since
+// that file only covers openapi.json (same reason Missile/Terrain above are
+// hand-written rather than generated).
+export interface ConstantRcsModel {
+  rcs: number;
+}
+
+export interface Trajectory {
+  target_id: number;
+  target_sidc: string;
+  times: string[];
+  lats: number[];
+  lons: number[];
+  alts: number[];
+  vxs: number[];
+  vys: number[];
+  vzs: number[];
+  cross_section_model: ConstantRcsModel;
+}
+
+// Not consumed by any renderer today (target_sidc isn't used for icon
+// selection anywhere in ScenarioMap.tsx, including the already-reserved
+// oneway_drones) - just a schema-valid placeholder.
+export const DRONE_TARGET_SIDC = "10260100001101000000";
+
+// The orbat_file_schema.json wire format: what actually gets saved under
+// OrderOfBattle.drone_swarms and (eventually) sent to the backend.
+export interface DroneSwarmFactory {
+  swarm_trajectory: Trajectory;
+  n_drones: number;
+  lateral_max_deviation: number;
+  up_max_deviation: number;
+  effector_range: number;
+  terrain: Terrain;
+}
+
+// The authored/in-memory shape of a drone swarm. Same waypoints as
+// DroneSwarmFactory.swarm_trajectory, just with velocity kept alongside
+// instead of baked into per-point vx/vy, so the map can offer drag-and-drop
+// editing without recomputing velocity by hand; ScenarioStore converts
+// to/from DroneSwarmFactory at the save-file boundary (see
+// buildDroneSwarmFactory / droneSwarmFromFactory in util/swarmTrajectory.ts).
+export interface DroneSwarm {
+  target_id: number;
+  waypoints: Waypoint[];
+  velocity: number;
+  cruiseAltitude: number;
+  t_start: string;
+  rcs: number;
+  n_drones: number;
+  lateral_max_deviation: number;
+  up_max_deviation: number;
+  effectorRange: number;
+  terrain: Terrain;
+}
+
+export function buildDefaultDroneSwarm(
+  point: Point,
+  target_id: number,
+  terrain: Terrain,
+): DroneSwarm {
+  const DEFAULT_VELOCITY = 20;
+  const DEFAULT_CRUISE_ALTITUDE_OFFSET = 100;
+  const DEFAULT_WAYPOINT_SPACING = 1000;
+  const DEFAULT_N_DRONES = 5;
+  const DEFAULT_LATERAL_MAX_DEVIATION = 50;
+  const DEFAULT_UP_MAX_DEVIATION = 20;
+  const DEFAULT_EFFECTOR_RANGE = 100;
+
+  const waypoints: Waypoint[] = [
+    { lat: point.lat, lon: point.lon },
+    offsetLatLon(point.lat, point.lon, DEFAULT_WAYPOINT_SPACING, 0),
+    offsetLatLon(point.lat, point.lon, 2 * DEFAULT_WAYPOINT_SPACING, 0),
+  ];
+
+  return {
+    target_id,
+    waypoints,
+    velocity: DEFAULT_VELOCITY,
+    cruiseAltitude: point.alt + DEFAULT_CRUISE_ALTITUDE_OFFSET,
+    t_start: new Date().toISOString(),
+    rcs: DEFAULT_RCS,
+    n_drones: DEFAULT_N_DRONES,
+    lateral_max_deviation: DEFAULT_LATERAL_MAX_DEVIATION,
+    up_max_deviation: DEFAULT_UP_MAX_DEVIATION,
+    effectorRange: DEFAULT_EFFECTOR_RANGE,
+    terrain,
+  };
 }

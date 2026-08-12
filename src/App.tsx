@@ -32,6 +32,11 @@ function App() {
           return;
         }
 
+        if (guiState.selectedDroneSwarmTargetId !== null) {
+          scenarioStore.deleteDroneSwarm(guiState.selectedDroneSwarmTargetId);
+          return;
+        }
+
         const receiverId = guiState.selectedReceiverId;
         if (receiverId === null) {
           return;

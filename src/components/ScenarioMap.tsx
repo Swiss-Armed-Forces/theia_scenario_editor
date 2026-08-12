@@ -231,7 +231,7 @@ function DistanceMeasurementLayer() {
             pathOptions={{ color: "#ff5722", weight: 2, dashArray: "6, 4" }}
           >
             <Tooltip permanent direction="center">
-              {distance !== undefined ? `${distance.toFixed(0)} m` : "..."}
+              {distance !== undefined ? `${(distance / 1000).toFixed(0)} km` : "..."}
             </Tooltip>
           </Polyline>
         );
@@ -240,7 +240,7 @@ function DistanceMeasurementLayer() {
         <Marker key={i} position={[p.lat, p.lon]} icon={distancePointIcon}>
           {i === points.length - 1 && points.length > 1 && (
             <Tooltip permanent direction="top" offset={[0, -8]}>
-              Total: {total.toFixed(0)} m
+              Total: {(total / 1000).toFixed(0)} km
             </Tooltip>
           )}
         </Marker>

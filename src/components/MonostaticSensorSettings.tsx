@@ -131,7 +131,7 @@ export default function MonostaticSensorSettings() {
           type="number"
           value={sensor.transmitter.max_coherent_integration_time}
           onChange={(event) => {
-            const value = parseInt(event.target.value);
+            const value = parseFloat(event.target.value);
             const newDetectableSensor = structuredClone(detectableSensor);
             newDetectableSensor.sensor.transmitter.max_coherent_integration_time =
               value;

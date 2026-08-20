@@ -231,7 +231,9 @@ function DistanceMeasurementLayer() {
             pathOptions={{ color: "#ff5722", weight: 2, dashArray: "6, 4" }}
           >
             <Tooltip permanent direction="center">
-              {distance !== undefined ? `${(distance / 1000).toFixed(0)} km` : "..."}
+              {distance !== undefined
+                ? `${(distance / 1000).toFixed(0)} km`
+                : "..."}
             </Tooltip>
           </Polyline>
         );
@@ -467,14 +469,14 @@ function DroneSwarmLayer({ droneSwarm }: { droneSwarm: DroneSwarm }) {
   const selectDroneSwarm = useGuiStateStore((state) => state.selectDroneSwarm);
   const updateDroneSwarm = useScenarioStore((state) => state.updateDroneSwarm);
 
-  const isHighlighted =
-    selectedDroneSwarmTargetId === droneSwarm.target_id;
+  const isHighlighted = selectedDroneSwarmTargetId === droneSwarm.target_id;
 
   // Depicts the swarm as a piecewise straight line through the waypointsP, so dragging a node shows
   // exactly the shape being edited. The lateral sampling width is shown as
   // a shaded band.
   const band = useMemo(
-    () => buildLateralBand(droneSwarm.waypoints, droneSwarm.lateral_max_deviation),
+    () =>
+      buildLateralBand(droneSwarm.waypoints, droneSwarm.lateral_max_deviation),
     [droneSwarm.waypoints, droneSwarm.lateral_max_deviation],
   );
 
@@ -493,7 +495,8 @@ function DroneSwarmLayer({ droneSwarm }: { droneSwarm: DroneSwarm }) {
           weight: 2,
         }}
         eventHandlers={{
-          click: () => selectDroneSwarm(isHighlighted ? null : droneSwarm.target_id),
+          click: () =>
+            selectDroneSwarm(isHighlighted ? null : droneSwarm.target_id),
         }}
       >
         <Tooltip>
@@ -504,7 +507,9 @@ function DroneSwarmLayer({ droneSwarm }: { droneSwarm: DroneSwarm }) {
         <Marker
           key={i}
           position={[waypoint.lat, waypoint.lon]}
-          icon={isHighlighted ? highlightedDroneWaypointIcon : droneWaypointIcon}
+          icon={
+            isHighlighted ? highlightedDroneWaypointIcon : droneWaypointIcon
+          }
           draggable
           eventHandlers={{
             click: () =>
@@ -600,8 +605,8 @@ function ReceiverMarker({
 const EMPTY_TRANSMITTER_IDS = new Set<number>();
 
 function PclTransmitterSelectionLayer({ receiverId }: { receiverId: number }) {
-  const receiver = useScenarioStore(
-    (state) => state.pclReceivers.find((r) => r.receiver.id === receiverId),
+  const receiver = useScenarioStore((state) =>
+    state.pclReceivers.find((r) => r.receiver.id === receiverId),
   )?.receiver;
   const criteria = useScenarioStore((state) =>
     state.pclTxCriteria.get(receiverId),

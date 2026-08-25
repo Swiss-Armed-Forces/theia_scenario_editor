@@ -17,6 +17,7 @@ export default function PclReceiverListItem({
   const visibleIds = useGuiStateStore((state) => state.visibleSensorIds);
   const showSensor = useGuiStateStore((state) => state.showSensor);
   const hideSensor = useGuiStateStore((state) => state.hideSensor);
+  const selectReceiver = useGuiStateStore((state) => state.selectReceiver);
   const pclSensors = useScenarioStore((state) => state.pclSensors).filter(
     (d) => d.sensor.receiver.id === receiver.id,
   );
@@ -36,11 +37,16 @@ export default function PclReceiverListItem({
           display: "flex",
           flexDirection: "row",
           gap: "10px",
+          cursor: "pointer",
         }}
+        onClick={() =>
+          selectReceiver(isHighlighted ? null : receiver.id)
+        }
       >
         <IconButton
           style={{ padding: 0, height: "1em", verticalAlign: "-0.25em" }}
-          onClick={(_event) => {
+          onClick={(event) => {
+            event.stopPropagation();
             for (const id of sensorIds) {
               if (isVisible) {
                 hideSensor(id);

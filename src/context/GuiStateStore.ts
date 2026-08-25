@@ -36,11 +36,15 @@ export const DEFAULT_PCL_COVERAGE_CALC_CONF: PclCoverageCalcConf = {
   delayThreshold: 1.0,
 };
 
+export type CalcSettingsView = "monostatic" | "pcl" | null;
+
 interface GuiStateStore {
   selectedReceiverId: number | null;
   selectedEffectorId: number | null;
   selectedMissileTargetId: number | null;
   selectedDroneSwarmTargetId: number | null;
+  activeCalcSettingsView: CalcSettingsView;
+  setActiveCalcSettingsView: (view: CalcSettingsView) => void;
   visibleSensorIds: Set<number>;
   monostaticCoverageCalcConf: MonostaticCoverageCalcConf;
   pclCoverageCalcConf: PclCoverageCalcConf;
@@ -82,6 +86,23 @@ export const useGuiStateStore = create<GuiStateStore>()(
       selectedEffectorId: null,
       selectedMissileTargetId: null,
       selectedDroneSwarmTargetId: null,
+      activeCalcSettingsView: null,
+      setActiveCalcSettingsView: (view) =>
+        set((_state) => {
+          if (view === null) {
+            return { activeCalcSettingsView: null };
+          }
+          // Selecting a category's calc settings is mutually exclusive with
+          // having an individual component selected, so the settings panel
+          // never has to decide between showing both at once.
+          return {
+            activeCalcSettingsView: view,
+            selectedReceiverId: null,
+            selectedEffectorId: null,
+            selectedMissileTargetId: null,
+            selectedDroneSwarmTargetId: null,
+          };
+        }),
       visibleSensorIds: new Set<number>(),
       fmTransmitters: [],
       terrainModels: [],
@@ -106,21 +127,59 @@ export const useGuiStateStore = create<GuiStateStore>()(
         set((_state) => {
           return { pendingMissileStart: point };
         }),
+      // Selecting one component deselects any other, so at most one item is
+      // ever "active" for the settings panel to display.
       selectReceiver: (receiverId) =>
         set((_state) => {
-          return { selectedReceiverId: receiverId };
+          if (receiverId === null) {
+            return { selectedReceiverId: null };
+          }
+          return {
+            selectedReceiverId: receiverId,
+            selectedEffectorId: null,
+            selectedMissileTargetId: null,
+            selectedDroneSwarmTargetId: null,
+            activeCalcSettingsView: null,
+          };
         }),
       selectEffector: (effectorId) =>
         set((_state) => {
-          return { selectedEffectorId: effectorId };
+          if (effectorId === null) {
+            return { selectedEffectorId: null };
+          }
+          return {
+            selectedEffectorId: effectorId,
+            selectedReceiverId: null,
+            selectedMissileTargetId: null,
+            selectedDroneSwarmTargetId: null,
+            activeCalcSettingsView: null,
+          };
         }),
       selectMissile: (missileTargetId) =>
         set((_state) => {
-          return { selectedMissileTargetId: missileTargetId };
+          if (missileTargetId === null) {
+            return { selectedMissileTargetId: null };
+          }
+          return {
+            selectedMissileTargetId: missileTargetId,
+            selectedReceiverId: null,
+            selectedEffectorId: null,
+            selectedDroneSwarmTargetId: null,
+            activeCalcSettingsView: null,
+          };
         }),
       selectDroneSwarm: (droneSwarmTargetId) =>
         set((_state) => {
-          return { selectedDroneSwarmTargetId: droneSwarmTargetId };
+          if (droneSwarmTargetId === null) {
+            return { selectedDroneSwarmTargetId: null };
+          }
+          return {
+            selectedDroneSwarmTargetId: droneSwarmTargetId,
+            selectedReceiverId: null,
+            selectedEffectorId: null,
+            selectedMissileTargetId: null,
+            activeCalcSettingsView: null,
+          };
         }),
       pclSelectionReceiverId: null,
       setPclSelectionReceiverId: (receiverId) =>

@@ -15,10 +15,14 @@ export default function MonostaticSensorSettings() {
     (state) => state.updateMonostaticSensor,
   );
 
-  let content = <></>;
-  if (detectableSensor) {
-    const sensor = detectableSensor.sensor;
-    content = (
+  if (!detectableSensor) {
+    return null;
+  }
+
+  const sensor = detectableSensor.sensor;
+  return (
+    <fieldset className="SensorSettingsContainer">
+      <legend>Sensor Settings</legend>
       <>
         <label>Position</label>
         <PositionSelector
@@ -217,16 +221,6 @@ export default function MonostaticSensorSettings() {
           }}
         />
       </>
-    );
-  }
-
-  return (
-    <fieldset
-      className="SensorSettingsContainer"
-      style={{ maxHeight: "30%", overflow: "scroll" }}
-    >
-      <legend>Sensor Settings</legend>
-      {content}
     </fieldset>
   );
 }

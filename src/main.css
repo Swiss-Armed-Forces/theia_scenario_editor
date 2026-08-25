@@ -61,43 +61,121 @@ body, html {
     min-height: 0;
 }
 
-.sidePanelTabs {
-    flex-shrink: 0;
-}
-
-.sidePanelTabs .MuiTab-root {
-    color: var(--text-color);
-    opacity: 0.7;
-}
-
-.sidePanelTabs .MuiTab-root.Mui-selected {
-    color: var(--primary);
-    opacity: 1;
-}
-
-.sidePanelTabContent {
-    flex: 1;
-    min-height: 0;
-    display: flex;
-    flex-direction: column;
-}
-
-.sidePanelSection {
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    gap: 10px;
-    flex: 1;
-    min-height: 0;
-}
-
 .sidePanelPlaceholder {
+    display: flex;
     align-items: center;
     justify-content: center;
     color: var(--text-color);
     opacity: 0.6;
     border: 1px dashed var(--panel-border-color);
     border-radius: 4px;
+    padding: 10px;
+    text-align: center;
+}
+
+.componentTree {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    border: 1px solid var(--panel-border-color);
+    border-radius: 4px;
+    background-color: var(--panel-bg);
+}
+
+.treeCategory {
+    border-bottom: 1px solid var(--panel-border-color);
+}
+
+.treeCategory:last-child {
+    border-bottom: none;
+}
+
+.treeCategoryHeader {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 8px;
+    cursor: pointer;
+    user-select: none;
+}
+
+.treeCategoryHeader:hover {
+    background-color: rgba(255, 255, 255, 0.05);
+}
+
+.treeChevron {
+    display: inline-block;
+    font-size: 0.7em;
+    transition: transform 0.1s ease-in-out;
+}
+
+.treeChevron.expanded {
+    transform: rotate(90deg);
+}
+
+.treeCategoryTitle {
+    flex: 1;
+    font-weight: bold;
+}
+
+.treeCategoryCount {
+    opacity: 0.6;
+    font-variant-numeric: tabular-nums;
+}
+
+.treeCategorySettingsButton {
+    color: var(--text-color);
+    opacity: 0.6;
+}
+
+.treeCategorySettingsButton.active {
+    color: var(--primary);
+    opacity: 1;
+}
+
+.treeCategoryBody {
+    display: flex;
+    flex-direction: column;
+    padding: 2px 0 4px 0;
+}
+
+.settingsPanel {
+    /* Fixed share of the side panel's height, regardless of whether it
+       holds item settings, calc settings, or the empty-state placeholder,
+       so switching between them doesn't reflow the component tree above. */
+    flex: 0 0 35%;
+    min-height: 0;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.settingsPanelSection {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    flex: 1;
+    min-height: 0;
+}
+
+.settingsPanelPlaceholder {
+    flex: 1;
+    min-height: 0;
+}
+
+.addComponentButtons {
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.addComponentButtons .MuiButton-root {
+    flex: 1 1 auto;
+    font-size: 0.75em;
 }
 
 .scenarioMap {
@@ -122,24 +200,21 @@ body, html {
 .SensorSettingsContainer {
     display: grid;
     grid-template-columns: 1.5fr 1fr;
+    align-content: start;
     gap: 10px;
-    min-height: 30%;
-    max-height: 30%;
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
 }
 
 .MonostaticCoverageSettingsContainer {
     display: grid;
     grid-template-columns: 1.5fr 1fr;
+    align-content: start;
     gap: 10px;
-    min-height: 20%;
-    max-height: 20%;
-    overflow-y: scroll;
-}
-
-.SensorList {
-    min-height: 30%;
-    max-height: 30%;
-    overflow-y: scroll;
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
 }
 
 .SettingsContainer > * {

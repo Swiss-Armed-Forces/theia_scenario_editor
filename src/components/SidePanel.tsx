@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Box, Button, Tab, Tabs } from "@mui/material";
+import { Button } from "@mui/material";
 import MonostaticSensorList from "./MonostaticSensorList";
 import { useSimulationStore } from "../context/SimulationResultStore";
 import { useGuiStateStore } from "../context/GuiStateStore";
@@ -15,9 +15,46 @@ import MissileList from "./MissileList";
 import MissileSettings from "./MissileSettings";
 import DroneSwarmList from "./DroneSwarmList";
 import DroneSwarmSettings from "./DroneSwarmSettings";
+import TreeCategory from "./TreeCategory";
+import AddComponentButtons from "./AddComponentButtons";
 
 export default function SidePanel() {
-  const [activeTab, setActiveTab] = useState(0);
+  const [expandedCategories, setExpandedCategories] = useState({
+    monostatic: true,
+    pcl: true,
+    gbad: true,
+    missiles: true,
+    drones: true,
+  });
+
+  function toggleExpanded(key: keyof typeof expandedCategories) {
+    setExpandedCategories((prev) => ({ ...prev, [key]: !prev[key] }));
+  }
+
+  const calcSettingsView = useGuiStateStore(
+    (state) => state.activeCalcSettingsView,
+  );
+  const setActiveCalcSettingsView = useGuiStateStore(
+    (state) => state.setActiveCalcSettingsView,
+  );
+
+  const selectedReceiverId = useGuiStateStore(
+    (state) => state.selectedReceiverId,
+  );
+  const selectedEffectorId = useGuiStateStore(
+    (state) => state.selectedEffectorId,
+  );
+  const selectedMissileTargetId = useGuiStateStore(
+    (state) => state.selectedMissileTargetId,
+  );
+  const selectedDroneSwarmTargetId = useGuiStateStore(
+    (state) => state.selectedDroneSwarmTargetId,
+  );
+  const hasItemSelected =
+    selectedReceiverId !== null ||
+    selectedEffectorId !== null ||
+    selectedMissileTargetId !== null ||
+    selectedDroneSwarmTargetId !== null;
 
   const visibleSensorIds = useGuiStateStore((state) => state.visibleSensorIds);
   const monostaticCalcConf = useGuiStateStore(
@@ -40,29 +77,76 @@ export default function SidePanel() {
   const updateMinDetectableRcsGrids = useSimulationStore(
     (state) => state.updateMinDetectableRcsGrids,
   );
+
+  const pclReceivers = useScenarioStore((state) => state.pclReceivers);
+  const effectors = useScenarioStore((state) => state.effectors);
+  const ballisticMissiles = useScenarioStore((state) => state.ballisticMissiles);
+  const droneSwarms = useScenarioStore((state) => state.droneSwarms);
+
   return (
     <div className="sidePanel">
-      <Tabs
-        className="sidePanelTabs"
-        value={activeTab}
-        onChange={(_event, value: number) => setActiveTab(value)}
-        variant="fullWidth"
-      >
-        <Tab label="Active Radar" />
-        <Tab label="PCL" />
-        <Tab label="GBAD" />
-        <Tab label="Missiles" />
-        <Tab label="Drones" />
-      </Tabs>
-      <Box className="sidePanelTabContent">
-        {activeTab === 0 && (
-          <div className="sidePanelSection">
-            <MonostaticSensorSettings />
-            <MonostaticSensorList />
+      <div className="componentTree">
+        <TreeCategory
+          title="Active Radar"
+          count={monostaticSensors.length}
+          expanded={expandedCategories.monostatic}
+          onToggleExpand={() => toggleExpanded("monostatic")}
+          hasSettings
+          isSettingsActive={calcSettingsView === "monostatic"}
+          onToggleSettings={() =>
+            setActiveCalcSettingsView(
+              calcSettingsView === "monostatic" ? null : "monostatic",
+            )
+          }
+        >
+          <MonostaticSensorList />
+        </TreeCategory>
+        <TreeCategory
+          title="PCL"
+          count={pclReceivers.length}
+          expanded={expandedCategories.pcl}
+          onToggleExpand={() => toggleExpanded("pcl")}
+          hasSettings
+          isSettingsActive={calcSettingsView === "pcl"}
+          onToggleSettings={() =>
+            setActiveCalcSettingsView(calcSettingsView === "pcl" ? null : "pcl")
+          }
+        >
+          <PclSensorList />
+        </TreeCategory>
+        <TreeCategory
+          title="GBAD"
+          count={effectors.length}
+          expanded={expandedCategories.gbad}
+          onToggleExpand={() => toggleExpanded("gbad")}
+        >
+          <EffectorList />
+        </TreeCategory>
+        <TreeCategory
+          title="Missiles"
+          count={ballisticMissiles.length}
+          expanded={expandedCategories.missiles}
+          onToggleExpand={() => toggleExpanded("missiles")}
+        >
+          <MissileList />
+        </TreeCategory>
+        <TreeCategory
+          title="Drones"
+          count={droneSwarms.length}
+          expanded={expandedCategories.drones}
+          onToggleExpand={() => toggleExpanded("drones")}
+        >
+          <DroneSwarmList />
+        </TreeCategory>
+      </div>
+
+      <div className="settingsPanel">
+        {calcSettingsView === "monostatic" && (
+          <div className="settingsPanelSection">
             <MonostaticCoverageCalcSettings />
             <Button
               variant="contained"
-              onClick={(_event) => {
+              onClick={() => {
                 updateMonostaticCoverage(
                   visibleMonostaticSensors,
                   monostaticCalcConf,
@@ -73,14 +157,12 @@ export default function SidePanel() {
             </Button>
           </div>
         )}
-        {activeTab === 1 && (
-          <div className="sidePanelSection">
-            <PclSensorSettings />
-            <PclSensorList />
+        {calcSettingsView === "pcl" && (
+          <div className="settingsPanelSection">
             <PclCoverageCalcSettings />
             <Button
               variant="contained"
-              onClick={(_event) => {
+              onClick={() => {
                 updateMinDetectableRcsGrids(visiblePclSensors, pclCalcConf);
               }}
             >
@@ -88,25 +170,24 @@ export default function SidePanel() {
             </Button>
           </div>
         )}
-        {activeTab === 2 && (
-          <div className="sidePanelSection">
+        {calcSettingsView === null && (
+          <>
+            <MonostaticSensorSettings />
+            <PclSensorSettings />
             <EffectorSettings />
-            <EffectorList />
-          </div>
-        )}
-        {activeTab === 3 && (
-          <div className="sidePanelSection">
             <MissileSettings />
-            <MissileList />
-          </div>
-        )}
-        {activeTab === 4 && (
-          <div className="sidePanelSection">
             <DroneSwarmSettings />
-            <DroneSwarmList />
-          </div>
+            {!hasItemSelected && (
+              <div className="sidePanelPlaceholder settingsPanelPlaceholder">
+                Select a component to edit its settings, or click a
+                category&rsquo;s gear icon for coverage calculation settings.
+              </div>
+            )}
+          </>
         )}
-      </Box>
+      </div>
+
+      <AddComponentButtons />
     </div>
   );
 }

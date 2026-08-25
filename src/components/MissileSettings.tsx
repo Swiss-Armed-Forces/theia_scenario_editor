@@ -15,9 +15,13 @@ export default function MissileSettings() {
 
   const updateMissile = useScenarioStore((state) => state.updateMissile);
 
-  let content = <></>;
-  if (missile) {
-    content = (
+  if (!missile) {
+    return null;
+  }
+
+  return (
+    <fieldset className="SensorSettingsContainer">
+      <legend>Missile Settings</legend>
       <>
         <label>Start position</label>
         <PositionSelector
@@ -82,16 +86,6 @@ export default function MissileSettings() {
           }}
         />
       </>
-    );
-  }
-
-  return (
-    <fieldset
-      className="SensorSettingsContainer"
-      style={{ maxHeight: "30%", overflow: "scroll" }}
-    >
-      <legend>Missile Settings</legend>
-      {content}
     </fieldset>
   );
 }

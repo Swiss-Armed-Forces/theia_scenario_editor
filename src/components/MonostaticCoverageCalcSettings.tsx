@@ -25,8 +25,9 @@ export default function MonostaticCoverageCalcSettings() {
       <label htmlFor="targetRcs">Target RCS [m^2]</label>
       <input
         name="targetRcs"
+        type="number"
         value={conf.targetRcs}
-        maxLength={3}
+        maxLength={5}
         onChange={(e) => {
           updateConf({ ...conf, targetRcs: parseFloat(e.target.value) });
         }}

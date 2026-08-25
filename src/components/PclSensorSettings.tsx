@@ -41,11 +41,15 @@ export default function PclSensorSettings() {
     detectableReceiver !== undefined &&
     pclSelectionReceiverId === detectableReceiver.receiver.id;
 
-  let content = <></>;
-  if (detectableReceiver && criteria) {
-    const receiver = detectableReceiver.receiver;
-    const newDetectableReceiver = structuredClone(detectableReceiver);
-    content = (
+  if (!detectableReceiver || !criteria) {
+    return null;
+  }
+
+  const receiver = detectableReceiver.receiver;
+  const newDetectableReceiver = structuredClone(detectableReceiver);
+  return (
+    <fieldset className="SensorSettingsContainer">
+      <legend>Sensor Settings</legend>
       <>
         <label>Position</label>
         <PositionSelector
@@ -197,16 +201,6 @@ export default function PclSensorSettings() {
           )}
         </div>
       </>
-    );
-  }
-
-  return (
-    <fieldset
-      className="SensorSettingsContainer"
-      style={{ maxHeight: "30%", overflow: "scroll" }}
-    >
-      <legend>Sensor Settings</legend>
-      {content}
     </fieldset>
   );
 }

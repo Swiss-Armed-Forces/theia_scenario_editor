@@ -32,16 +32,20 @@ export default function DroneSwarmSettings() {
     );
   }, [droneSwarm]);
 
-  let content = <></>;
-  if (droneSwarm) {
-    const durationSeconds =
-      trajectory && trajectory.times.length > 0
-        ? (new Date(trajectory.times[trajectory.times.length - 1]).getTime() -
-            new Date(trajectory.times[0]).getTime()) /
-          1000
-        : 0;
+  if (!droneSwarm) {
+    return null;
+  }
 
-    content = (
+  const durationSeconds =
+    trajectory && trajectory.times.length > 0
+      ? (new Date(trajectory.times[trajectory.times.length - 1]).getTime() -
+          new Date(trajectory.times[0]).getTime()) /
+        1000
+      : 0;
+
+  return (
+    <fieldset className="SensorSettingsContainer">
+      <legend>Drone Swarm Settings</legend>
       <>
         <label># Waypoints</label>
         <input
@@ -173,16 +177,6 @@ export default function DroneSwarmSettings() {
           ))}
         </select>
       </>
-    );
-  }
-
-  return (
-    <fieldset
-      className="SensorSettingsContainer"
-      style={{ maxHeight: "30%", overflow: "scroll" }}
-    >
-      <legend>Drone Swarm Settings</legend>
-      {content}
     </fieldset>
   );
 }

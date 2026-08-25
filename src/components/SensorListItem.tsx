@@ -14,6 +14,7 @@ export default function SensorListItem({
   const visibleIds = useGuiStateStore((state) => state.visibleSensorIds);
   const showSensor = useGuiStateStore((state) => state.showSensor);
   const hideSensor = useGuiStateStore((state) => state.hideSensor);
+  const selectReceiver = useGuiStateStore((state) => state.selectReceiver);
   const isVisible = visibleIds.has(sensor.id);
   return (
     <Box
@@ -23,11 +24,16 @@ export default function SensorListItem({
         display: "flex",
         flexDirection: "row",
         gap: "10px",
+        cursor: "pointer",
       }}
+      onClick={() =>
+        selectReceiver(isHighlighted ? null : sensor.receiver.id)
+      }
     >
       <IconButton
         style={{ padding: 0, height: "1em", verticalAlign: "-0.25em" }}
-        onClick={(_event) => {
+        onClick={(event) => {
+          event.stopPropagation();
           if (isVisible) {
             hideSensor(sensor.id);
           } else {

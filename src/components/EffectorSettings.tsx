@@ -13,10 +13,14 @@ export default function EffectorSettings() {
 
   const updateEffector = useScenarioStore((state) => state.updateEffector);
 
-  let content = <></>;
-  if (detectableEffector) {
-    const effector = detectableEffector.effector;
-    content = (
+  if (!detectableEffector) {
+    return null;
+  }
+
+  const effector = detectableEffector.effector;
+  return (
+    <fieldset className="SensorSettingsContainer">
+      <legend>Effector Settings</legend>
       <>
         <label>Name</label>
         <input
@@ -85,16 +89,6 @@ export default function EffectorSettings() {
           }}
         />
       </>
-    );
-  }
-
-  return (
-    <fieldset
-      className="SensorSettingsContainer"
-      style={{ maxHeight: "30%", overflow: "scroll" }}
-    >
-      <legend>Effector Settings</legend>
-      {content}
     </fieldset>
   );
 }

@@ -214,7 +214,7 @@ export default function MonostaticSensorSettings() {
           type="number"
           value={sensor.transmitter.pulse_width}
           onChange={(event) => {
-            const value = parseInt(event.target.value);
+            const value = parseFloat(event.target.value);
             const newDetectableSensor = structuredClone(detectableSensor);
             newDetectableSensor.sensor.transmitter.pulse_width = value;
             updateMonostaticSensor(newDetectableSensor);

@@ -351,6 +351,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/default_monostatic_sensor_configurations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Default Monostatic Sensor Configurations */
+        get: operations["get_default_monostatic_sensor_configurations_default_monostatic_sensor_configurations_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -383,6 +400,14 @@ export interface components {
         ConstantRcsModel: {
             /** Rcs */
             rcs: number;
+        };
+        /** DefaultMonostaticSensorConfiguration */
+        DefaultMonostaticSensorConfiguration: {
+            /** Name */
+            name: string;
+            /** Description */
+            description: string;
+            sensor: components["schemas"]["MonostaticSensor-Output"];
         };
         /** EventMessage */
         EventMessage: {
@@ -1444,6 +1469,26 @@ export interface operations {
                 };
                 content: {
                     "application/json": string[];
+                };
+            };
+        };
+    };
+    get_default_monostatic_sensor_configurations_default_monostatic_sensor_configurations_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DefaultMonostaticSensorConfiguration"][];
                 };
             };
         };

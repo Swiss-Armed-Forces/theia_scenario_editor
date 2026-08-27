@@ -158,6 +158,7 @@ body, html {
     gap: 10px;
     flex: 1;
     min-height: 0;
+    min-width: 0;
 }
 
 .settingsPanelPlaceholder {
@@ -199,22 +200,80 @@ body, html {
 
 .SensorSettingsContainer {
     display: grid;
-    grid-template-columns: 1.5fr 1fr;
+    /* minmax(0, ...) instead of a bare fr unit: grid tracks (and this
+       fieldset itself, as a flex item) otherwise default to a min size of
+       their content's min-content width, which lets a long <select> option
+       or button force the whole fieldset wider than its flex parent
+       instead of shrinking/wrapping/scrolling internally. That silent
+       overflow was enough to make a focus-triggered "scroll into view"
+       shift the entire settings panel sideways. */
+    grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
     align-content: start;
     gap: 10px;
     flex: 1;
     min-height: 0;
+    min-width: 0;
     overflow-y: auto;
+    overflow-x: hidden;
+}
+
+.presetRow {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 6px;
+}
+
+.presetRow > select {
+    flex: 1;
+    min-width: 0;
+}
+
+.infoButtonWrapper {
+    position: relative;
+    display: inline-flex;
+}
+
+.infoButton {
+    color: var(--text-color);
+    border: 1px solid var(--panel-border-color);
+    border-radius: 50%;
+    opacity: 0.85;
+}
+
+.infoButton:hover {
+    opacity: 1;
+    border-color: var(--primary);
+    color: var(--primary);
+}
+
+.infoBox {
+    position: absolute;
+    top: calc(100% + 4px);
+    right: 0;
+    z-index: 20;
+    width: max-content;
+    max-width: 220px;
+    background-color: var(--panel-bg);
+    border: 1px solid var(--panel-border-color);
+    border-radius: 4px;
+    padding: 8px 10px;
+    font-size: 0.85em;
+    white-space: pre-wrap;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+    cursor: pointer;
 }
 
 .MonostaticCoverageSettingsContainer {
     display: grid;
-    grid-template-columns: 1.5fr 1fr;
+    grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
     align-content: start;
     gap: 10px;
     flex: 1;
     min-height: 0;
+    min-width: 0;
     overflow-y: auto;
+    overflow-x: hidden;
 }
 
 .SettingsContainer > * {

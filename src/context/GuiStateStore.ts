@@ -82,6 +82,8 @@ interface GuiStateStore {
   maxZoomLevel: number;
   defaultMonostaticSensorConfigurations: DefaultMonostaticSensorConfiguration[];
   fetchDefaultMonostaticSensorConfigurations: () => void;
+  monostaticExpertMode: boolean;
+  setMonostaticExpertMode: (expertMode: boolean) => void;
 }
 
 const TILE_SERVER_OSM = "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png";
@@ -240,6 +242,11 @@ export const useGuiStateStore = create<GuiStateStore>()(
         const configurations = await fetchDefaultMonostaticSensorConfigurations();
         set({ defaultMonostaticSensorConfigurations: configurations });
       },
+      monostaticExpertMode: false,
+      setMonostaticExpertMode: (expertMode) =>
+        set((_state) => {
+          return { monostaticExpertMode: expertMode };
+        }),
       mapTileUrl: TILE_SERVER_LOCAL, // sensible default while we check
       maxZoomLevel: 12,
       initTileUrl: async () => {

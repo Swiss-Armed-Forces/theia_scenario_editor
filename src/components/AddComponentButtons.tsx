@@ -10,6 +10,7 @@ import {
   buildDefaultMonostaticSensor,
   buildDefaultPclReceiver,
 } from "../types/types";
+import { applyMonostaticSensorPreset } from "../util/monostaticSensorPresets";
 
 function AddMonostaticSensorButton() {
   const addSensor = useScenarioStore((state) => state.addMonostaticSensor);
@@ -24,6 +25,9 @@ function AddMonostaticSensorButton() {
   const setMapClickListener = useGuiStateStore(
     (state) => state.setMapClickListener,
   );
+  const defaultConfigurations = useGuiStateStore(
+    (state) => state.defaultMonostaticSensorConfigurations,
+  );
 
   return (
     <Button
@@ -33,13 +37,22 @@ function AddMonostaticSensorButton() {
           elevationAt(p.lat, p.lng).then((alt) => {
             const point = { lat: p.lat, lon: p.lng, alt: alt };
 
-            const newRadar = buildDefaultMonostaticSensor(
+            let newRadar = buildDefaultMonostaticSensor(
               point,
               unusedIdReceiver,
               unusedIdTransmitter,
               unusedIdMonostaticSensor,
               unusedTargetId,
             );
+            // Seed newly placed sensors with the first backend-provided
+            // preset rather than the hardcoded fallback defaults, if one is
+            // available.
+            if (defaultConfigurations.length > 0) {
+              newRadar = applyMonostaticSensorPreset(
+                newRadar,
+                defaultConfigurations[0],
+              );
+            }
             addSensor(newRadar);
 
             setMapClickListener(null);

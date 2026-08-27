@@ -1,12 +1,18 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import {
+  fetchDefaultMonostaticSensorConfigurations,
   fetchFmTransmitters,
   fetchTerrainModels,
   type MonostaticCoverageCalcConf,
   type PclCoverageCalcConf,
 } from "../backend/backend";
-import type { MapClickListener, Point, Transmitter } from "../types/types";
+import type {
+  DefaultMonostaticSensorConfiguration,
+  MapClickListener,
+  Point,
+  Transmitter,
+} from "../types/types";
 import { useScenarioStore } from "./ScenarioStore";
 import { isApiReachable } from "../util/isApiReachable";
 
@@ -74,6 +80,8 @@ interface GuiStateStore {
   mapTileUrl: string;
   initTileUrl: () => void;
   maxZoomLevel: number;
+  defaultMonostaticSensorConfigurations: DefaultMonostaticSensorConfiguration[];
+  fetchDefaultMonostaticSensorConfigurations: () => void;
 }
 
 const TILE_SERVER_OSM = "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png";
@@ -226,6 +234,11 @@ export const useGuiStateStore = create<GuiStateStore>()(
       fetchTerrainModels: async () => {
         const terrainModels = await fetchTerrainModels();
         set({ terrainModels: terrainModels });
+      },
+      defaultMonostaticSensorConfigurations: [],
+      fetchDefaultMonostaticSensorConfigurations: async () => {
+        const configurations = await fetchDefaultMonostaticSensorConfigurations();
+        set({ defaultMonostaticSensorConfigurations: configurations });
       },
       mapTileUrl: TILE_SERVER_LOCAL, // sensible default while we check
       maxZoomLevel: 12,

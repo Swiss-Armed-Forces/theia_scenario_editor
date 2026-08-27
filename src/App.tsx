@@ -11,6 +11,9 @@ function App() {
   const fetchTerrainModels = useGuiStateStore(
     (state) => state.fetchTerrainModels,
   );
+  const fetchDefaultMonostaticSensorConfigurations = useGuiStateStore(
+    (state) => state.fetchDefaultMonostaticSensorConfigurations,
+  );
 
   useEffect(() => {
     useGuiStateStore.getState().initTileUrl();
@@ -63,6 +66,7 @@ function App() {
   useEffect(() => {
     fetchFmTransmitters();
     fetchTerrainModels();
+    fetchDefaultMonostaticSensorConfigurations();
   }, []);
 
   return (

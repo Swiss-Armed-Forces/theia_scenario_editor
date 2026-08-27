@@ -1,6 +1,7 @@
 import createClient from "openapi-fetch";
 import type { paths } from "../types/schema";
 import type {
+  DefaultMonostaticSensorConfiguration,
   GeoJSONFeature,
   LatLonHeightGrid,
   MonostaticSensor,
@@ -123,6 +124,20 @@ export async function fetchTerrainModels(): Promise<string[]> {
 
   if (error) {
     throw new Error(error);
+  }
+
+  return data;
+}
+
+export async function fetchDefaultMonostaticSensorConfigurations(): Promise<
+  DefaultMonostaticSensorConfiguration[]
+> {
+  const { data, error } = await client.GET(
+    "/default_monostatic_sensor_configurations",
+  );
+
+  if (error) {
+    throw new Error(JSON.stringify(error));
   }
 
   return data;

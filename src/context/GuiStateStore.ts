@@ -21,8 +21,8 @@ export const DEFAULT_MONOSTATIC_COVERAGE_CALC_CONF: MonostaticCoverageCalcConf =
     targetAlt: 1000.0,
     targetRcs: 1.0,
     probabilityThreshold: 0.8,
-    azimuthResolution: 2.0,
-    rangeOnly: false,
+    latRes: 0.01,
+    lonRes: 0.025,
   };
 
 export const DEFAULT_PCL_COVERAGE_CALC_CONF: PclCoverageCalcConf = {
@@ -239,7 +239,8 @@ export const useGuiStateStore = create<GuiStateStore>()(
       },
       defaultMonostaticSensorConfigurations: [],
       fetchDefaultMonostaticSensorConfigurations: async () => {
-        const configurations = await fetchDefaultMonostaticSensorConfigurations();
+        const configurations =
+          await fetchDefaultMonostaticSensorConfigurations();
         set({ defaultMonostaticSensorConfigurations: configurations });
       },
       monostaticExpertMode: false,

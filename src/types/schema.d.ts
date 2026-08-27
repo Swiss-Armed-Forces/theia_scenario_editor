@@ -64,8 +64,8 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Calculate Line Of Sight */
-        post: operations["calculate_line_of_sight_calculate_monostatic_coverage_post"];
+        /** Calculate Monostatic Coverage */
+        post: operations["calculate_monostatic_coverage_calculate_monostatic_coverage_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1021,12 +1021,14 @@ export interface operations {
             };
         };
     };
-    calculate_line_of_sight_calculate_monostatic_coverage_post: {
+    calculate_monostatic_coverage_calculate_monostatic_coverage_post: {
         parameters: {
             query: {
                 target_alt: number;
-                max_range: number;
-                azimuth_resolution_degree: number;
+                target_rcs: number;
+                probability_threshold: number;
+                lat_res: number;
+                lon_res: number;
             };
             header?: never;
             path?: never;
@@ -1034,7 +1036,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["Point"];
+                "application/json": components["schemas"]["MonostaticSensor-Input"];
             };
         };
         responses: {
@@ -1044,7 +1046,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["GeoJSONFeature"];
+                    "application/json": components["schemas"]["GeoJSONFeature"][];
                 };
             };
             /** @description Validation Error */

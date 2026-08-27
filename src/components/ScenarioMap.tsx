@@ -707,7 +707,7 @@ export default function ScenarioMap() {
   const pclSelectionReceiverId = useGuiStateStore(
     (state) => state.pclSelectionReceiverId,
   );
-  const maxZoom = useGuiStateStore((state) => state.maxZoomLevel)
+  const maxZoom = useGuiStateStore((state) => state.maxZoomLevel);
   const distancePoints = useGuiStateStore((state) => state.distancePoints);
 
   return (
@@ -775,12 +775,14 @@ export default function ScenarioMap() {
       {pclSelectionReceiverId !== null && (
         <PclTransmitterSelectionLayer receiverId={pclSelectionReceiverId} />
       )}
-      {blueMonostaticCoverages.map(([result, date]) => (
-        <GeoJSON
-          key={`Coverage ${result.sensorId}_${date}`}
-          data={result.coverage}
-        />
-      ))}
+      {blueMonostaticCoverages.map(([result, date]) =>
+        result.coverage.map((polygon, i) => (
+          <GeoJSON
+            key={`Coverage ${result.sensorId}_${date}_${i}`}
+            data={polygon}
+          />
+        )),
+      )}
       <PclGridMarker grid={pclCalcGrid} />
       {combinedMinDetectableRcsGrid.length > 0 && (
         <MinDetectableRcsOverlay

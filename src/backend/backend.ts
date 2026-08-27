@@ -16,8 +16,8 @@ export interface MonostaticCoverageCalcConf {
   targetAlt: number;
   targetRcs: number;
   probabilityThreshold: number;
-  azimuthResolution: number;
-  rangeOnly: boolean;
+  latRes: number;
+  lonRes: number;
 }
 
 export interface PclCoverageCalcConf {
@@ -30,7 +30,7 @@ export interface PclCoverageCalcConf {
 export interface MonostaticCoverageResult {
   sensorId: number;
   settings: MonostaticCoverageCalcConf;
-  coverage: GeoJSONFeature;
+  coverage: GeoJSONFeature[];
 }
 
 export interface PclMinDetectableRcsResult {
@@ -47,10 +47,10 @@ export async function calculateMonostaticCoverage(
     params: {
       query: {
         target_alt: conf.targetAlt,
-        rcs: conf.targetRcs,
+        target_rcs: conf.targetRcs,
         probability_threshold: conf.probabilityThreshold,
-        azimuth_resolution_degree: conf.azimuthResolution,
-        range_only: conf.rangeOnly,
+        lat_res: conf.latRes,
+        lon_res: conf.lonRes,
       },
     },
     body: sensor,

@@ -67,7 +67,11 @@ function App() {
     fetchFmTransmitters();
     fetchTerrainModels();
     fetchDefaultMonostaticSensorConfigurations();
-  }, []);
+  }, [
+    fetchFmTransmitters,
+    fetchTerrainModels,
+    fetchDefaultMonostaticSensorConfigurations,
+  ]);
 
   return (
     <div className="rootContainer">

@@ -44,15 +44,27 @@ export default function MonostaticCoverageCalcSettings() {
           });
         }}
       />
-      <label htmlFor="aziRes">Azimuth res. [deg]</label>
+      <label htmlFor="latRes">Lat res. [deg]</label>
       <input
-        name="azuRes"
+        name="latRes"
         type="number"
-        value={conf.azimuthResolution}
+        value={conf.latRes}
         onChange={(e) => {
           updateConf({
             ...conf,
-            azimuthResolution: parseFloat(e.target.value),
+            latRes: parseFloat(e.target.value),
+          });
+        }}
+      />
+      <label htmlFor="lonRes">Lon res. [deg]</label>
+      <input
+        name="lonRes"
+        type="number"
+        value={conf.lonRes}
+        onChange={(e) => {
+          updateConf({
+            ...conf,
+            lonRes: parseFloat(e.target.value),
           });
         }}
       />

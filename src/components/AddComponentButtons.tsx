@@ -5,7 +5,7 @@ import { useGuiStateStore } from "../context/GuiStateStore";
 import { useScenarioStore } from "../context/ScenarioStore";
 import {
   buildDefaultDroneSwarm,
-  buildDefaultEffector,
+  buildDefaultGbad,
   buildDefaultMissile,
   buildDefaultMonostaticSensor,
   buildDefaultPclReceiver,
@@ -110,14 +110,14 @@ function AddPclSensorButton() {
   );
 }
 
-function AddEffectorButton() {
-  const addEffector = useScenarioStore((state) => state.addEffector);
+function AddGbadButton() {
+  const addGbad = useScenarioStore((state) => state.addGbad);
   const unusedIdEffector = useScenarioStore((state) => state.unusedIdEffector);
   const unusedTargetId = useScenarioStore((state) => state.unusedTargetId);
   const setMapClickListener = useGuiStateStore(
     (state) => state.setMapClickListener,
   );
-  const selectEffector = useGuiStateStore((state) => state.selectEffector);
+  const selectGbad = useGuiStateStore((state) => state.selectGbad);
 
   return (
     <Button
@@ -127,14 +127,14 @@ function AddEffectorButton() {
           elevationAt(p.lat, p.lng).then((alt) => {
             const point = { lat: p.lat, lon: p.lng, alt: alt };
 
-            const newEffector = buildDefaultEffector(
+            const newGbad = buildDefaultGbad(
               point,
               unusedIdEffector,
               `Effector ${unusedIdEffector}`,
               unusedTargetId,
             );
-            addEffector(newEffector);
-            selectEffector(newEffector.effector.id);
+            addGbad(newGbad);
+            selectGbad(newGbad.gbad.id);
 
             setMapClickListener(null);
           });
@@ -245,7 +245,7 @@ export default function AddComponentButtons() {
     <div className="addComponentButtons">
       <AddMonostaticSensorButton />
       <AddPclSensorButton />
-      <AddEffectorButton />
+      <AddGbadButton />
       <AddMissileButton />
       <AddDroneSwarmButton />
     </div>

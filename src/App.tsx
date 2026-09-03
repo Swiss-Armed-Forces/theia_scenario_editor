@@ -25,8 +25,8 @@ function App() {
         const guiState = useGuiStateStore.getState();
         const scenarioStore = useScenarioStore.getState();
 
-        if (guiState.selectedEffectorId !== null) {
-          scenarioStore.deleteEffector(guiState.selectedEffectorId);
+        if (guiState.selectedGbadId !== null) {
+          scenarioStore.deleteGbad(guiState.selectedGbadId);
           return;
         }
 

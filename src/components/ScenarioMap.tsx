@@ -385,13 +385,11 @@ function MonostaticRadarMarker({ radar }: { radar: MonostaticSensor }) {
   );
 }
 
-function EffectorMarker({ effector }: { effector: Effector }) {
-  const selectedEffectorId = useGuiStateStore(
-    (state) => state.selectedEffectorId,
-  );
-  const selectEffector = useGuiStateStore((state) => state.selectEffector);
+function GbadMarker({ effector }: { effector: Effector }) {
+  const selectedGbadId = useGuiStateStore((state) => state.selectedGbadId);
+  const selectGbad = useGuiStateStore((state) => state.selectGbad);
 
-  const isHighlighted = selectedEffectorId === effector.id;
+  const isHighlighted = selectedGbadId === effector.id;
   return (
     <>
       <Marker
@@ -399,7 +397,7 @@ function EffectorMarker({ effector }: { effector: Effector }) {
         icon={isHighlighted ? highlightedEffectorIcon : effectorIcon}
         eventHandlers={{
           click: () => {
-            selectEffector(isHighlighted ? null : effector.id);
+            selectGbad(isHighlighted ? null : effector.id);
           },
         }}
       >
@@ -676,7 +674,7 @@ export default function ScenarioMap() {
   const pclSensors = allPclSensors.filter((d) =>
     visibleSensorIds.has(d.sensor.id),
   );
-  const effectors = useScenarioStore((state) => state.effectors);
+  const gbads = useScenarioStore((state) => state.gbads);
   const ballisticMissiles = useScenarioStore(
     (state) => state.ballisticMissiles,
   );
@@ -734,11 +732,8 @@ export default function ScenarioMap() {
           radar={sensor.sensor}
         ></MonostaticRadarMarker>
       ))}
-      {effectors.map((detectableEffector) => (
-        <EffectorMarker
-          key={detectableEffector.effector.id}
-          effector={detectableEffector.effector}
-        />
+      {gbads.map((gbad) => (
+        <GbadMarker key={gbad.gbad.id} effector={gbad.gbad} />
       ))}
       {ballisticMissiles.map((missile) => (
         <MissileMarker key={missile.target_id} missile={missile} />

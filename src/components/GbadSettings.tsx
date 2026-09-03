@@ -3,21 +3,19 @@ import { useScenarioStore } from "../context/ScenarioStore";
 import { EFFECTOR_ALTITUDE_OFFSET, type Point } from "../types/types";
 import PositionSelector from "./PositionSelector";
 
-export default function EffectorSettings() {
-  const selectedEffectorId = useGuiStateStore(
-    (state) => state.selectedEffectorId,
-  );
-  const detectableEffector = useScenarioStore((state) => state.effectors).find(
-    (d) => d.effector.id === selectedEffectorId,
+export default function GbadSettings() {
+  const selectedGbadId = useGuiStateStore((state) => state.selectedGbadId);
+  const gbad = useScenarioStore((state) => state.gbads).find(
+    (g) => g.gbad.id === selectedGbadId,
   );
 
-  const updateEffector = useScenarioStore((state) => state.updateEffector);
+  const updateGbad = useScenarioStore((state) => state.updateGbad);
 
-  if (!detectableEffector) {
+  if (!gbad) {
     return null;
   }
 
-  const effector = detectableEffector.effector;
+  const effector = gbad.gbad;
   return (
     <fieldset className="SensorSettingsContainer">
       <legend>Effector Settings</legend>
@@ -27,32 +25,32 @@ export default function EffectorSettings() {
           type="text"
           value={effector.name}
           onChange={(event) => {
-            const newDetectableEffector = structuredClone(detectableEffector);
-            newDetectableEffector.effector.name = event.target.value;
-            updateEffector(newDetectableEffector);
+            const newGbad = structuredClone(gbad);
+            newGbad.gbad.name = event.target.value;
+            updateGbad(newGbad);
           }}
         />
         <label>Position</label>
         <PositionSelector
           point={effector.point}
           setPoint={(p: Point) => {
-            const newDetectableEffector = structuredClone(detectableEffector);
-            newDetectableEffector.effector.point = p;
+            const newGbad = structuredClone(gbad);
+            newGbad.gbad.point = p;
             // Avoid problems during LOS check when
             // an effector lies exactly on the earth's surface.
-            newDetectableEffector.effector.point.alt += EFFECTOR_ALTITUDE_OFFSET;
-            updateEffector(newDetectableEffector);
+            newGbad.gbad.point.alt += EFFECTOR_ALTITUDE_OFFSET;
+            updateGbad(newGbad);
           }}
         />
         <label>RCS [m²]</label>
         <input
           type="number"
-          value={detectableEffector.rcs}
+          value={gbad.rcs}
           onChange={(event) => {
             const value = parseFloat(event.target.value);
-            const newDetectableEffector = structuredClone(detectableEffector);
-            newDetectableEffector.rcs = value;
-            updateEffector(newDetectableEffector);
+            const newGbad = structuredClone(gbad);
+            newGbad.rcs = value;
+            updateGbad(newGbad);
           }}
         />
         <label>Combat range [m]</label>
@@ -61,9 +59,9 @@ export default function EffectorSettings() {
           value={effector.combat_range}
           onChange={(event) => {
             const value = parseFloat(event.target.value);
-            const newDetectableEffector = structuredClone(detectableEffector);
-            newDetectableEffector.effector.combat_range = value;
-            updateEffector(newDetectableEffector);
+            const newGbad = structuredClone(gbad);
+            newGbad.gbad.combat_range = value;
+            updateGbad(newGbad);
           }}
         />
         <label>N attacks left</label>
@@ -72,9 +70,9 @@ export default function EffectorSettings() {
           value={effector.n_attacks_left}
           onChange={(event) => {
             const value = parseInt(event.target.value);
-            const newDetectableEffector = structuredClone(detectableEffector);
-            newDetectableEffector.effector.n_attacks_left = value;
-            updateEffector(newDetectableEffector);
+            const newGbad = structuredClone(gbad);
+            newGbad.gbad.n_attacks_left = value;
+            updateGbad(newGbad);
           }}
         />
         <label>Cadence [shots/s]</label>
@@ -83,9 +81,9 @@ export default function EffectorSettings() {
           value={effector.cadence}
           onChange={(event) => {
             const value = parseFloat(event.target.value);
-            const newDetectableEffector = structuredClone(detectableEffector);
-            newDetectableEffector.effector.cadence = value;
-            updateEffector(newDetectableEffector);
+            const newGbad = structuredClone(gbad);
+            newGbad.gbad.cadence = value;
+            updateGbad(newGbad);
           }}
         />
       </>

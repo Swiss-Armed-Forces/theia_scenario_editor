@@ -9,8 +9,8 @@ import MonostaticSensorSettings from "./MonostaticSensorSettings";
 import PclSensorList from "./PclSensorList";
 import PclSensorSettings from "./PclSensorSettings";
 import PclCoverageCalcSettings from "./PclCoverageCalcSettings";
-import EffectorList from "./EffectorList";
-import EffectorSettings from "./EffectorSettings";
+import GbadList from "./GbadList";
+import GbadSettings from "./GbadSettings";
 import MissileList from "./MissileList";
 import MissileSettings from "./MissileSettings";
 import DroneSwarmList from "./DroneSwarmList";
@@ -41,9 +41,7 @@ export default function SidePanel() {
   const selectedReceiverId = useGuiStateStore(
     (state) => state.selectedReceiverId,
   );
-  const selectedEffectorId = useGuiStateStore(
-    (state) => state.selectedEffectorId,
-  );
+  const selectedGbadId = useGuiStateStore((state) => state.selectedGbadId);
   const selectedMissileTargetId = useGuiStateStore(
     (state) => state.selectedMissileTargetId,
   );
@@ -52,7 +50,7 @@ export default function SidePanel() {
   );
   const hasItemSelected =
     selectedReceiverId !== null ||
-    selectedEffectorId !== null ||
+    selectedGbadId !== null ||
     selectedMissileTargetId !== null ||
     selectedDroneSwarmTargetId !== null;
 
@@ -79,7 +77,7 @@ export default function SidePanel() {
   );
 
   const pclReceivers = useScenarioStore((state) => state.pclReceivers);
-  const effectors = useScenarioStore((state) => state.effectors);
+  const gbads = useScenarioStore((state) => state.gbads);
   const ballisticMissiles = useScenarioStore((state) => state.ballisticMissiles);
   const droneSwarms = useScenarioStore((state) => state.droneSwarms);
 
@@ -116,11 +114,11 @@ export default function SidePanel() {
         </TreeCategory>
         <TreeCategory
           title="GBAD"
-          count={effectors.length}
+          count={gbads.length}
           expanded={expandedCategories.gbad}
           onToggleExpand={() => toggleExpanded("gbad")}
         >
-          <EffectorList />
+          <GbadList />
         </TreeCategory>
         <TreeCategory
           title="Missiles"
@@ -174,7 +172,7 @@ export default function SidePanel() {
           <>
             <MonostaticSensorSettings />
             <PclSensorSettings />
-            <EffectorSettings />
+            <GbadSettings />
             <MissileSettings />
             <DroneSwarmSettings />
             {!hasItemSelected && (

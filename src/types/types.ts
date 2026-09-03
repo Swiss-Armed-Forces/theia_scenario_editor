@@ -62,10 +62,10 @@ export interface DetectablePclSensor {
   sensor: PclSensor;
 }
 
-export interface DetectableEffector {
+export interface Gbad {
   target_id: number;
   rcs: number;
-  effector: Effector;
+  gbad: Effector;
 }
 
 export const DEFAULT_LAUNCH_ANGLE = 45;
@@ -149,19 +149,19 @@ export function buildDefaultMonostaticSensor(
   };
 }
 
-export function buildDefaultEffector(
+export function buildDefaultGbad(
   point: Point,
   id: number,
   name: string,
   target_id: number,
-): DetectableEffector {
+): Gbad {
   const DEFAULT_COMBAT_RANGE = 4_000;
   const DEFAULT_N_ATTACKS = 10;
   const DEFAULT_CADENCE = 0.3;
   return {
     target_id,
     rcs: DEFAULT_RCS,
-    effector: {
+    gbad: {
       id,
       name,
       point: { ...point, alt: point.alt + EFFECTOR_ALTITUDE_OFFSET },

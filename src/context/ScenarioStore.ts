@@ -1,11 +1,11 @@
 import { create } from "zustand";
 import type {
-  DetectableEffector,
   DetectableMonostaticSensor,
   DetectablePclReceiver,
   DetectablePclSensor,
   DroneSwarm,
   DroneSwarmFactory,
+  Gbad,
   Missile,
   Receiver,
   Transmitter,
@@ -27,7 +27,7 @@ export interface ScenarioStore {
   pclReceivers: DetectablePclReceiver[];
   pclTransmitterIds: Map<number, Set<number>>;
   pclTxCriteria: Map<number, PclTxSelectionCriteria>;
-  effectors: DetectableEffector[];
+  gbads: Gbad[];
   ballisticMissiles: Missile[];
   droneSwarms: DroneSwarm[];
   unusedIdSensor: number;
@@ -40,9 +40,9 @@ export interface ScenarioStore {
     rx: DetectablePclReceiver,
     criteria: PclTxSelectionCriteria,
   ) => Promise<void>;
-  addEffector: (effector: DetectableEffector) => void;
-  updateEffector: (effector: DetectableEffector) => void;
-  deleteEffector: (effectorId: number) => void;
+  addGbad: (gbad: Gbad) => void;
+  updateGbad: (gbad: Gbad) => void;
+  deleteGbad: (gbadId: number) => void;
   addMissile: (missile: Missile) => void;
   updateMissile: (missile: Missile) => void;
   deleteMissile: (targetId: number) => void;
@@ -153,7 +153,7 @@ async function matchingTransmitterIds(
 export type SerializedScenarioState = {
   monostatic_sensors: DetectableMonostaticSensor[];
   pcl_sensors: DetectablePclSensor[];
-  effectors: DetectableEffector[];
+  gbads: Gbad[];
   oneway_drones: unknown[];
   ballistic_missiles: Missile[];
   drone_swarms: DroneSwarmFactory[];
@@ -170,7 +170,7 @@ export function serializeScenarioState(
   return {
     monostatic_sensors: state.monostaticSensors,
     pcl_sensors: state.pclSensors,
-    effectors: state.effectors,
+    gbads: state.gbads,
     oneway_drones: [],
     ballistic_missiles: state.ballisticMissiles,
     drone_swarms: state.droneSwarms.map(buildDroneSwarmFactory),
@@ -195,7 +195,7 @@ export function deserializeScenarioState(
   // cast in ImportButton.tsx), so this backfills target_id/rcs for any item
   // that doesn't already have them, minting target_ids from a single counter
   // shared across all lists in a fixed order: monostatic sensors, then PCL
-  // sensors (one per not-yet-seen receiver), then effectors.
+  // sensors (one per not-yet-seen receiver), then gbads.
   let nextTargetId = data.unused_target_id ?? 0;
 
   const monostaticSensors = (data.monostatic_sensors ?? []).map(
@@ -230,14 +230,14 @@ export function deserializeScenarioState(
     },
   );
 
-  const effectors = (data.effectors ?? []).map(
-    (item): DetectableEffector =>
+  const gbads = (data.gbads ?? []).map(
+    (item): Gbad =>
       hasTargetId(item)
         ? item
         : {
             target_id: nextTargetId++,
             rcs: DEFAULT_RCS,
-            effector: item as unknown as DetectableEffector["effector"],
+            gbad: item as unknown as Gbad["gbad"],
           },
   );
 
@@ -275,7 +275,7 @@ export function deserializeScenarioState(
     // Auto-selection criteria aren't persisted - not needed to reload the
     // sensors, so this always comes back empty.
     pclTxCriteria: new Map(),
-    effectors,
+    gbads,
     ballisticMissiles,
     droneSwarms,
     unusedIdSensor: data.unused_id_sensor,
@@ -292,7 +292,7 @@ export const useScenarioStore = create<ScenarioStore>((set, get) => ({
   pclReceivers: [],
   pclTransmitterIds: new Map<number, Set<number>>(),
   pclTxCriteria: new Map<number, PclTxSelectionCriteria>(),
-  effectors: [],
+  gbads: [],
   ballisticMissiles: [],
   droneSwarms: [],
   unusedIdSensor: 0,
@@ -331,37 +331,27 @@ export const useScenarioStore = create<ScenarioStore>((set, get) => ({
         ),
       };
     }),
-  addEffector: (detectableEffector) =>
+  addGbad: (gbad) =>
     set((state) => {
       return {
-        effectors: [...state.effectors, detectableEffector],
-        unusedIdEffector: Math.max(
-          state.unusedIdEffector,
-          detectableEffector.effector.id + 1,
-        ),
-        unusedTargetId: Math.max(
-          state.unusedTargetId,
-          detectableEffector.target_id + 1,
-        ),
+        gbads: [...state.gbads, gbad],
+        unusedIdEffector: Math.max(state.unusedIdEffector, gbad.gbad.id + 1),
+        unusedTargetId: Math.max(state.unusedTargetId, gbad.target_id + 1),
       };
     }),
-  updateEffector: (effector) =>
+  updateGbad: (gbad) =>
     set((state) => {
-      const i = state.effectors.findIndex(
-        (e) => e.effector.id === effector.effector.id,
-      );
-      const newEffectors = structuredClone(state.effectors);
-      newEffectors[i] = effector;
+      const i = state.gbads.findIndex((g) => g.gbad.id === gbad.gbad.id);
+      const newGbads = structuredClone(state.gbads);
+      newGbads[i] = gbad;
       return {
-        effectors: newEffectors,
+        gbads: newGbads,
       };
     }),
-  deleteEffector: (effectorId) =>
+  deleteGbad: (gbadId) =>
     set((state) => {
-      const newEffectors = state.effectors.filter(
-        (e) => e.effector.id !== effectorId,
-      );
-      return { effectors: newEffectors };
+      const newGbads = state.gbads.filter((g) => g.gbad.id !== gbadId);
+      return { gbads: newGbads };
     }),
   addMissile: (missile) =>
     set((state) => {

@@ -2,14 +2,14 @@ import { Box } from "@mui/material";
 import { useGuiStateStore } from "../context/GuiStateStore";
 import type { Effector } from "../types/types";
 
-export default function EffectorListItem({
+export default function GbadListItem({
   effector,
   isHighlighted,
 }: {
   effector: Effector;
   isHighlighted: boolean;
 }) {
-  const selectEffector = useGuiStateStore((state) => state.selectEffector);
+  const selectGbad = useGuiStateStore((state) => state.selectGbad);
 
   return (
     <Box
@@ -18,7 +18,7 @@ export default function EffectorListItem({
         border: isHighlighted ? "solid red" : "none",
         cursor: "pointer",
       }}
-      onClick={() => selectEffector(isHighlighted ? null : effector.id)}
+      onClick={() => selectGbad(isHighlighted ? null : effector.id)}
     >
       <span>
         {effector.name} #{effector.id}

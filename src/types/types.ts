@@ -14,7 +14,7 @@ export type DefaultMonostaticSensorConfiguration =
 export type GeoJSONFeature = components["schemas"]["GeoJSONFeature"];
 export type LatLonHeightGrid = components["schemas"]["LatLonHeightGrid"];
 
-export interface Effector {
+interface BaseEffector {
   id: number;
   name: string;
   point: Point;
@@ -22,6 +22,20 @@ export interface Effector {
   n_attacks_left: number;
   cadence: number;
 }
+
+export interface DirectEffector extends BaseEffector {
+  type: "direct";
+}
+
+export interface IndirectEffector extends BaseEffector {
+  type: "indirect";
+  projectile: DirectEffector;
+  projectile_speed: number;
+  projectile_max_dist: number;
+  projectile_rcs: ConstantRcsModel;
+}
+
+export type Effector = DirectEffector | IndirectEffector;
 
 export type Sensor = MonostaticSensor | PclSensor;
 
@@ -162,12 +176,64 @@ export function buildDefaultGbad(
     target_id,
     rcs: DEFAULT_RCS,
     gbad: {
+      type: "direct",
       id,
       name,
       point: { ...point, alt: point.alt + EFFECTOR_ALTITUDE_OFFSET },
       combat_range: DEFAULT_COMBAT_RANGE,
       n_attacks_left: DEFAULT_N_ATTACKS,
       cadence: DEFAULT_CADENCE,
+    },
+  };
+}
+
+// A single-shot expendable munition: n_attacks_left/cadence rarely matter
+// once fired, so they're not exposed for editing (see IndirectGbadSettings).
+const PROJECTILE_N_ATTACKS = 1;
+const PROJECTILE_CADENCE = 1.0;
+// The projectile is only a template: each shot deep-copies it and mints a
+// fresh id. So this authored id is never actually used for identity.
+// Any value works.
+const PROJECTILE_TEMPLATE_ID = 0;
+
+export function buildDefaultIndirectGbad(
+  point: Point,
+  id: number,
+  name: string,
+  target_id: number,
+): Gbad {
+  const DEFAULT_COMBAT_RANGE = 100_000;
+  const DEFAULT_N_ATTACKS = 10;
+  const DEFAULT_CADENCE = 0.3;
+  const DEFAULT_PROJECTILE_COMBAT_RANGE = 5_000;
+  const DEFAULT_PROJECTILE_SPEED = 300.0;
+  const DEFAULT_PROJECTILE_MAX_DIST = 50_000;
+  const DEFAULT_PROJECTILE_RCS = 0.1;
+  const launcherPoint = { ...point, alt: point.alt + EFFECTOR_ALTITUDE_OFFSET };
+  return {
+    target_id,
+    rcs: DEFAULT_RCS,
+    gbad: {
+      type: "indirect",
+      id,
+      name,
+      point: launcherPoint,
+      combat_range: DEFAULT_COMBAT_RANGE,
+      n_attacks_left: DEFAULT_N_ATTACKS,
+      cadence: DEFAULT_CADENCE,
+      projectile: {
+        type: "direct",
+        id: PROJECTILE_TEMPLATE_ID,
+        name: `${name} projectile`,
+        // The projectile launches from the launcher's own location.
+        point: launcherPoint,
+        combat_range: DEFAULT_PROJECTILE_COMBAT_RANGE,
+        n_attacks_left: PROJECTILE_N_ATTACKS,
+        cadence: PROJECTILE_CADENCE,
+      },
+      projectile_speed: DEFAULT_PROJECTILE_SPEED,
+      projectile_max_dist: DEFAULT_PROJECTILE_MAX_DIST,
+      projectile_rcs: { rcs: DEFAULT_PROJECTILE_RCS },
     },
   };
 }

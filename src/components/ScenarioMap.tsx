@@ -403,6 +403,12 @@ function GbadMarker({ effector }: { effector: Effector }) {
       >
         <Tooltip>
           {effector.name} #{effector.id}
+          {effector.type === "indirect" && (
+            <>
+              <br />
+              Indirect fire
+            </>
+          )}
           <br />
           Combat range = {effector.combat_range.toFixed(0)}m
           <br />

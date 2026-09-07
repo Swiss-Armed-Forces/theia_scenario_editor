@@ -35,10 +35,17 @@ export default function GbadSettings() {
           point={effector.point}
           setPoint={(p: Point) => {
             const newGbad = structuredClone(gbad);
-            newGbad.gbad.point = p;
-            // Avoid problems during LOS check when
-            // an effector lies exactly on the earth's surface.
-            newGbad.gbad.point.alt += EFFECTOR_ALTITUDE_OFFSET;
+            const point = {
+              ...p,
+              // Avoid problems during LOS check when
+              // an effector lies exactly on the earth's surface.
+              alt: p.alt + EFFECTOR_ALTITUDE_OFFSET,
+            };
+            newGbad.gbad.point = point;
+            if (newGbad.gbad.type === "indirect") {
+              // The projectile always launches from the launcher's location.
+              newGbad.gbad.projectile.point = { ...point };
+            }
             updateGbad(newGbad);
           }}
         />
@@ -87,6 +94,77 @@ export default function GbadSettings() {
           }}
         />
       </>
+      {effector.type === "indirect" && (
+        <fieldset className="SensorSettingsContainer">
+          <legend>Projectile</legend>
+          <>
+            <label>Name</label>
+            <input
+              type="text"
+              value={effector.projectile.name}
+              onChange={(event) => {
+                const newGbad = structuredClone(gbad);
+                if (newGbad.gbad.type === "indirect") {
+                  newGbad.gbad.projectile.name = event.target.value;
+                }
+                updateGbad(newGbad);
+              }}
+            />
+            <label>Combat range [m]</label>
+            <input
+              type="number"
+              value={effector.projectile.combat_range}
+              onChange={(event) => {
+                const value = parseFloat(event.target.value);
+                const newGbad = structuredClone(gbad);
+                if (newGbad.gbad.type === "indirect") {
+                  newGbad.gbad.projectile.combat_range = value;
+                }
+                updateGbad(newGbad);
+              }}
+            />
+            <label>Speed [m/s]</label>
+            <input
+              type="number"
+              value={effector.projectile_speed}
+              onChange={(event) => {
+                const value = parseFloat(event.target.value);
+                const newGbad = structuredClone(gbad);
+                if (newGbad.gbad.type === "indirect") {
+                  newGbad.gbad.projectile_speed = value;
+                }
+                updateGbad(newGbad);
+              }}
+            />
+            <label>Max distance [m]</label>
+            <input
+              type="number"
+              value={effector.projectile_max_dist}
+              onChange={(event) => {
+                const value = parseFloat(event.target.value);
+                const newGbad = structuredClone(gbad);
+                if (newGbad.gbad.type === "indirect") {
+                  newGbad.gbad.projectile_max_dist = value;
+                }
+                updateGbad(newGbad);
+              }}
+            />
+            <label>RCS [m²]</label>
+            <input
+              type="number"
+              value={effector.projectile_rcs.rcs}
+              onChange={(event) => {
+                const value = parseFloat(event.target.value);
+                const newGbad = structuredClone(gbad);
+                if (newGbad.gbad.type === "indirect") {
+                  newGbad.gbad.projectile_rcs.rcs = value;
+                }
+                updateGbad(newGbad);
+              }}
+            />
+          </>
+        </fieldset>
+      )}
     </fieldset>
   );
 }

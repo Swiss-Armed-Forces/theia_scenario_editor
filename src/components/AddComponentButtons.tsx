@@ -6,6 +6,7 @@ import { useScenarioStore } from "../context/ScenarioStore";
 import {
   buildDefaultDroneSwarm,
   buildDefaultGbad,
+  buildDefaultIndirectGbad,
   buildDefaultMissile,
   buildDefaultMonostaticSensor,
   buildDefaultPclReceiver,
@@ -146,6 +147,42 @@ function AddGbadButton() {
   );
 }
 
+function AddIndirectGbadButton() {
+  const addGbad = useScenarioStore((state) => state.addGbad);
+  const unusedIdEffector = useScenarioStore((state) => state.unusedIdEffector);
+  const unusedTargetId = useScenarioStore((state) => state.unusedTargetId);
+  const setMapClickListener = useGuiStateStore(
+    (state) => state.setMapClickListener,
+  );
+  const selectGbad = useGuiStateStore((state) => state.selectGbad);
+
+  return (
+    <Button
+      variant="contained"
+      onClick={() => {
+        setMapClickListener((p: LatLng) => {
+          elevationAt(p.lat, p.lng).then((alt) => {
+            const point = { lat: p.lat, lon: p.lng, alt: alt };
+
+            const newGbad = buildDefaultIndirectGbad(
+              point,
+              unusedIdEffector,
+              `Effector ${unusedIdEffector}`,
+              unusedTargetId,
+            );
+            addGbad(newGbad);
+            selectGbad(newGbad.gbad.id);
+
+            setMapClickListener(null);
+          });
+        });
+      }}
+    >
+      + Indirect Fire GBAD
+    </Button>
+  );
+}
+
 function AddMissileButton() {
   const addMissile = useScenarioStore((state) => state.addMissile);
   const unusedTargetId = useScenarioStore((state) => state.unusedTargetId);
@@ -246,6 +283,7 @@ export default function AddComponentButtons() {
       <AddMonostaticSensorButton />
       <AddPclSensorButton />
       <AddGbadButton />
+      <AddIndirectGbadButton />
       <AddMissileButton />
       <AddDroneSwarmButton />
     </div>

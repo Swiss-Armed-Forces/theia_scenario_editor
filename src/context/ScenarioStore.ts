@@ -3,6 +3,7 @@ import type {
   DetectableMonostaticSensor,
   DetectablePclReceiver,
   DetectablePclSensor,
+  DirectEffector,
   DroneSwarm,
   DroneSwarmFactory,
   Gbad,
@@ -230,16 +231,21 @@ export function deserializeScenarioState(
     },
   );
 
-  const gbads = (data.gbads ?? []).map(
-    (item): Gbad =>
-      hasTargetId(item)
-        ? item
-        : {
-            target_id: nextTargetId++,
-            rcs: DEFAULT_RCS,
-            gbad: item as unknown as Gbad["gbad"],
-          },
-  );
+  const gbads = (data.gbads ?? []).map((item): Gbad => {
+    const gbad: Gbad = hasTargetId(item)
+      ? (item as Gbad)
+      : {
+          target_id: nextTargetId++,
+          rcs: DEFAULT_RCS,
+          gbad: item as unknown as Gbad["gbad"],
+        };
+    // Save files written before indirect fire existed have no "type" on
+    // their gbad. Default it to "direct", the only kind that ever existed.
+    if (!("type" in gbad.gbad)) {
+      (gbad.gbad as DirectEffector).type = "direct";
+    }
+    return gbad;
+  });
 
   // ballistic_missiles already carry target_id/effector_id/rcs directly -
   // no Detectable*-style wrapper or legacy backfill applies to missiles.
@@ -333,6 +339,9 @@ export const useScenarioStore = create<ScenarioStore>((set, get) => ({
     }),
   addGbad: (gbad) =>
     set((state) => {
+      // gbad.gbad.projectile.id (if indirect) is a template value never
+      // used for real identity, so it's deliberately excluded from this
+      // id bookkeeping.
       return {
         gbads: [...state.gbads, gbad],
         unusedIdEffector: Math.max(state.unusedIdEffector, gbad.gbad.id + 1),

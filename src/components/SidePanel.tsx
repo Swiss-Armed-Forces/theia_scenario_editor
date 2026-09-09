@@ -15,6 +15,8 @@ import MissileList from "./MissileList";
 import MissileSettings from "./MissileSettings";
 import DroneSwarmList from "./DroneSwarmList";
 import DroneSwarmSettings from "./DroneSwarmSettings";
+import CriticalInfrastructureList from "./CriticalInfrastructureList";
+import CriticalInfrastructureSettings from "./CriticalInfrastructureSettings";
 import TreeCategory from "./TreeCategory";
 import AddComponentButtons from "./AddComponentButtons";
 
@@ -25,6 +27,7 @@ export default function SidePanel() {
     gbad: true,
     missiles: true,
     drones: true,
+    criticalInfrastructure: true,
   });
 
   function toggleExpanded(key: keyof typeof expandedCategories) {
@@ -48,11 +51,15 @@ export default function SidePanel() {
   const selectedDroneSwarmTargetId = useGuiStateStore(
     (state) => state.selectedDroneSwarmTargetId,
   );
+  const selectedCriticalInfrastructureTargetId = useGuiStateStore(
+    (state) => state.selectedCriticalInfrastructureTargetId,
+  );
   const hasItemSelected =
     selectedReceiverId !== null ||
     selectedGbadId !== null ||
     selectedMissileTargetId !== null ||
-    selectedDroneSwarmTargetId !== null;
+    selectedDroneSwarmTargetId !== null ||
+    selectedCriticalInfrastructureTargetId !== null;
 
   const visibleSensorIds = useGuiStateStore((state) => state.visibleSensorIds);
   const monostaticCalcConf = useGuiStateStore(
@@ -80,6 +87,9 @@ export default function SidePanel() {
   const gbads = useScenarioStore((state) => state.gbads);
   const ballisticMissiles = useScenarioStore((state) => state.ballisticMissiles);
   const droneSwarms = useScenarioStore((state) => state.droneSwarms);
+  const criticalInfrastructure = useScenarioStore(
+    (state) => state.criticalInfrastructure,
+  );
 
   return (
     <div className="sidePanel">
@@ -136,6 +146,14 @@ export default function SidePanel() {
         >
           <DroneSwarmList />
         </TreeCategory>
+        <TreeCategory
+          title="Critical Infrastructure"
+          count={criticalInfrastructure.length}
+          expanded={expandedCategories.criticalInfrastructure}
+          onToggleExpand={() => toggleExpanded("criticalInfrastructure")}
+        >
+          <CriticalInfrastructureList />
+        </TreeCategory>
       </div>
 
       <div className="settingsPanel">
@@ -175,6 +193,7 @@ export default function SidePanel() {
             <GbadSettings />
             <MissileSettings />
             <DroneSwarmSettings />
+            <CriticalInfrastructureSettings />
             {!hasItemSelected && (
               <div className="sidePanelPlaceholder settingsPanelPlaceholder">
                 Select a component to edit its settings, or click a

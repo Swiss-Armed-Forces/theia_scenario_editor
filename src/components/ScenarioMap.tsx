@@ -17,6 +17,7 @@ import "leaflet/dist/leaflet.css";
 import { DEFAULT_MAP_CENTER } from "../util/constants";
 import { useEffect, useMemo, useState } from "react";
 import type {
+  CriticalInfrastructure,
   DroneSwarm,
   Effector,
   LatLonHeightGrid,
@@ -331,6 +332,23 @@ const highlightedEffectorIcon = L.divIcon({
   iconAnchor: [12, 12], // center the icon
 });
 
+const criticalInfrastructureSymbol = new ms.Symbol("10232000001206000000", {
+  size: 24,
+});
+
+const criticalInfrastructureIcon = L.divIcon({
+  html: criticalInfrastructureSymbol.asSVG(),
+  className: "", // remove default 'leaflet-div-icon' styles if needed
+  iconSize: [24, 24],
+  iconAnchor: [12, 12], // center the icon
+});
+const highlightedCriticalInfrastructureIcon = L.divIcon({
+  html: `<div style="border: 2px solid red; width: fit-content; height: fit-content">${criticalInfrastructureSymbol.asSVG()}</div>`,
+  className: "", // remove default 'leaflet-div-icon' styles if needed
+  iconSize: [24, 24],
+  iconAnchor: [12, 12], // center the icon
+});
+
 const missileStartSymbol = new ms.Symbol("10031500001110000000", {
   size: 24,
 });
@@ -421,6 +439,39 @@ function GbadMarker({ effector }: { effector: Effector }) {
         pathOptions={{ fill: false, color: "blue", dashArray: "4, 4" }}
       />
     </>
+  );
+}
+
+function CriticalInfrastructureMarker({
+  infra,
+}: {
+  infra: CriticalInfrastructure;
+}) {
+  const selectedCriticalInfrastructureTargetId = useGuiStateStore(
+    (state) => state.selectedCriticalInfrastructureTargetId,
+  );
+  const selectCriticalInfrastructure = useGuiStateStore(
+    (state) => state.selectCriticalInfrastructure,
+  );
+
+  const isHighlighted =
+    selectedCriticalInfrastructureTargetId === infra.target_id;
+  return (
+    <Marker
+      position={[infra.point.lat, infra.point.lon]}
+      icon={
+        isHighlighted
+          ? highlightedCriticalInfrastructureIcon
+          : criticalInfrastructureIcon
+      }
+      eventHandlers={{
+        click: () => {
+          selectCriticalInfrastructure(isHighlighted ? null : infra.target_id);
+        },
+      }}
+    >
+      <Tooltip>{infra.name}</Tooltip>
+    </Marker>
   );
 }
 
@@ -685,6 +736,9 @@ export default function ScenarioMap() {
     (state) => state.ballisticMissiles,
   );
   const droneSwarms = useScenarioStore((state) => state.droneSwarms);
+  const criticalInfrastructure = useScenarioStore(
+    (state) => state.criticalInfrastructure,
+  );
   const pendingMissileStart = useGuiStateStore(
     (state) => state.pendingMissileStart,
   );
@@ -746,6 +800,9 @@ export default function ScenarioMap() {
       ))}
       {droneSwarms.map((droneSwarm) => (
         <DroneSwarmLayer key={droneSwarm.target_id} droneSwarm={droneSwarm} />
+      ))}
+      {criticalInfrastructure.map((infra) => (
+        <CriticalInfrastructureMarker key={infra.target_id} infra={infra} />
       ))}
       {pendingMissileStart && (
         <Marker

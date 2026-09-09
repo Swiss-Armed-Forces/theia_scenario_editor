@@ -82,6 +82,14 @@ export interface Gbad {
   gbad: Effector;
 }
 
+// A stationary, killable target with no sensor or weapon of its own (e. g.
+// an airport, power plant, or command building).
+export interface CriticalInfrastructure {
+  target_id: number;
+  name: string;
+  point: Point;
+}
+
 export const DEFAULT_LAUNCH_ANGLE = 45;
 
 export type Terrain = { terrain_name: string };
@@ -184,6 +192,17 @@ export function buildDefaultGbad(
       n_attacks_left: DEFAULT_N_ATTACKS,
       cadence: DEFAULT_CADENCE,
     },
+  };
+}
+
+export function buildDefaultCriticalInfrastructure(
+  point: Point,
+  target_id: number,
+): CriticalInfrastructure {
+  return {
+    target_id,
+    name: "Critical Infrastructure",
+    point,
   };
 }
 

@@ -4,6 +4,7 @@ import { elevationAt } from "../backend/backend";
 import { useGuiStateStore } from "../context/GuiStateStore";
 import { useScenarioStore } from "../context/ScenarioStore";
 import {
+  buildDefaultCriticalInfrastructure,
   buildDefaultDroneSwarm,
   buildDefaultGbad,
   buildDefaultIndirectGbad,
@@ -277,6 +278,43 @@ function AddDroneSwarmButton() {
   );
 }
 
+function AddCriticalInfrastructureButton() {
+  const addCriticalInfrastructure = useScenarioStore(
+    (state) => state.addCriticalInfrastructure,
+  );
+  const unusedTargetId = useScenarioStore((state) => state.unusedTargetId);
+  const setMapClickListener = useGuiStateStore(
+    (state) => state.setMapClickListener,
+  );
+  const selectCriticalInfrastructure = useGuiStateStore(
+    (state) => state.selectCriticalInfrastructure,
+  );
+
+  return (
+    <Button
+      variant="contained"
+      onClick={() => {
+        setMapClickListener((p: LatLng) => {
+          elevationAt(p.lat, p.lng).then((alt) => {
+            const point = { lat: p.lat, lon: p.lng, alt: alt };
+
+            const newInfra = buildDefaultCriticalInfrastructure(
+              point,
+              unusedTargetId,
+            );
+            addCriticalInfrastructure(newInfra);
+            selectCriticalInfrastructure(newInfra.target_id);
+
+            setMapClickListener(null);
+          });
+        });
+      }}
+    >
+      + Critical Infrastructure
+    </Button>
+  );
+}
+
 export default function AddComponentButtons() {
   return (
     <div className="addComponentButtons">
@@ -286,6 +324,7 @@ export default function AddComponentButtons() {
       <AddIndirectGbadButton />
       <AddMissileButton />
       <AddDroneSwarmButton />
+      <AddCriticalInfrastructureButton />
     </div>
   );
 }

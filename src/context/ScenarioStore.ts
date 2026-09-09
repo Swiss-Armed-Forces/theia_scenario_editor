@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import type {
+  CriticalInfrastructure,
   DetectableMonostaticSensor,
   DetectablePclReceiver,
   DetectablePclSensor,
@@ -31,6 +32,7 @@ export interface ScenarioStore {
   gbads: Gbad[];
   ballisticMissiles: Missile[];
   droneSwarms: DroneSwarm[];
+  criticalInfrastructure: CriticalInfrastructure[];
   unusedIdSensor: number;
   unusedIdReceiver: number;
   unusedIdTransmitter: number;
@@ -50,6 +52,9 @@ export interface ScenarioStore {
   addDroneSwarm: (droneSwarm: DroneSwarm) => void;
   updateDroneSwarm: (droneSwarm: DroneSwarm) => void;
   deleteDroneSwarm: (targetId: number) => void;
+  addCriticalInfrastructure: (infra: CriticalInfrastructure) => void;
+  updateCriticalInfrastructure: (infra: CriticalInfrastructure) => void;
+  deleteCriticalInfrastructure: (targetId: number) => void;
   updatePclReceiverSettings: (rx: DetectablePclReceiver) => void;
   updatePclTxCriteria: (
     receiverId: number,
@@ -158,6 +163,7 @@ export type SerializedScenarioState = {
   oneway_drones: unknown[];
   ballistic_missiles: Missile[];
   drone_swarms: DroneSwarmFactory[];
+  critical_infrastructure: CriticalInfrastructure[];
   unused_id_sensor: number;
   unused_id_receiver: number;
   unused_id_transmitter: number;
@@ -175,6 +181,7 @@ export function serializeScenarioState(
     oneway_drones: [],
     ballistic_missiles: state.ballisticMissiles,
     drone_swarms: state.droneSwarms.map(buildDroneSwarmFactory),
+    critical_infrastructure: state.criticalInfrastructure,
     unused_id_sensor: state.unusedIdSensor,
     unused_id_receiver: state.unusedIdReceiver,
     unused_id_transmitter: state.unusedIdTransmitter,
@@ -253,6 +260,10 @@ export function deserializeScenarioState(
 
   const droneSwarms = (data.drone_swarms ?? []).map(droneSwarmFromFactory);
 
+  // critical_infrastructure is a new field - older save files simply won't
+  // have it, no legacy backfill needed.
+  const criticalInfrastructure = data.critical_infrastructure ?? [];
+
   // pcl_receivers/pcl_transmitter_ids aren't persisted (each PclSensorFactory
   // entry already carries the full receiver plus its target_id/rcs, which
   // are identical across every entry for the same receiver - see
@@ -284,6 +295,7 @@ export function deserializeScenarioState(
     gbads,
     ballisticMissiles,
     droneSwarms,
+    criticalInfrastructure,
     unusedIdSensor: data.unused_id_sensor,
     unusedIdReceiver: data.unused_id_receiver,
     unusedIdTransmitter: data.unused_id_transmitter,
@@ -301,6 +313,7 @@ export const useScenarioStore = create<ScenarioStore>((set, get) => ({
   gbads: [],
   ballisticMissiles: [],
   droneSwarms: [],
+  criticalInfrastructure: [],
   unusedIdSensor: 0,
   unusedIdReceiver: 0,
   unusedIdTransmitter: 0,
@@ -416,6 +429,31 @@ export const useScenarioStore = create<ScenarioStore>((set, get) => ({
         (d) => d.target_id !== targetId,
       );
       return { droneSwarms: newDroneSwarms };
+    }),
+  addCriticalInfrastructure: (infra) =>
+    set((state) => {
+      return {
+        criticalInfrastructure: [...state.criticalInfrastructure, infra],
+        unusedTargetId: Math.max(state.unusedTargetId, infra.target_id + 1),
+      };
+    }),
+  updateCriticalInfrastructure: (infra) =>
+    set((state) => {
+      const i = state.criticalInfrastructure.findIndex(
+        (c) => c.target_id === infra.target_id,
+      );
+      const newCriticalInfrastructure = structuredClone(
+        state.criticalInfrastructure,
+      );
+      newCriticalInfrastructure[i] = infra;
+      return { criticalInfrastructure: newCriticalInfrastructure };
+    }),
+  deleteCriticalInfrastructure: (targetId) =>
+    set((state) => {
+      const newCriticalInfrastructure = state.criticalInfrastructure.filter(
+        (c) => c.target_id !== targetId,
+      );
+      return { criticalInfrastructure: newCriticalInfrastructure };
     }),
   deleteReceiver: (receiverId: number) =>
     set((state) => {

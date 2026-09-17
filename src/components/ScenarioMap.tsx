@@ -12,7 +12,7 @@ import {
   Tooltip,
   useMap,
   useMapEvents,
-} from "react-leaflet";
+} from "../leaflet";
 import "leaflet/dist/leaflet.css";
 import { DEFAULT_MAP_CENTER } from "../util/constants";
 import { useEffect, useMemo, useState } from "react";

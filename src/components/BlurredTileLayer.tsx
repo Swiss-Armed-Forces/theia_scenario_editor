@@ -1,6 +1,6 @@
 import React, { useEffect, useId } from 'react';
-import { useMap } from 'react-leaflet';
-import type { TileLayerProps } from 'react-leaflet';
+import { useMap } from '../leaflet';
+import type { TileLayerProps } from '../leaflet';
 
 /**
  * BlurredTileLayer

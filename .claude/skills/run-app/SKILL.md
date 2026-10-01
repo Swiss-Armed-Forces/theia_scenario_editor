@@ -110,6 +110,10 @@ App structure notes gathered while verifying the Effector→GBAD rename
   map still renders fine from the OSM tiles that did load. Don't chase it as
   a regression — filter console/request errors down to the domains your
   change actually touches before treating any as a real signal.
+- **`+ Missile` needs two map clicks with a pause in between** — the
+  stop-point click listener is only armed after the backend elevation lookup
+  for the start point returns, so a second click fired immediately is lost.
+  Wait ~2s between the clicks (see `verify_target_category.mjs`).
 - **React `<StrictMode>` double-invokes effects in dev only** — a
   `useEffect(() => { fetch(...) }, [])` will issue two requests under
   `npm run dev`; not a bug, doesn't happen in a production build.

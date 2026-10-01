@@ -12,7 +12,7 @@ import type {
   Receiver,
   Transmitter,
 } from "../types/types";
-import { DEFAULT_RCS } from "../types/types";
+import { DEFAULT_MISSILE_CATEGORY, DEFAULT_RCS } from "../types/types";
 import { useGuiStateStore } from "./GuiStateStore";
 import { useSimulationStore } from "./SimulationResultStore";
 import { lineOfSightDistance } from "../backend/backend";
@@ -255,8 +255,14 @@ export function deserializeScenarioState(
   });
 
   // ballistic_missiles already carry target_id/effector_id/rcs directly -
-  // no Detectable*-style wrapper or legacy backfill applies to missiles.
-  const ballisticMissiles = data.ballistic_missiles ?? [];
+  // no Detectable*-style wrapper applies to missiles. Save files written
+  // before categories existed have no category; default it like the backend.
+  const ballisticMissiles = (data.ballistic_missiles ?? []).map(
+    (missile): Missile => ({
+      ...missile,
+      category: missile.category ?? DEFAULT_MISSILE_CATEGORY,
+    }),
+  );
 
   const droneSwarms = (data.drone_swarms ?? []).map(droneSwarmFromFactory);
 

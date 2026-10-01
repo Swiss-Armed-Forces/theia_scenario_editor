@@ -1,10 +1,15 @@
 import type {
+  DroneCategory,
   DroneSwarm,
   DroneSwarmFactory,
   Trajectory,
   Waypoint,
 } from "../types/types";
-import { DRONE_TARGET_SIDC } from "../types/types";
+import {
+  DEFAULT_DRONE_CATEGORY,
+  DRONE_CATEGORIES,
+  droneTargetInfo,
+} from "../types/types";
 import { EARTH_RADIUS_M, haversineDistance } from "./geo";
 
 // Turns a swarm's waypoints into a Trajectory with exactly one sample per
@@ -21,6 +26,7 @@ export function buildSwarmTrajectory(
   tStartIso: string,
   targetId: number,
   rcs: number,
+  category: DroneCategory,
 ): Trajectory {
   const tStart = new Date(tStartIso).getTime();
   const times: string[] = [];
@@ -60,7 +66,7 @@ export function buildSwarmTrajectory(
 
   return {
     target_id: targetId,
-    target_sidc: DRONE_TARGET_SIDC,
+    target_info: droneTargetInfo(category),
     times,
     lats,
     lons,
@@ -84,6 +90,7 @@ export function buildDroneSwarmFactory(droneSwarm: DroneSwarm): DroneSwarmFactor
       droneSwarm.t_start,
       droneSwarm.target_id,
       droneSwarm.rcs,
+      droneSwarm.category,
     ),
     n_drones: droneSwarm.n_drones,
     lateral_max_deviation: droneSwarm.lateral_max_deviation,
@@ -134,5 +141,14 @@ export function droneSwarmFromFactory(factory: DroneSwarmFactory): DroneSwarm {
     up_max_deviation: factory.up_max_deviation,
     effectorRange: factory.effector_range,
     terrain: factory.terrain,
+    category: droneCategoryOf(trajectory),
   };
+}
+
+// Save files written before categories existed carry a bare target_sidc
+// instead of target_info - those (and any non-drone category) fall back to
+// the default drone class.
+function droneCategoryOf(trajectory: Trajectory): DroneCategory {
+  const category = trajectory.target_info?.category;
+  return DRONE_CATEGORIES.find((c) => c === category) ?? DEFAULT_DRONE_CATEGORY;
 }

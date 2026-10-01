@@ -1,6 +1,8 @@
 import { useMemo } from "react";
 import { useGuiStateStore } from "../context/GuiStateStore";
 import { useScenarioStore } from "../context/ScenarioStore";
+import type { DroneCategory } from "../types/types";
+import { DRONE_CATEGORIES, DRONE_CATEGORY_LABELS } from "../types/types";
 import { buildSwarmTrajectory } from "../util/swarmTrajectory";
 import { resizeWaypoints } from "../util/waypoints";
 import { fromDatetimeLocalValue, toDatetimeLocalValue } from "../util/datetime";
@@ -29,6 +31,7 @@ export default function DroneSwarmSettings() {
       droneSwarm.t_start,
       droneSwarm.target_id,
       droneSwarm.rcs,
+      droneSwarm.category,
     );
   }, [droneSwarm]);
 
@@ -47,6 +50,21 @@ export default function DroneSwarmSettings() {
     <fieldset className="SensorSettingsContainer">
       <legend>Drone Swarm Settings</legend>
       <>
+        <label>Drone class</label>
+        <select
+          value={droneSwarm.category}
+          onChange={(event) => {
+            const newDroneSwarm = structuredClone(droneSwarm);
+            newDroneSwarm.category = event.target.value as DroneCategory;
+            updateDroneSwarm(newDroneSwarm);
+          }}
+        >
+          {DRONE_CATEGORIES.map((category) => (
+            <option key={category} value={category}>
+              {DRONE_CATEGORY_LABELS[category]}
+            </option>
+          ))}
+        </select>
         <label># Waypoints</label>
         <input
           type="number"

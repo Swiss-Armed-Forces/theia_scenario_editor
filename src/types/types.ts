@@ -13,6 +13,9 @@ export type DefaultMonostaticSensorConfiguration =
   components["schemas"]["DefaultMonostaticSensorConfiguration"];
 export type GeoJSONFeature = components["schemas"]["GeoJSONFeature"];
 export type LatLonHeightGrid = components["schemas"]["LatLonHeightGrid"];
+export type TargetCategory = components["schemas"]["TargetCategory"];
+export type Party = components["schemas"]["Party"];
+export type TargetInfo = components["schemas"]["TargetInfo"];
 
 interface BaseEffector {
   id: number;
@@ -94,6 +97,22 @@ export const DEFAULT_LAUNCH_ANGLE = 45;
 
 export type Terrain = { terrain_name: string };
 
+export const MISSILE_CATEGORIES = [
+  "SHORT_RANGE_BALLISTIC_MISSILE",
+  "MEDIUM_RANGE_BALLISTIC_MISSILE",
+  "INTERMEDIATE_RANGE_BALLISTIC_MISSILE",
+  "CRUISE_MISSILE",
+] as const satisfies readonly TargetCategory[];
+export type MissileCategory = (typeof MISSILE_CATEGORIES)[number];
+export const MISSILE_CATEGORY_LABELS: Record<MissileCategory, string> = {
+  SHORT_RANGE_BALLISTIC_MISSILE: "Short-range ballistic missile",
+  MEDIUM_RANGE_BALLISTIC_MISSILE: "Medium-range ballistic missile",
+  INTERMEDIATE_RANGE_BALLISTIC_MISSILE: "Intermediate-range ballistic missile",
+  CRUISE_MISSILE: "Cruise missile",
+};
+export const DEFAULT_MISSILE_CATEGORY: MissileCategory =
+  "SHORT_RANGE_BALLISTIC_MISSILE";
+
 export interface Missile {
   p_start: Point;
   p_stop: Point;
@@ -103,6 +122,7 @@ export interface Missile {
   effector_id: number;
   rcs: number;
   alpha: number;
+  category: MissileCategory;
 }
 
 export function buildDefaultMonostaticSensor(
@@ -273,6 +293,7 @@ export function buildDefaultMissile(
     effector_id,
     rcs: DEFAULT_RCS,
     alpha: DEFAULT_LAUNCH_ANGLE,
+    category: DEFAULT_MISSILE_CATEGORY,
   };
 }
 
@@ -331,7 +352,7 @@ export interface ConstantRcsModel {
 
 export interface Trajectory {
   target_id: number;
-  target_sidc: string;
+  target_info: TargetInfo;
   times: string[];
   lats: number[];
   lons: number[];
@@ -342,10 +363,32 @@ export interface Trajectory {
   cross_section_model: ConstantRcsModel;
 }
 
-// Not consumed by any renderer today (target_sidc isn't used for icon
-// selection anywhere in ScenarioMap.tsx, including the already-reserved
-// oneway_drones) - just a schema-valid placeholder.
-export const DRONE_TARGET_SIDC = "10260100001101000000";
+export const DRONE_CATEGORIES = [
+  "DRONE_CLASS_I",
+  "DRONE_CLASS_II",
+  "DRONE_CLASS_III",
+] as const satisfies readonly TargetCategory[];
+export type DroneCategory = (typeof DRONE_CATEGORIES)[number];
+export const DRONE_CATEGORY_LABELS: Record<DroneCategory, string> = {
+  DRONE_CLASS_I: "Class I",
+  DRONE_CLASS_II: "Class II",
+  DRONE_CLASS_III: "Class III",
+};
+export const DEFAULT_DRONE_CATEGORY: DroneCategory = "DRONE_CLASS_I";
+
+// Fixed-wing SIDC with "x" as party placeholder; mirrors the backend's
+// TargetInfos.for_category. The party is left UNKNOWN on purpose - the
+// backend assigns it depending on which side the ORBAT is loaded for.
+const DRONE_SIDC_TEMPLATE = "102x0100001101000000";
+
+export function droneTargetInfo(category: DroneCategory): TargetInfo {
+  return {
+    sidc_template: DRONE_SIDC_TEMPLATE,
+    category,
+    tags: [],
+    party: "UNKNOWN",
+  };
+}
 
 // The orbat_file_schema.json wire format: what actually gets saved under
 // OrderOfBattle.drone_swarms and (eventually) sent to the backend.
@@ -376,6 +419,7 @@ export interface DroneSwarm {
   up_max_deviation: number;
   effectorRange: number;
   terrain: Terrain;
+  category: DroneCategory;
 }
 
 export function buildDefaultDroneSwarm(
@@ -409,5 +453,6 @@ export function buildDefaultDroneSwarm(
     up_max_deviation: DEFAULT_UP_MAX_DEVIATION,
     effectorRange: DEFAULT_EFFECTOR_RANGE,
     terrain,
+    category: DEFAULT_DRONE_CATEGORY,
   };
 }

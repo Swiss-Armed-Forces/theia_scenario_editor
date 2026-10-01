@@ -423,10 +423,13 @@ export interface components {
         ExtrapolatedGroundtruth: {
             /** Target Id */
             target_id: number;
+            /** Name */
+            name: string;
             /** Points */
             points: components["schemas"]["TrackPoint"][];
             /** Sidc */
             sidc: string;
+            info: components["schemas"]["TargetInfo"];
         };
         /** ExtrapolatedSituationalPicture */
         ExtrapolatedSituationalPicture: {
@@ -448,6 +451,7 @@ export interface components {
             points: components["schemas"]["TrackPoint"][];
             /** Sidc */
             sidc: string;
+            info: components["schemas"]["TargetInfo"];
             receiver?: components["schemas"]["Receiver-Output"] | null;
             transmitter?: components["schemas"]["Transmitter-Output"] | null;
         };
@@ -554,6 +558,12 @@ export interface components {
             receiver: components["schemas"]["Receiver-Output"];
             error_model: components["schemas"]["MonostaticRadarMeasurementModel"];
         };
+        /**
+         * Party
+         * @description Party a target belongs to.
+         * @enum {string}
+         */
+        Party: "UNKNOWN" | "BLUE" | "RED" | "NEUTRAL";
         /**
          * PclMeasurementModel
          * @description Measurement model for PCL detections.
@@ -772,13 +782,48 @@ export interface components {
              * @default
              */
             name: string;
-            /** Sidc */
-            sidc: string;
+            info: components["schemas"]["TargetInfo"];
+            /**
+             * Is Damaged
+             * @default false
+             */
+            is_damaged: boolean;
             point: components["schemas"]["Point"];
             cross_section_model: components["schemas"]["ConstantRcsModel"];
             velocity: components["schemas"]["Velocity"];
             receiver?: components["schemas"]["Receiver-Output"] | null;
             transmitter?: components["schemas"]["Transmitter-Output"] | null;
+            /**
+             * Sidc
+             * @description Symbol identification coding according to NATO APP-6D
+             */
+            readonly sidc: string;
+        };
+        /**
+         * TargetCategory
+         * @description Kind of a physical entity, independent of its party.
+         * @enum {string}
+         */
+        TargetCategory: "UNKNOWN" | "SENSOR" | "CRITICAL_INFRASTRUCTURE" | "INTERCEPTOR" | "GBAD" | "DRONE_CLASS_I" | "DRONE_CLASS_II" | "DRONE_CLASS_III" | "SHORT_RANGE_BALLISTIC_MISSILE" | "MEDIUM_RANGE_BALLISTIC_MISSILE" | "INTERMEDIATE_RANGE_BALLISTIC_MISSILE" | "CRUISE_MISSILE" | "FIGHTER_JET";
+        /**
+         * TargetInfo
+         * @description Meta-information about a target.
+         *
+         *     Categorical information lives here rather than in `Target`, so that new
+         *     criteria can be added without touching `Target` (open-closed principle).
+         */
+        TargetInfo: {
+            /** Sidc Template */
+            sidc_template: string;
+            /** @default UNKNOWN */
+            category: components["schemas"]["TargetCategory"];
+            /**
+             * Tags
+             * @default []
+             */
+            tags: string[];
+            /** @default UNKNOWN */
+            party: components["schemas"]["Party"];
         };
         /**
          * Team

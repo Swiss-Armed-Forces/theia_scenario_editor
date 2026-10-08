@@ -48,6 +48,7 @@ interface GuiStateStore {
   selectedReceiverId: number | null;
   selectedGbadId: number | null;
   selectedMissileTargetId: number | null;
+  selectedCruiseMissileTargetId: number | null;
   selectedDroneSwarmTargetId: number | null;
   selectedCriticalInfrastructureTargetId: number | null;
   activeCalcSettingsView: CalcSettingsView;
@@ -67,6 +68,7 @@ interface GuiStateStore {
   selectReceiver: (receiverId: number | null) => void;
   selectGbad: (gbadId: number | null) => void;
   selectMissile: (missileTargetId: number | null) => void;
+  selectCruiseMissile: (targetId: number | null) => void;
   selectDroneSwarm: (droneSwarmTargetId: number | null) => void;
   selectCriticalInfrastructure: (targetId: number | null) => void;
   pclSelectionReceiverId: number | null;
@@ -97,6 +99,7 @@ export const useGuiStateStore = create<GuiStateStore>()(
       selectedReceiverId: null,
       selectedGbadId: null,
       selectedMissileTargetId: null,
+      selectedCruiseMissileTargetId: null,
       selectedDroneSwarmTargetId: null,
       selectedCriticalInfrastructureTargetId: null,
       activeCalcSettingsView: null,
@@ -113,6 +116,7 @@ export const useGuiStateStore = create<GuiStateStore>()(
             selectedReceiverId: null,
             selectedGbadId: null,
             selectedMissileTargetId: null,
+            selectedCruiseMissileTargetId: null,
             selectedDroneSwarmTargetId: null,
             selectedCriticalInfrastructureTargetId: null,
           };
@@ -152,6 +156,7 @@ export const useGuiStateStore = create<GuiStateStore>()(
             selectedReceiverId: receiverId,
             selectedGbadId: null,
             selectedMissileTargetId: null,
+            selectedCruiseMissileTargetId: null,
             selectedDroneSwarmTargetId: null,
             selectedCriticalInfrastructureTargetId: null,
             activeCalcSettingsView: null,
@@ -166,6 +171,7 @@ export const useGuiStateStore = create<GuiStateStore>()(
             selectedGbadId: gbadId,
             selectedReceiverId: null,
             selectedMissileTargetId: null,
+            selectedCruiseMissileTargetId: null,
             selectedDroneSwarmTargetId: null,
             selectedCriticalInfrastructureTargetId: null,
             activeCalcSettingsView: null,
@@ -178,8 +184,24 @@ export const useGuiStateStore = create<GuiStateStore>()(
           }
           return {
             selectedMissileTargetId: missileTargetId,
+            selectedCruiseMissileTargetId: null,
             selectedReceiverId: null,
             selectedGbadId: null,
+            selectedDroneSwarmTargetId: null,
+            selectedCriticalInfrastructureTargetId: null,
+            activeCalcSettingsView: null,
+          };
+        }),
+      selectCruiseMissile: (targetId) =>
+        set((_state) => {
+          if (targetId === null) {
+            return { selectedCruiseMissileTargetId: null };
+          }
+          return {
+            selectedCruiseMissileTargetId: targetId,
+            selectedReceiverId: null,
+            selectedGbadId: null,
+            selectedMissileTargetId: null,
             selectedDroneSwarmTargetId: null,
             selectedCriticalInfrastructureTargetId: null,
             activeCalcSettingsView: null,
@@ -195,6 +217,7 @@ export const useGuiStateStore = create<GuiStateStore>()(
             selectedReceiverId: null,
             selectedGbadId: null,
             selectedMissileTargetId: null,
+            selectedCruiseMissileTargetId: null,
             selectedCriticalInfrastructureTargetId: null,
             activeCalcSettingsView: null,
           };
@@ -209,6 +232,7 @@ export const useGuiStateStore = create<GuiStateStore>()(
             selectedReceiverId: null,
             selectedGbadId: null,
             selectedMissileTargetId: null,
+            selectedCruiseMissileTargetId: null,
             selectedDroneSwarmTargetId: null,
             activeCalcSettingsView: null,
           };

@@ -5,6 +5,7 @@ import { useGuiStateStore } from "../context/GuiStateStore";
 import { useScenarioStore } from "../context/ScenarioStore";
 import {
   buildDefaultCriticalInfrastructure,
+  buildDefaultCruiseMissile,
   buildDefaultDroneSwarm,
   buildDefaultGbad,
   buildDefaultIndirectGbad,
@@ -240,7 +241,67 @@ function AddMissileButton() {
         });
       }}
     >
-      + Missile
+      + Ballistic Missile
+    </Button>
+  );
+}
+
+function AddCruiseMissileButton() {
+  const addCruiseMissile = useScenarioStore((state) => state.addCruiseMissile);
+  const unusedTargetId = useScenarioStore((state) => state.unusedTargetId);
+  const unusedIdEffector = useScenarioStore((state) => state.unusedIdEffector);
+  const terrainModels = useGuiStateStore((state) => state.terrainModels);
+  const setMapClickListener = useGuiStateStore(
+    (state) => state.setMapClickListener,
+  );
+  const setPendingMissileStart = useGuiStateStore(
+    (state) => state.setPendingMissileStart,
+  );
+  const selectCruiseMissile = useGuiStateStore(
+    (state) => state.selectCruiseMissile,
+  );
+
+  return (
+    <Button
+      variant="contained"
+      onClick={() => {
+        // Same two-click placement as AddMissileButton: start, then target.
+        setMapClickListener((pStart: LatLng) => {
+          elevationAt(pStart.lat, pStart.lng).then((altStart) => {
+            const p_start = {
+              lat: pStart.lat,
+              lon: pStart.lng,
+              alt: altStart,
+            };
+            setPendingMissileStart(p_start);
+
+            setMapClickListener((pStop: LatLng) => {
+              elevationAt(pStop.lat, pStop.lng).then((altStop) => {
+                const p_stop = {
+                  lat: pStop.lat,
+                  lon: pStop.lng,
+                  alt: altStop,
+                };
+
+                const newMissile = buildDefaultCruiseMissile(
+                  p_start,
+                  p_stop,
+                  unusedTargetId,
+                  unusedIdEffector,
+                  { terrain_name: terrainModels[0] ?? "" },
+                );
+                addCruiseMissile(newMissile);
+                selectCruiseMissile(newMissile.target_id);
+
+                setPendingMissileStart(null);
+                setMapClickListener(null);
+              });
+            });
+          });
+        });
+      }}
+    >
+      + Cruise Missile
     </Button>
   );
 }
@@ -323,6 +384,7 @@ export default function AddComponentButtons() {
       <AddGbadButton />
       <AddIndirectGbadButton />
       <AddMissileButton />
+      <AddCruiseMissileButton />
       <AddDroneSwarmButton />
       <AddCriticalInfrastructureButton />
     </div>

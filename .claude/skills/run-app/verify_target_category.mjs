@@ -28,17 +28,17 @@ async function save() {
   return JSON.parse(fs.readFileSync(await download.path(), "utf8"));
 }
 
-// Missile: start + stop click, then pick a category.
-await page.getByRole("button", { name: "+ Missile" }).click();
+// Ballistic missile: start + stop click, then pick a category.
+await page.getByRole("button", { name: "+ Ballistic Missile" }).click();
 await at(0.4, 0.5);
 // The stop-point listener is only armed once the start elevation lookup returns.
 await page.waitForTimeout(2000);
 await at(0.6, 0.5);
-const missile = settings("Missile Settings");
+const missile = settings("Ballistic Missile Settings");
 await missile.waitFor({ state: "visible", timeout: 5000 });
 const missileSelect = missile.locator('label:has-text("Category") + select');
 const missileDefault = await missileSelect.inputValue();
-await missileSelect.selectOption("CRUISE_MISSILE");
+await missileSelect.selectOption("MEDIUM_RANGE_BALLISTIC_MISSILE");
 await page.screenshot({ path: `${outDir}/missile_category.png`, fullPage: true });
 
 // Drone swarm: one click, then pick a drone class.

@@ -13,6 +13,8 @@ import GbadList from "./GbadList";
 import GbadSettings from "./GbadSettings";
 import MissileList from "./MissileList";
 import MissileSettings from "./MissileSettings";
+import CruiseMissileList from "./CruiseMissileList";
+import CruiseMissileSettings from "./CruiseMissileSettings";
 import DroneSwarmList from "./DroneSwarmList";
 import DroneSwarmSettings from "./DroneSwarmSettings";
 import CriticalInfrastructureList from "./CriticalInfrastructureList";
@@ -26,6 +28,7 @@ export default function SidePanel() {
     pcl: true,
     gbad: true,
     missiles: true,
+    cruiseMissiles: true,
     drones: true,
     criticalInfrastructure: true,
   });
@@ -48,6 +51,9 @@ export default function SidePanel() {
   const selectedMissileTargetId = useGuiStateStore(
     (state) => state.selectedMissileTargetId,
   );
+  const selectedCruiseMissileTargetId = useGuiStateStore(
+    (state) => state.selectedCruiseMissileTargetId,
+  );
   const selectedDroneSwarmTargetId = useGuiStateStore(
     (state) => state.selectedDroneSwarmTargetId,
   );
@@ -58,6 +64,7 @@ export default function SidePanel() {
     selectedReceiverId !== null ||
     selectedGbadId !== null ||
     selectedMissileTargetId !== null ||
+    selectedCruiseMissileTargetId !== null ||
     selectedDroneSwarmTargetId !== null ||
     selectedCriticalInfrastructureTargetId !== null;
 
@@ -86,6 +93,7 @@ export default function SidePanel() {
   const pclReceivers = useScenarioStore((state) => state.pclReceivers);
   const gbads = useScenarioStore((state) => state.gbads);
   const ballisticMissiles = useScenarioStore((state) => state.ballisticMissiles);
+  const cruiseMissiles = useScenarioStore((state) => state.cruiseMissiles);
   const droneSwarms = useScenarioStore((state) => state.droneSwarms);
   const criticalInfrastructure = useScenarioStore(
     (state) => state.criticalInfrastructure,
@@ -131,12 +139,20 @@ export default function SidePanel() {
           <GbadList />
         </TreeCategory>
         <TreeCategory
-          title="Missiles"
+          title="Ballistic Missiles"
           count={ballisticMissiles.length}
           expanded={expandedCategories.missiles}
           onToggleExpand={() => toggleExpanded("missiles")}
         >
           <MissileList />
+        </TreeCategory>
+        <TreeCategory
+          title="Cruise Missiles"
+          count={cruiseMissiles.length}
+          expanded={expandedCategories.cruiseMissiles}
+          onToggleExpand={() => toggleExpanded("cruiseMissiles")}
+        >
+          <CruiseMissileList />
         </TreeCategory>
         <TreeCategory
           title="Drones"
@@ -192,6 +208,7 @@ export default function SidePanel() {
             <PclSensorSettings />
             <GbadSettings />
             <MissileSettings />
+            <CruiseMissileSettings />
             <DroneSwarmSettings />
             <CriticalInfrastructureSettings />
             {!hasItemSelected && (

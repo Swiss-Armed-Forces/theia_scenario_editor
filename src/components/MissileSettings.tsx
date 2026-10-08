@@ -22,7 +22,7 @@ export default function MissileSettings() {
 
   return (
     <fieldset className="SensorSettingsContainer">
-      <legend>Missile Settings</legend>
+      <legend>Ballistic Missile Settings</legend>
       <>
         <label>Category</label>
         <select
@@ -33,6 +33,13 @@ export default function MissileSettings() {
             updateMissile(newMissile);
           }}
         >
+          {!(MISSILE_CATEGORIES as readonly string[]).includes(
+            missile.category,
+          ) && (
+            <option value={missile.category}>
+              {MISSILE_CATEGORY_LABELS[missile.category]}
+            </option>
+          )}
           {MISSILE_CATEGORIES.map((category) => (
             <option key={category} value={category}>
               {MISSILE_CATEGORY_LABELS[category]}

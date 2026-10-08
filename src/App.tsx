@@ -35,6 +35,13 @@ function App() {
           return;
         }
 
+        if (guiState.selectedCruiseMissileTargetId !== null) {
+          scenarioStore.deleteCruiseMissile(
+            guiState.selectedCruiseMissileTargetId,
+          );
+          return;
+        }
+
         if (guiState.selectedDroneSwarmTargetId !== null) {
           scenarioStore.deleteDroneSwarm(guiState.selectedDroneSwarmTargetId);
           return;

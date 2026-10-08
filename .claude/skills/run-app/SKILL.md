@@ -110,17 +110,55 @@ App structure notes gathered while verifying the Effector→GBAD rename
   map still renders fine from the OSM tiles that did load. Don't chase it as
   a regression — filter console/request errors down to the domains your
   change actually touches before treating any as a real signal.
-- **`+ Missile` needs two map clicks with a pause in between** — the
-  stop-point click listener is only armed after the backend elevation lookup
-  for the start point returns, so a second click fired immediately is lost.
-  Wait ~2s between the clicks (see `verify_target_category.mjs`).
+- **`+ Ballistic Missile` and `+ Cruise Missile` need two map clicks with a
+  pause in between** — the stop-point click listener is only armed after the
+  backend elevation lookup for the start point returns, so a second click
+  fired immediately is lost. Wait ~2s between the clicks (see
+  `verify_target_category.mjs`, `verify_cruise_missile.mjs`). The button
+  was called `+ Missile` before cruise missiles existed.
+- **Missile legends and list rows**: `"Ballistic Missile Settings"` /
+  `"Ballistic missile #N"` and `"Cruise Missile Settings"` /
+  `"Cruise missile #N"`. A `hasText: "Missile Settings"` legend filter
+  matches both forms; only one is visible at a time.
+- **Selection survives loading a file** — after `Load file`, the previously
+  selected item's id may still be selected, so clicking its list row toggles
+  it *off*. Check whether the settings form is already visible before
+  clicking (see `select()` in `verify_cruise_missile.mjs`).
+- **Cruise missile form validation**: an out-of-range value shows a
+  `role="alert"` message inside the form and is not written to the store, so
+  a save made meanwhile still holds the last valid value.
 - **React `<StrictMode>` double-invokes effects in dev only** — a
   `useEffect(() => { fetch(...) }, [])` will issue two requests under
   `npm run dev`; not a bug, doesn't happen in a production build.
+
+## Feature checks
+
+- `verify_critical_infra.mjs` — critical infrastructure.
+- `verify_target_category.mjs` — ballistic missile and drone swarm
+  categories, including legacy save files.
+- `verify_cruise_missile.mjs` — cruise missile placement, settings
+  defaults, range validation, Delete key, save/load, and a ballistic missile
+  alongside it. Prints a JSON summary and writes `cruise_missile.png` and
+  `cruise_missile_invalid.png` to the output directory:
+
+  ```bash
+  node .claude/skills/run-app/verify_cruise_missile.mjs http://localhost:5173 /tmp
+  ```
 
 ## 6. Teardown
 
 ```bash
 lsof -ti:5173 -sTCP:LISTEN | xargs -r kill
 lsof -ti:8000 -sTCP:LISTEN | xargs -r kill
+```
+
+**Wait until the backend process has actually exited before starting anything
+else theia-related** (backend tests, `simulate_scenario.py`, another server).
+`run_server.py` loads the terrain named by `THEIA_DEFAULT_TERRAIN`; when that
+is a `tree_*` terrain, it is a `FastSrtmModel` that fills more than half the
+machine's RAM, so a second one (e.g. `tests/test_fast_los.py` loads one) can
+run the machine out of memory. A free port does not mean the process is gone:
+
+```bash
+timeout 60 bash -c 'while pgrep -f scripts/run_server.py >/dev/null; do sleep 1; done'
 ```

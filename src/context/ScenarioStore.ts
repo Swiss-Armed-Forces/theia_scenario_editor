@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import type {
   CriticalInfrastructure,
+  CruiseMissile,
   DetectableMonostaticSensor,
   DetectablePclReceiver,
   DetectablePclSensor,
@@ -31,6 +32,7 @@ export interface ScenarioStore {
   pclTxCriteria: Map<number, PclTxSelectionCriteria>;
   gbads: Gbad[];
   ballisticMissiles: Missile[];
+  cruiseMissiles: CruiseMissile[];
   droneSwarms: DroneSwarm[];
   criticalInfrastructure: CriticalInfrastructure[];
   unusedIdSensor: number;
@@ -49,6 +51,9 @@ export interface ScenarioStore {
   addMissile: (missile: Missile) => void;
   updateMissile: (missile: Missile) => void;
   deleteMissile: (targetId: number) => void;
+  addCruiseMissile: (missile: CruiseMissile) => void;
+  updateCruiseMissile: (missile: CruiseMissile) => void;
+  deleteCruiseMissile: (targetId: number) => void;
   addDroneSwarm: (droneSwarm: DroneSwarm) => void;
   updateDroneSwarm: (droneSwarm: DroneSwarm) => void;
   deleteDroneSwarm: (targetId: number) => void;
@@ -162,6 +167,7 @@ export type SerializedScenarioState = {
   gbads: Gbad[];
   oneway_drones: unknown[];
   ballistic_missiles: Missile[];
+  cruise_missiles: CruiseMissile[];
   drone_swarms: DroneSwarmFactory[];
   critical_infrastructure: CriticalInfrastructure[];
   unused_id_sensor: number;
@@ -180,6 +186,7 @@ export function serializeScenarioState(
     gbads: state.gbads,
     oneway_drones: [],
     ballistic_missiles: state.ballisticMissiles,
+    cruise_missiles: state.cruiseMissiles,
     drone_swarms: state.droneSwarms.map(buildDroneSwarmFactory),
     critical_infrastructure: state.criticalInfrastructure,
     unused_id_sensor: state.unusedIdSensor,
@@ -264,6 +271,15 @@ export function deserializeScenarioState(
     }),
   );
 
+  // cruise_missiles is a new field - older save files simply won't have it.
+  // min_clearance may be omitted, which the backend treats like null.
+  const cruiseMissiles = (data.cruise_missiles ?? []).map(
+    (missile): CruiseMissile => ({
+      ...missile,
+      min_clearance: missile.min_clearance ?? null,
+    }),
+  );
+
   const droneSwarms = (data.drone_swarms ?? []).map(droneSwarmFromFactory);
 
   // critical_infrastructure is a new field - older save files simply won't
@@ -300,6 +316,7 @@ export function deserializeScenarioState(
     pclTxCriteria: new Map(),
     gbads,
     ballisticMissiles,
+    cruiseMissiles,
     droneSwarms,
     criticalInfrastructure,
     unusedIdSensor: data.unused_id_sensor,
@@ -318,6 +335,7 @@ export const useScenarioStore = create<ScenarioStore>((set, get) => ({
   pclTxCriteria: new Map<number, PclTxSelectionCriteria>(),
   gbads: [],
   ballisticMissiles: [],
+  cruiseMissiles: [],
   droneSwarms: [],
   criticalInfrastructure: [],
   unusedIdSensor: 0,
@@ -409,6 +427,33 @@ export const useScenarioStore = create<ScenarioStore>((set, get) => ({
         (m) => m.target_id !== targetId,
       );
       return { ballisticMissiles: newMissiles };
+    }),
+  addCruiseMissile: (missile) =>
+    set((state) => {
+      return {
+        cruiseMissiles: [...state.cruiseMissiles, missile],
+        unusedTargetId: Math.max(state.unusedTargetId, missile.target_id + 1),
+        unusedIdEffector: Math.max(
+          state.unusedIdEffector,
+          missile.effector_id + 1,
+        ),
+      };
+    }),
+  updateCruiseMissile: (missile) =>
+    set((state) => {
+      const i = state.cruiseMissiles.findIndex(
+        (m) => m.target_id === missile.target_id,
+      );
+      const newMissiles = structuredClone(state.cruiseMissiles);
+      newMissiles[i] = missile;
+      return { cruiseMissiles: newMissiles };
+    }),
+  deleteCruiseMissile: (targetId) =>
+    set((state) => {
+      const newMissiles = state.cruiseMissiles.filter(
+        (m) => m.target_id !== targetId,
+      );
+      return { cruiseMissiles: newMissiles };
     }),
   addDroneSwarm: (droneSwarm) =>
     set((state) => {

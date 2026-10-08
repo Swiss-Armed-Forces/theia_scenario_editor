@@ -1,6 +1,6 @@
 import type { LatLng } from "leaflet";
 import type { components } from "./schema";
-import { offsetLatLon } from "../util/geo";
+import { haversineDistance, offsetLatLon } from "../util/geo";
 
 export type Point = components["schemas"]["Point"];
 export type Receiver = components["schemas"]["Receiver-Input"];
@@ -101,14 +101,19 @@ export const MISSILE_CATEGORIES = [
   "SHORT_RANGE_BALLISTIC_MISSILE",
   "MEDIUM_RANGE_BALLISTIC_MISSILE",
   "INTERMEDIATE_RANGE_BALLISTIC_MISSILE",
-  "CRUISE_MISSILE",
 ] as const satisfies readonly TargetCategory[];
-export type MissileCategory = (typeof MISSILE_CATEGORIES)[number];
+// Ballistic missiles saved before cruise missiles became their own entity may
+// carry this category. It still loads unchanged, but is no longer offered.
+export const LEGACY_MISSILE_CATEGORY =
+  "CRUISE_MISSILE" as const satisfies TargetCategory;
+export type MissileCategory =
+  | (typeof MISSILE_CATEGORIES)[number]
+  | typeof LEGACY_MISSILE_CATEGORY;
 export const MISSILE_CATEGORY_LABELS: Record<MissileCategory, string> = {
   SHORT_RANGE_BALLISTIC_MISSILE: "Short-range ballistic missile",
   MEDIUM_RANGE_BALLISTIC_MISSILE: "Medium-range ballistic missile",
   INTERMEDIATE_RANGE_BALLISTIC_MISSILE: "Intermediate-range ballistic missile",
-  CRUISE_MISSILE: "Cruise missile",
+  CRUISE_MISSILE: "Cruise missile (legacy)",
 };
 export const DEFAULT_MISSILE_CATEGORY: MissileCategory =
   "SHORT_RANGE_BALLISTIC_MISSILE";
@@ -123,6 +128,101 @@ export interface Missile {
   rcs: number;
   alpha: number;
   category: MissileCategory;
+}
+
+// Defaults and valid ranges mirror the backend's theia.cruise_missile module.
+export const DEFAULT_CRUISE_MISSILE_SPEED = 250;
+export const DEFAULT_CRUISE_MISSILE_MAGL = 50;
+export const DEFAULT_MIN_FLIGHT_PATH_ANGLE = -10;
+export const DEFAULT_MAX_FLIGHT_PATH_ANGLE = 15;
+export const DEFAULT_TERMINAL_DIVE_ANGLE = -30;
+export const DEFAULT_SAMPLE_SPACING = 100;
+export const DEFAULT_CRUISE_MISSILE_RCS = 0.1;
+
+export interface CruiseMissile {
+  p_start: Point;
+  p_stop: Point;
+  t_start: string;
+  terrain: Terrain;
+  target_id: number;
+  effector_id: number;
+  rcs: number;
+  /** Constant speed along the path [m/s] */
+  speed: number;
+  /** Nominal cruise height above ground level [m] */
+  cruise_magl: number;
+  /** Steepest descent while cruising [°], in (-90, 0) */
+  min_flight_path_angle: number;
+  /** Steepest climb while cruising [°], in (0, 90) */
+  max_flight_path_angle: number;
+  /** Flight-path angle of the terminal dive [°], in (-90, 0) */
+  terminal_dive_angle: number;
+  /** Hard floor above the terrain [m], in (0, cruise_magl]. null: backend default */
+  min_clearance: number | null;
+  /** Distance between trajectory samples [m] */
+  sample_spacing: number;
+  category: "CRUISE_MISSILE";
+}
+
+/** Default min_clearance the backend applies when it is null. */
+export function defaultMinClearance(cruiseMagl: number): number {
+  return Math.min(cruiseMagl, Math.max(15, 0.5 * cruiseMagl));
+}
+
+/**
+ * Validation error for a cruise missile's parameters, or null if valid.
+ * Mirrors the backend's validate_parameters.
+ */
+export function cruiseMissileError(missile: CruiseMissile): string | null {
+  const isNumber = (v: number) => Number.isFinite(v);
+  if (!isNumber(missile.rcs) || missile.rcs < 0) {
+    return "RCS must be ≥ 0 m².";
+  }
+  if (!isNumber(missile.speed) || missile.speed <= 0) {
+    return "Speed must be > 0 m/s.";
+  }
+  if (!isNumber(missile.cruise_magl) || missile.cruise_magl <= 0) {
+    return "Cruise altitude must be > 0 m.";
+  }
+  if (
+    !isNumber(missile.min_flight_path_angle) ||
+    missile.min_flight_path_angle <= -90 ||
+    missile.min_flight_path_angle >= 0
+  ) {
+    return "Min. flight-path angle must lie in (-90°, 0°).";
+  }
+  if (
+    !isNumber(missile.max_flight_path_angle) ||
+    missile.max_flight_path_angle <= 0 ||
+    missile.max_flight_path_angle >= 90
+  ) {
+    return "Max. flight-path angle must lie in (0°, 90°).";
+  }
+  if (
+    !isNumber(missile.terminal_dive_angle) ||
+    missile.terminal_dive_angle <= -90 ||
+    missile.terminal_dive_angle >= 0
+  ) {
+    return "Terminal dive angle must lie in (-90°, 0°).";
+  }
+  if (
+    missile.min_clearance !== null &&
+    (!isNumber(missile.min_clearance) ||
+      missile.min_clearance <= 0 ||
+      missile.min_clearance > missile.cruise_magl)
+  ) {
+    return "Min. clearance must lie in (0, cruise altitude] m.";
+  }
+  if (!isNumber(missile.sample_spacing) || missile.sample_spacing <= 0) {
+    return "Sample spacing must be > 0 m.";
+  }
+  if (
+    haversineDistance(missile.p_start, missile.p_stop) <
+    2 * missile.sample_spacing
+  ) {
+    return "Start and target must be at least 2 × sample spacing apart.";
+  }
+  return null;
 }
 
 export function buildDefaultMonostaticSensor(
@@ -294,6 +394,32 @@ export function buildDefaultMissile(
     rcs: DEFAULT_RCS,
     alpha: DEFAULT_LAUNCH_ANGLE,
     category: DEFAULT_MISSILE_CATEGORY,
+  };
+}
+
+export function buildDefaultCruiseMissile(
+  pStart: Point,
+  pStop: Point,
+  target_id: number,
+  effector_id: number,
+  terrain: Terrain,
+): CruiseMissile {
+  return {
+    p_start: pStart,
+    p_stop: pStop,
+    t_start: new Date().toISOString(),
+    terrain,
+    target_id,
+    effector_id,
+    rcs: DEFAULT_CRUISE_MISSILE_RCS,
+    speed: DEFAULT_CRUISE_MISSILE_SPEED,
+    cruise_magl: DEFAULT_CRUISE_MISSILE_MAGL,
+    min_flight_path_angle: DEFAULT_MIN_FLIGHT_PATH_ANGLE,
+    max_flight_path_angle: DEFAULT_MAX_FLIGHT_PATH_ANGLE,
+    terminal_dive_angle: DEFAULT_TERMINAL_DIVE_ANGLE,
+    min_clearance: null,
+    sample_spacing: DEFAULT_SAMPLE_SPACING,
+    category: "CRUISE_MISSILE",
   };
 }
 

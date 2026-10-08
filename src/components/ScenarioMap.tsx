@@ -18,6 +18,7 @@ import { DEFAULT_MAP_CENTER } from "../util/constants";
 import { useEffect, useMemo, useState } from "react";
 import type {
   CriticalInfrastructure,
+  CruiseMissile,
   DroneSwarm,
   Effector,
   LatLonHeightGrid,
@@ -381,6 +382,24 @@ const highlightedMissileStopIcon = L.divIcon({
   iconAnchor: [12, 12],
 });
 
+// Air missile (symbol set 02), so a cruise missile's start is told apart from
+// a ballistic missile's launcher. The target reuses missileStopSymbol.
+const cruiseMissileStartSymbol = new ms.Symbol("10030200001100000000", {
+  size: 24,
+});
+const cruiseMissileStartIcon = L.divIcon({
+  html: cruiseMissileStartSymbol.asSVG(),
+  className: "",
+  iconSize: [24, 24],
+  iconAnchor: [12, 12],
+});
+const highlightedCruiseMissileStartIcon = L.divIcon({
+  html: `<div style="border: 2px solid red; width: fit-content; height: fit-content">${cruiseMissileStartSymbol.asSVG()}</div>`,
+  className: "",
+  iconSize: [24, 24],
+  iconAnchor: [12, 12],
+});
+
 function MonostaticRadarMarker({ radar }: { radar: MonostaticSensor }) {
   const selectedReceiverId = useGuiStateStore(
     (state) => state.selectedReceiverId,
@@ -500,7 +519,7 @@ function MissileMarker({ missile }: { missile: Missile }) {
           },
         }}
       >
-        <Tooltip>Missile #{missile.target_id} (start)</Tooltip>
+        <Tooltip>Ballistic missile #{missile.target_id} (start)</Tooltip>
       </Marker>
       <Marker
         position={[missile.p_stop.lat, missile.p_stop.lon]}
@@ -511,7 +530,51 @@ function MissileMarker({ missile }: { missile: Missile }) {
           },
         }}
       >
-        <Tooltip>Missile #{missile.target_id} (stop)</Tooltip>
+        <Tooltip>Ballistic missile #{missile.target_id} (stop)</Tooltip>
+      </Marker>
+    </>
+  );
+}
+
+function CruiseMissileMarker({ missile }: { missile: CruiseMissile }) {
+  const selectedTargetId = useGuiStateStore(
+    (state) => state.selectedCruiseMissileTargetId,
+  );
+  const selectCruiseMissile = useGuiStateStore(
+    (state) => state.selectCruiseMissile,
+  );
+
+  const isHighlighted = selectedTargetId === missile.target_id;
+  const toggleSelection = () =>
+    selectCruiseMissile(isHighlighted ? null : missile.target_id);
+  return (
+    <>
+      {/* Only the ground track; the terrain-following profile is computed
+          by the backend. */}
+      <Polyline
+        positions={[
+          [missile.p_start.lat, missile.p_start.lon],
+          [missile.p_stop.lat, missile.p_stop.lon],
+        ]}
+        pathOptions={{ color: "#7b1fa2", weight: 2, dashArray: "2, 6" }}
+      />
+      <Marker
+        position={[missile.p_start.lat, missile.p_start.lon]}
+        icon={
+          isHighlighted
+            ? highlightedCruiseMissileStartIcon
+            : cruiseMissileStartIcon
+        }
+        eventHandlers={{ click: toggleSelection }}
+      >
+        <Tooltip>Cruise missile #{missile.target_id} (start)</Tooltip>
+      </Marker>
+      <Marker
+        position={[missile.p_stop.lat, missile.p_stop.lon]}
+        icon={isHighlighted ? highlightedMissileStopIcon : missileStopIcon}
+        eventHandlers={{ click: toggleSelection }}
+      >
+        <Tooltip>Cruise missile #{missile.target_id} (target)</Tooltip>
       </Marker>
     </>
   );
@@ -735,6 +798,7 @@ export default function ScenarioMap() {
   const ballisticMissiles = useScenarioStore(
     (state) => state.ballisticMissiles,
   );
+  const cruiseMissiles = useScenarioStore((state) => state.cruiseMissiles);
   const droneSwarms = useScenarioStore((state) => state.droneSwarms);
   const criticalInfrastructure = useScenarioStore(
     (state) => state.criticalInfrastructure,
@@ -797,6 +861,9 @@ export default function ScenarioMap() {
       ))}
       {ballisticMissiles.map((missile) => (
         <MissileMarker key={missile.target_id} missile={missile} />
+      ))}
+      {cruiseMissiles.map((missile) => (
+        <CruiseMissileMarker key={missile.target_id} missile={missile} />
       ))}
       {droneSwarms.map((droneSwarm) => (
         <DroneSwarmLayer key={droneSwarm.target_id} droneSwarm={droneSwarm} />

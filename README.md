@@ -28,6 +28,22 @@ npm run dev
 
 Serves the editor at `http://localhost:5173`. Stop it with `Ctrl+C`.
 
+## Missiles
+
+The editor has two kinds of missile, each with its own button, list and
+settings form. Both are placed with two map clicks: launch point, then target.
+
+- **Ballistic missiles** (`+ Ballistic Missile`) fly a ballistic arc.
+- **Cruise missiles** (`+ Cruise Missile`) follow the terrain at a set height
+  above ground, within configurable climb and descent angle limits, and finish
+  with a terminal dive onto the target. Out-of-range values in the settings
+  form are flagged and not applied.
+
+For both, the map only shows the straight line between launch point and
+target. The actual flight path is computed by the backend when the scenario is
+simulated. For the cruise missile's flight model and parameters, see the
+backend's `doc/source/concepts/cruise_missile.rst`.
+
 ## Offline map tiles
 
 By default, map tiles are fetched live from public OpenStreetMap/ArcGIS

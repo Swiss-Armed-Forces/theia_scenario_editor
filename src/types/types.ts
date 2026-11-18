@@ -513,6 +513,7 @@ export function droneTargetInfo(category: DroneCategory): TargetInfo {
     category,
     tags: [],
     party: "UNKNOWN",
+    is_airborne: true,
   };
 }
 

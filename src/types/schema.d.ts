@@ -140,6 +140,99 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/is_user_controlled/{which}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Is User Controlled
+         * @description Whether a side is commanded with actions (see ``/assign_action``).
+         */
+        get: operations["is_user_controlled_is_user_controlled__which__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/assign_action/{which}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Assign Action
+         * @description Queue an action for a side.
+         *
+         *     ``id``, ``time`` and ``party`` of the action are overwritten when it
+         *     is executed.
+         *
+         *     Returns whether the side accepts actions (is user-controlled). Whether
+         *     the action is possible is decided when it is executed; the outcome is
+         *     reported as an ``ActionExecutedEvent`` or ``ActionRejectedEvent``.
+         */
+        post: operations["assign_action_assign_action__which__post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/camp_sites/{which}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Camp Sites
+         * @description Live state of a side's camp sites and shipments.
+         *
+         *     Only camp sites a player commands are reported: if the side is not
+         *     user-controlled, the result is empty even if the side has camp sites
+         *     (they are simulated as targets, but nothing tracks their stock).
+         */
+        get: operations["get_camp_sites_camp_sites__which__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/transport_times/{which}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Transport Times
+         * @description Routes for moving stock between a side's camp sites.
+         *
+         *     Empty if the side is not user-controlled.
+         */
+        get: operations["get_transport_times_transport_times__which__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/health": {
         parameters: {
             query?: never;
@@ -200,6 +293,46 @@ export interface paths {
         };
         /** Is Paused */
         get: operations["is_paused_is_paused_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/stop": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Stop
+         * @description End the simulation properly, e. g. so that the log file is written.
+         *
+         *     Returns once the simulation has ended. A stopped simulation cannot be
+         *     resumed; the server keeps serving its final state.
+         */
+        post: operations["stop_stop_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/is_stopped": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Is Stopped */
+        get: operations["is_stopped_is_stopped_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -385,6 +518,26 @@ export interface components {
             attenuation_table_values: number[];
             polarization: components["schemas"]["Polarization"];
         };
+        /**
+         * BallisticGenerator
+         * @description Ballistic trajectory under gravity only, see
+         *     :class:`theia.simulation.scenario_import.BallisticMissileFactory`.
+         *
+         *     Default path generator for ballistic missiles. The speed is ignored: it
+         *     follows from the launch angle and the distance.
+         */
+        BallisticGenerator: {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "ballistic";
+            /**
+             * Alpha
+             * @default 45
+             */
+            alpha: number;
+        };
         /** Body_calculate_min_detectable_rcs_calculate_min_detectable_rcs_post */
         Body_calculate_min_detectable_rcs_calculate_min_detectable_rcs_post: {
             sensor: components["schemas"]["PclSensor-Input"];
@@ -395,6 +548,73 @@ export interface components {
             /** Sensors */
             sensors: components["schemas"]["PclSensor-Input"][];
             grid: components["schemas"]["LatLonHeightGrid"];
+        };
+        /**
+         * CampSiteState
+         * @description Live state of a camp site.
+         */
+        CampSiteState: {
+            /** Id */
+            id: number;
+            /** Name */
+            name: string;
+            point: components["schemas"]["Point"];
+            /** Target Id */
+            target_id: number;
+            /** Can Launch */
+            can_launch: boolean;
+            /** Ammo Type */
+            ammo_type: string;
+            /** N Ammo */
+            n_ammo: number;
+            /** Is Alive */
+            is_alive: boolean;
+            /** Seconds Until Ready */
+            seconds_until_ready: number;
+        };
+        /**
+         * CampSitesStatus
+         * @description Live state of all camp sites and shipments of a side.
+         */
+        CampSitesStatus: {
+            /**
+             * Time
+             * Format: date-time
+             */
+            time: string;
+            /** Sites */
+            sites: components["schemas"]["CampSiteState"][];
+            /** Shipments */
+            shipments: components["schemas"]["Shipment"][];
+        };
+        /**
+         * ClimbCruiseDiveGenerator
+         * @description Climb linearly to a cruise altitude, fly along the great circle and dive
+         *     linearly onto the destination.
+         *
+         *     Default path generator for one-way drones.
+         */
+        ClimbCruiseDiveGenerator: {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "climb_cruise_dive";
+            /**
+             * Cruise Alt Masl
+             * @default 5000
+             */
+            cruise_alt_masl: number;
+            /**
+             * Dive Start Distance
+             * @default 1000
+             */
+            dive_start_distance: number;
+            /**
+             * Climb Angle
+             * @default 10
+             */
+            climb_angle: number;
         };
         /** ConstantRcsModel */
         ConstantRcsModel: {
@@ -439,7 +659,7 @@ export interface components {
              */
             time: string;
             /** Friendly Radars */
-            friendly_radars: (components["schemas"]["MonostaticSensor-Output"] | components["schemas"]["PclSensor-Output"] | components["schemas"]["PetSensor"] | components["schemas"]["VisualSensor"])[];
+            friendly_radars: (components["schemas"]["MonostaticSensor-Output"] | components["schemas"]["PclSensor-Output"] | components["schemas"]["PetSensor"] | components["schemas"]["VisualSensor"] | components["schemas"]["IntelSensor"])[];
             /** Enemy Tracks */
             enemy_tracks: components["schemas"]["ExtrapolatedTrack"][];
         };
@@ -498,6 +718,20 @@ export interface components {
             /** Detail */
             detail?: components["schemas"]["ValidationError"][];
         };
+        /**
+         * IntelSensor
+         * @description A sensor that knows a target's trajectory and reports its ground truth.
+         */
+        IntelSensor: {
+            /** Id */
+            id: number;
+            trajectory: components["schemas"]["Trajectory"];
+            /**
+             * Sigma
+             * @default 0.1
+             */
+            sigma: number;
+        };
         /** LatLonHeightGrid */
         LatLonHeightGrid: {
             /** Lat Start */
@@ -518,6 +752,35 @@ export interface components {
             height_stop: number;
             /** Height Res */
             height_res: number;
+        };
+        /**
+         * LaunchAction
+         * @description Launch exactly one round from a launch site at a point.
+         */
+        LaunchAction: {
+            /**
+             * Id
+             * @default -1
+             */
+            id: number;
+            /**
+             * Time
+             * Format: date-time
+             * @default 1970-01-01T00:00:00Z
+             */
+            time: string;
+            /** @default UNKNOWN */
+            party: components["schemas"]["Party"];
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "launch";
+            /** Site Id */
+            site_id: number;
+            destination: components["schemas"]["Point"];
+            /** Path Generator */
+            path_generator?: (components["schemas"]["ClimbCruiseDiveGenerator"] | components["schemas"]["BallisticGenerator"] | components["schemas"]["TerrainFollowingGenerator"]) | null;
         };
         /** MonostaticRadarMeasurementModel */
         MonostaticRadarMeasurementModel: {
@@ -557,6 +820,36 @@ export interface components {
             transmitter: components["schemas"]["Transmitter-Output"];
             receiver: components["schemas"]["Receiver-Output"];
             error_model: components["schemas"]["MonostaticRadarMeasurementModel"];
+        };
+        /**
+         * MoveStockAction
+         * @description Move ammunition from one camp site to another.
+         */
+        MoveStockAction: {
+            /**
+             * Id
+             * @default -1
+             */
+            id: number;
+            /**
+             * Time
+             * Format: date-time
+             * @default 1970-01-01T00:00:00Z
+             */
+            time: string;
+            /** @default UNKNOWN */
+            party: components["schemas"]["Party"];
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "move_stock";
+            /** Source Site Id */
+            source_site_id: number;
+            /** Target Site Id */
+            target_site_id: number;
+            /** Count */
+            count: number;
         };
         /**
          * Party
@@ -769,6 +1062,36 @@ export interface components {
             horizontal_attenuation?: components["schemas"]["AttenuationModel"] | null;
         };
         /**
+         * Shipment
+         * @description Stock being moved from one camp site to another.
+         */
+        Shipment: {
+            /** Id */
+            id: number;
+            /** Source Site Id */
+            source_site_id: number;
+            /** Target Site Id */
+            target_site_id: number;
+            /** Count */
+            count: number;
+            state: components["schemas"]["ShipmentState"];
+            /**
+             * Departure Time
+             * Format: date-time
+             */
+            departure_time: string;
+            /**
+             * Arrival Time
+             * Format: date-time
+             */
+            arrival_time: string;
+        };
+        /**
+         * ShipmentState
+         * @enum {string}
+         */
+        ShipmentState: "BREAKING_CAMP" | "UNDERWAY" | "ARRIVED";
+        /**
          * Target
          * @description Represents a detectable entity.
          */
@@ -824,12 +1147,84 @@ export interface components {
             tags: string[];
             /** @default UNKNOWN */
             party: components["schemas"]["Party"];
+            /** Is Airborne */
+            is_airborne: boolean;
         };
         /**
          * Team
          * @enum {string}
          */
         Team: "BLUE" | "RED";
+        /**
+         * TerrainFollowingGenerator
+         * @description Terrain-following path, see :mod:`theia.cruise_missile`.
+         *
+         *     Default path generator for cruise missiles. The altitudes of the start and
+         *     the destination are ignored, see
+         *     :class:`theia.simulation.scenario_import.CruiseMissileFactory`.
+         */
+        TerrainFollowingGenerator: {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "terrain_following";
+            /**
+             * Cruise Magl
+             * @default 50
+             */
+            cruise_magl: number;
+            /**
+             * Min Flight Path Angle
+             * @default -10
+             */
+            min_flight_path_angle: number;
+            /**
+             * Max Flight Path Angle
+             * @default 15
+             */
+            max_flight_path_angle: number;
+            /**
+             * Terminal Dive Angle
+             * @default -30
+             */
+            terminal_dive_angle: number;
+            /** Min Clearance */
+            min_clearance?: number | null;
+            /**
+             * Sample Spacing
+             * @default 100
+             */
+            sample_spacing: number;
+        };
+        /**
+         * ToggleMonostaticRadarAction
+         * @description Switch a monostatic radar on or off.
+         */
+        ToggleMonostaticRadarAction: {
+            /**
+             * Id
+             * @default -1
+             */
+            id: number;
+            /**
+             * Time
+             * Format: date-time
+             * @default 1970-01-01T00:00:00Z
+             */
+            time: string;
+            /** @default UNKNOWN */
+            party: components["schemas"]["Party"];
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "toggle_monostatic_radar";
+            /** Sensor Id */
+            sensor_id: number;
+            /** New Is On */
+            new_is_on: boolean;
+        };
         /** TrackPoint */
         TrackPoint: {
             /**
@@ -849,6 +1244,27 @@ export interface components {
             v_north: number;
             /** V Up */
             v_up: number;
+        };
+        /** Trajectory */
+        Trajectory: {
+            /** Target Id */
+            target_id: number;
+            target_info: components["schemas"]["TargetInfo"];
+            /** Times */
+            times: string[];
+            /** Lats */
+            lats: number[];
+            /** Lons */
+            lons: number[];
+            /** Alts */
+            alts: number[];
+            /** Vxs */
+            vxs: number[];
+            /** Vys */
+            vys: number[];
+            /** Vzs */
+            vzs: number[];
+            cross_section_model: components["schemas"]["ConstantRcsModel"];
         };
         /** Transmitter */
         "Transmitter-Input": {
@@ -919,6 +1335,22 @@ export interface components {
             antenna_efficiency_value: number;
             vertical_attenuation?: components["schemas"]["AttenuationModel"] | null;
             horizontal_attenuation?: components["schemas"]["AttenuationModel"] | null;
+        };
+        /**
+         * TransportTime
+         * @description One-way route for moving stock between two camp sites.
+         *
+         *     A return trip needs its own entry.
+         */
+        TransportTime: {
+            /** Source Site Id */
+            source_site_id: number;
+            /** Target Site Id */
+            target_site_id: number;
+            /** Seconds Until Leave */
+            seconds_until_leave: number;
+            /** Seconds Underway */
+            seconds_underway: number;
         };
         /** ValidationError */
         ValidationError: {
@@ -1183,6 +1615,134 @@ export interface operations {
             };
         };
     };
+    is_user_controlled_is_user_controlled__which__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                which: components["schemas"]["Team"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": boolean;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    assign_action_assign_action__which__post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                which: components["schemas"]["Team"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LaunchAction"] | components["schemas"]["MoveStockAction"] | components["schemas"]["ToggleMonostaticRadarAction"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": boolean;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_camp_sites_camp_sites__which__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                which: components["schemas"]["Team"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CampSitesStatus"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_transport_times_transport_times__which__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                which: components["schemas"]["Team"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TransportTime"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     check_health_health_get: {
         parameters: {
             query?: never;
@@ -1244,6 +1804,46 @@ export interface operations {
         };
     };
     is_paused_is_paused_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": boolean;
+                };
+            };
+        };
+    };
+    stop_stop_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+        };
+    };
+    is_stopped_is_stopped_get: {
         parameters: {
             query?: never;
             header?: never;

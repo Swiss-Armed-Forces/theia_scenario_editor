@@ -51,6 +51,10 @@ export function buildSwarmTrajectory(
     const dEast = (next.lon - waypoint.lon) * Math.cos(latRad) * EARTH_RADIUS_M * (Math.PI / 180);
     const dNorth = (next.lat - waypoint.lat) * EARTH_RADIUS_M * (Math.PI / 180);
     const segmentLength = Math.hypot(dEast, dNorth);
+    // FIXME: Wrong frame. The backend's Trajectory.vxs/vys/vzs are ECEF
+    // velocities [m/s], but these are local east/north/up components.
+    // Planned fix: the backend derives velocities from the positions, so the
+    // editor should stop computing them altogether (keep this until then).
     vxs.push(segmentLength > 0 ? (dEast / segmentLength) * velocity : 0);
     vys.push(segmentLength > 0 ? (dNorth / segmentLength) * velocity : 0);
     vzs.push(0);

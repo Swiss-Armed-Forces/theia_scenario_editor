@@ -483,9 +483,6 @@ export interface Trajectory {
   lats: number[];
   lons: number[];
   alts: number[];
-  vxs: number[];
-  vys: number[];
-  vzs: number[];
   cross_section_model: ConstantRcsModel;
 }
 
@@ -530,7 +527,7 @@ export interface DroneSwarmFactory {
 
 // The authored/in-memory shape of a drone swarm. Same waypoints as
 // DroneSwarmFactory.swarm_trajectory, just with velocity kept alongside
-// instead of baked into per-point vx/vy, so the map can offer drag-and-drop
+// instead of baked into the per-point times, so the map can offer drag-and-drop
 // editing without recomputing velocity by hand; ScenarioStore converts
 // to/from DroneSwarmFactory at the save-file boundary (see
 // buildDroneSwarmFactory / droneSwarmFromFactory in util/swarmTrajectory.ts).

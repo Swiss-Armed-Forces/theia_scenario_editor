@@ -631,11 +631,14 @@ export interface components {
         };
         /** EventMessage */
         EventMessage: {
+            /** Id */
+            id: number;
             /**
              * Time
              * Format: date-time
              */
             time: string;
+            party: components["schemas"]["Party"] | null;
             /** Msg */
             msg: string;
         };
@@ -1245,7 +1248,13 @@ export interface components {
             /** V Up */
             v_up: number;
         };
-        /** Trajectory */
+        /**
+         * Trajectory
+         * @description Path of a target, interpolated with a cubic spline in geodetic coordinates.
+         *
+         *     The velocity is not stored: `__call__` derives it from the time derivative
+         *     of the position spline, so it is always consistent with the positions.
+         */
         Trajectory: {
             /** Target Id */
             target_id: number;
@@ -1258,12 +1267,6 @@ export interface components {
             lons: number[];
             /** Alts */
             alts: number[];
-            /** Vxs */
-            vxs: number[];
-            /** Vys */
-            vys: number[];
-            /** Vzs */
-            vzs: number[];
             cross_section_model: components["schemas"]["ConstantRcsModel"];
         };
         /** Transmitter */
@@ -1361,7 +1364,10 @@ export interface components {
             /** Error Type */
             type: string;
         };
-        /** Velocity */
+        /**
+         * Velocity
+         * @description Velocity in Earth-centred, Earth-fixed (ECEF, WGS84) coordinates.
+         */
         Velocity: {
             /** Vx */
             vx: number;

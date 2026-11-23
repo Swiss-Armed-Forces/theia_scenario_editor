@@ -10,15 +10,14 @@ import {
   DRONE_CATEGORIES,
   droneTargetInfo,
 } from "../types/types";
-import { EARTH_RADIUS_M, haversineDistance } from "./geo";
+import { haversineDistance } from "./geo";
 
 // Turns a swarm's waypoints into a Trajectory with exactly one sample per
 // waypoint - no interpolation/sampling in between. If the user wants a
 // smoother or more detailed path, they add more waypoints; this never
 // invents points on its own. Times are derived from cumulative
-// great-circle distance / velocity; each waypoint's velocity vector points
-// along the segment leaving it (the last waypoint reuses the final
-// segment's heading, since there's nothing beyond it to aim at).
+// great-circle distance / velocity. No velocity vectors are written: the
+// backend derives them from the positions and times.
 export function buildSwarmTrajectory(
   waypoints: Waypoint[],
   velocity: number,
@@ -33,9 +32,6 @@ export function buildSwarmTrajectory(
   const lats: number[] = [];
   const lons: number[] = [];
   const alts: number[] = [];
-  const vxs: number[] = [];
-  const vys: number[] = [];
-  const vzs: number[] = [];
 
   let elapsedSeconds = 0;
   for (let i = 0; i < waypoints.length; i++) {
@@ -46,18 +42,6 @@ export function buildSwarmTrajectory(
     lats.push(waypoint.lat);
     lons.push(waypoint.lon);
     alts.push(cruiseAltitude);
-
-    const latRad = (waypoint.lat * Math.PI) / 180;
-    const dEast = (next.lon - waypoint.lon) * Math.cos(latRad) * EARTH_RADIUS_M * (Math.PI / 180);
-    const dNorth = (next.lat - waypoint.lat) * EARTH_RADIUS_M * (Math.PI / 180);
-    const segmentLength = Math.hypot(dEast, dNorth);
-    // FIXME: Wrong frame. The backend's Trajectory.vxs/vys/vzs are ECEF
-    // velocities [m/s], but these are local east/north/up components.
-    // Planned fix: the backend derives velocities from the positions, so the
-    // editor should stop computing them altogether (keep this until then).
-    vxs.push(segmentLength > 0 ? (dEast / segmentLength) * velocity : 0);
-    vys.push(segmentLength > 0 ? (dNorth / segmentLength) * velocity : 0);
-    vzs.push(0);
 
     if (i < waypoints.length - 1) {
       const dist = haversineDistance(
@@ -75,9 +59,6 @@ export function buildSwarmTrajectory(
     lats,
     lons,
     alts,
-    vxs,
-    vys,
-    vzs,
     cross_section_model: { rcs },
   };
 }

@@ -211,6 +211,28 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/radars/{which}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Radars
+         * @description Live state of a side's monostatic radars.
+         *
+         *     Dead radars are not reported.
+         */
+        get: operations["get_radars_radars__which__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/transport_times/{which}": {
         parameters: {
             query?: never;
@@ -678,6 +700,24 @@ export interface components {
             receiver?: components["schemas"]["Receiver-Output"] | null;
             transmitter?: components["schemas"]["Transmitter-Output"] | null;
         };
+        /**
+         * GeoJSONAnnotation
+         * @description A GeoJSON feature with the meta-information needed to display it.
+         */
+        GeoJSONAnnotation: {
+            /** Id */
+            id: string;
+            feature: components["schemas"]["GeoJSONFeature"];
+            /** @default OTHER */
+            kind: components["schemas"]["GeoJSONKind"];
+            /**
+             * Target Ids
+             * @default []
+             */
+            target_ids: number[];
+            /** Hover Text */
+            hover_text?: string | null;
+        };
         /** GeoJSONFeature */
         GeoJSONFeature: {
             /**
@@ -696,6 +736,12 @@ export interface components {
                 [key: string]: unknown;
             };
         };
+        /**
+         * GeoJSONKind
+         * @description What a `GeoJSONAnnotation` depicts.
+         * @enum {string}
+         */
+        GeoJSONKind: "SENSOR_RANGE" | "EFFECTOR_RANGE" | "OTHER";
         /** GeoJSONMultiPolygon */
         GeoJSONMultiPolygon: {
             /**
@@ -958,6 +1004,18 @@ export interface components {
          * @enum {integer}
          */
         Polarization: 0 | 1;
+        /**
+         * RadarState
+         * @description Live state of a living monostatic radar; dead radars are not reported.
+         */
+        RadarState: {
+            /** Sensor Id */
+            sensor_id: number;
+            /** Target Id */
+            target_id: number;
+            /** Is On */
+            is_on: boolean;
+        };
         /** Receiver */
         "Receiver-Input": {
             /** Id */
@@ -1718,6 +1776,37 @@ export interface operations {
             };
         };
     };
+    get_radars_radars__which__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                which: components["schemas"]["Team"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RadarState"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     get_transport_times_transport_times__which__get: {
         parameters: {
             query?: never;
@@ -1968,9 +2057,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": {
-                        [key: string]: components["schemas"]["GeoJSONFeature"];
-                    };
+                    "application/json": components["schemas"]["GeoJSONAnnotation"][];
                 };
             };
             /** @description Validation Error */
